@@ -1,6 +1,5 @@
 package com.bdlepla.android.mymusicplayer.ui
 
-import android.content.res.AssetManager
 import androidx.media3.common.MediaItem
 
 object MediaItemTree {
@@ -10,13 +9,12 @@ object MediaItemTree {
         return treeNodes[ROOT_ID]!!.item
     }
 
-    fun initialize(assets: AssetManager?) {
+    fun initialize() {
         TODO("Not yet implemented")
     }
 
-    fun getItem(mediaId: String): MediaItem? {
-        TODO("Not yet implemented")
-    }
+    fun getItem(mediaId: String): MediaItem? =
+        treeNodes.getOrDefault(mediaId, null)?.item
 
     private class MediaItemNode(val item: MediaItem) {
 
