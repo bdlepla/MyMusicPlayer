@@ -44,8 +44,6 @@ class PlayService: MediaLibraryService() {
 
     private fun initializeSessionAndPlayer() {
 
-
-
         val parentScreenIntent = Intent(this, MainActivity::class.java)
         //val intent = Intent(this, PlayerActivity::class.java)
 
@@ -61,7 +59,7 @@ class PlayService: MediaLibraryService() {
             .setAudioAttributes(AudioAttributes.DEFAULT, /* handleAudioFocus= */ true)
             .build()
 
-        MediaItemTree.initialize(assets)
+        MediaItemTree.initialize()
 
         mediaLibrarySession = MediaLibrarySession.Builder(this, player, librarySessionCallback)
             .setMediaItemFiller(CustomMediaItemFiller())
