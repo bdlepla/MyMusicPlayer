@@ -1,17 +1,36 @@
 package com.bdlepla.android.mymusicplayer
 
+import androidx.media3.common.MediaItem
+import androidx.media3.common.MediaMetadata
 import com.bdlepla.android.mymusicplayer.business.AlbumInfo
 import com.bdlepla.android.mymusicplayer.business.ArtistInfo
 import com.bdlepla.android.mymusicplayer.business.SongInfo
 
 object SampleData {
-    val Songs = listOf(
-        SongInfo("Speed of Sound", "Coldplay", "X & Y", 2000, 1, 1, 1, 1, null),
-        SongInfo("Someone Like You", "Adele", "21", 2000, 1, 1, 1, 1, null),
-        SongInfo("Carry on my Wayward Son", "Kansas", "Leftoverture", 2000, 1, 1, 1, 1, null),
-        SongInfo("Mr. Blue Sky", "ELO", "Greatest Hits", 2000, 1, 1, 1, 1, null)
+    private val songData = listOf(
+        listOf("Speed of Sound", "Coldplay", "X & Y"),
+        listOf("Someone Like You", "Adele", "21"),
+        listOf("Carry on my Wayward Son", "Kansas", "Leftoverture"),
+        listOf("Mr. Blue Sky", "ELO", "Greatest Hits")
     )
+    val Songs = songData.map {
+        val metadata =
+            MediaMetadata.Builder()
+                .setTitle(it[0])
+                .setArtist(it[1])
+                .setAlbumTitle(it[2])
+                .setGenre("Music")
+                .setFolderType(MediaMetadata.FOLDER_TYPE_NONE)
+                .setIsPlayable(true)
+                .build()
+        val item =  MediaItem.Builder()
+            .setMediaId("1")
+            .setMediaMetadata(metadata)
+            .build()
+        SongInfo(item)
+    }
 
-    val Artists = Songs.map{ ArtistInfo(it.artist, it.artistId) }
-    val Albums = Songs.map{AlbumInfo(it.album, it.albumId, it.albumYear, it.albumArt)}
+
+    val Artists = Songs.map{ ArtistInfo(it.artist) }
+    val Albums = Songs.map{AlbumInfo(it.album, it.albumYear, it.albumArt)}
 }

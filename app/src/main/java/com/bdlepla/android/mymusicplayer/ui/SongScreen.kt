@@ -23,7 +23,7 @@ import com.bdlepla.android.mymusicplayer.ui.theme.MyMusicPlayerTheme
 fun SongList(songInfos: List<SongInfo>, onClick: (SongInfo) -> Unit = { }) {
     val listState = rememberLazyListState()
     LazyColumn(state = listState) {
-        items(items = songInfos, key={si -> si.songId}) { songInfo ->
+        items(items = songInfos, key={si -> si.title}) { songInfo ->
             Song(songInfo, onClick)
             Divider(color = MaterialTheme.colors.primary)
         }
@@ -94,7 +94,6 @@ fun SongPreview() {
 )
 @Composable
 fun SongListPreview() {
-
     MyMusicPlayerTheme {
          SongList(SampleData.Songs )
     }

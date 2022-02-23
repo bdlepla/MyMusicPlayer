@@ -7,6 +7,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Divider
 import androidx.compose.material.MaterialTheme
+import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,7 +27,6 @@ private fun PlayScreen(filename:String) {
 
 @Composable
 fun CurrentlyPlayingSmallScreen(currentSong: SongInfo, isPaused:Boolean, onPlayPauseClick:()->Unit={}) {
-    //val isPaused by viewModel.isPaused.collectAsState()
     val playPauseIcon = painterResource(
         if (isPaused) R.drawable.exo_icon_play
         else R.drawable.exo_icon_pause)
@@ -39,14 +39,15 @@ fun CurrentlyPlayingSmallScreen(currentSong: SongInfo, isPaused:Boolean, onPlayP
             Box(modifier = Modifier.weight(3f)) {
                 Song(currentSong)
             }
-            Image(painter = playPauseIcon, contentDescription = "Play",
+            Image(painter = playPauseIcon,
+                contentDescription = if (isPaused) "Play" else "Pause",
                 modifier = Modifier
                     .size(50.dp)
                     .requiredWidth(50.dp)
                     .weight(1f)
                     .background(Color.Black)
                     .clickable { onPlayPauseClick.invoke()})
-            Spacer(modifier = Modifier.width(4.dp))
+            Spacer(modifier = Modifier.requiredWidth(4.dp))
             Image(painter = nextIcon, contentDescription = "Next",
                 modifier = Modifier
                     .size(50.dp)
