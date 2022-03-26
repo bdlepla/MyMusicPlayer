@@ -8,9 +8,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material.Divider
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
+import androidx.compose.material3.Divider
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
@@ -53,7 +53,7 @@ fun AlbumList(
         LazyColumn(state = listState) {
             items(items = AlbumList, key = { it.albumId }) { albumInfo ->
                 Album(albumInfo, onClick)
-                Divider(color = MaterialTheme.colors.primary)
+                Divider(color = MaterialTheme.colorScheme.primary)
             }
         }
     }
@@ -75,8 +75,8 @@ fun Album(albumInfo:AlbumInfo, onClick: (AlbumInfo) -> Unit = emptyFunction1()) 
         Spacer(modifier=Modifier.padding(all=4.dp))
         Text(
             text = albumInfo.name,
-            style = MaterialTheme.typography.subtitle2,
-            color = MaterialTheme.colors.secondaryVariant
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.secondary
         )
     }
 }

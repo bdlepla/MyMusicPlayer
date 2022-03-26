@@ -3,10 +3,11 @@ package com.bdlepla.android.mymusicplayer.ui
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.*
+import androidx.compose.material.BottomNavigationItem
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -62,6 +63,7 @@ internal fun MainScreen(viewModel: MyMusicViewModel=viewModel()) {
 }
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun MainContent(
     songs:List<ISongInfo>,
@@ -77,23 +79,24 @@ private fun MainContent(
     currentlyPlaying:ISongInfo? = null,
     isPaused:Boolean = false) {
     val items = listOf("Songs", "Artists", "Albums")//, "Genres", "Playlists")
-
-    Scaffold(
-        topBar = { TopAppBar(onShuffleClick, onRepeatClick) },
-        bottomBar = {
-            BottomAppBar(
-                items, categorySelected, onCategoryClick,
-                onPlayPauseClick, onNextClick, currentlyPlaying, isPaused
-            )
-        }
-    ) { paddingValues ->
-        MyMusicPlayerTheme {
-            // A surface container using the 'background' color from the theme
-            Column(modifier = Modifier.padding(paddingValues)) {
-                when (categorySelected) {
-                    1 -> ArtistList(artists, albums, songs, onSongClick)
-                    2 -> AlbumList(albums, songs, onSongClick)
-                    else -> SongList(songs, onSongClick)
+    MyMusicPlayerTheme {
+        Surface {
+            Scaffold(
+                topBar = { TopAppBar(onShuffleClick, onRepeatClick) },
+                bottomBar = {
+                    BottomAppBar(
+                        items, categorySelected, onCategoryClick,
+                        onPlayPauseClick, onNextClick, currentlyPlaying, isPaused
+                    )
+                }
+            ) { paddingValues ->
+                // A surface container using the 'background' color from the theme
+                Column(modifier = Modifier.padding(paddingValues)) {
+                    when (categorySelected) {
+                        1 -> ArtistList(artists, albums, songs, onSongClick)
+                        2 -> AlbumList(albums, songs, onSongClick)
+                        else -> SongList(songs, onSongClick)
+                    }
                 }
             }
         }
@@ -105,11 +108,11 @@ private fun TopAppBar(
     onShuffleClick: ()->Unit = emptyFunction(),
     onRepeatClick: ()->Unit = emptyFunction()) {
     Column {
-        TopAppBar(
+        SmallTopAppBar(
             title = {
                 Text(
                     text = "My Music Player",
-                    style = MaterialTheme.typography.h4
+                    style = MaterialTheme.typography.headlineSmall
                 )
             },
             actions = {
@@ -141,7 +144,7 @@ private fun BottomAppBar(
         if (currentlyPlaying != null) {
             CurrentlyPlayingSmallScreen(currentlyPlaying, isPaused, onPlayPauseClick, onNextClick)
         }
-        BottomNavigation {
+        NavigationBar {
             items.forEachIndexed { index, item ->
                 BottomNavigationItem(
                     icon = { Icon(Icons.Filled.Info, contentDescription = null) },

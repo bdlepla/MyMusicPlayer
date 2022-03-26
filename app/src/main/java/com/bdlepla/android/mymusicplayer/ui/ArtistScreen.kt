@@ -8,9 +8,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material.Divider
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
+import androidx.compose.material3.Divider
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
@@ -67,7 +67,7 @@ fun ArtistList(
             items(items = artistList, key = { it.artistId }) { artistInfo ->
                 val album = allAlbums.filter { it.artistId == artistInfo.artistId }.randomOrNull()
                 Artist(artistInfo, album, onClick)
-                Divider(color = MaterialTheme.colors.primary)
+                Divider(color = MaterialTheme.colorScheme.primary)
             }
         }
     }
@@ -92,8 +92,8 @@ fun Artist(
         Spacer(modifier=Modifier.padding(all=4.dp))
         Text(
             text = artistInfo.name,
-            style = MaterialTheme.typography.subtitle2,
-            color = MaterialTheme.colors.secondaryVariant
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.secondary
         )
     }
 }

@@ -7,7 +7,11 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material.*
+import androidx.compose.material.ContentAlpha
+import androidx.compose.material.LocalContentAlpha
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.TabRowDefaults.Divider
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
@@ -32,7 +36,7 @@ fun SongList(songInfos: List<ISongInfo>,
     LazyColumn(state = listState) {
         items(items = songInfos, key = { it.songId }) { songInfo ->
             Song(songInfo, myOnClick)
-            Divider(color = MaterialTheme.colors.primary)
+            Divider(color = MaterialTheme.colorScheme.inversePrimary)
         }
     }
 }
@@ -55,8 +59,8 @@ fun Song(songInfo: ISongInfo, onClick: (ISongInfo) -> Unit = emptyFunction1()) {
         Column(modifier = Modifier.padding(all = 4.dp)) {
             Text(
                 text = songInfo.title,
-                style = MaterialTheme.typography.subtitle2,
-                color = MaterialTheme.colors.primary,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.primary,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
@@ -64,17 +68,17 @@ fun Song(songInfo: ISongInfo, onClick: (ISongInfo) -> Unit = emptyFunction1()) {
                 Column {
                     Text(
                         text = songInfo.artist,
-                        style = MaterialTheme.typography.body2,
-                        color = MaterialTheme.colors.secondary,
-                        maxLines = 2,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.secondary,
+                        maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
                         text = songInfo.album,
-                        style = MaterialTheme.typography.body2,
-                        color = MaterialTheme.colors.secondaryVariant,
-                        maxLines = 2,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.tertiary,
+                        maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
                 }
