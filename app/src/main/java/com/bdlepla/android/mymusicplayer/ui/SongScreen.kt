@@ -12,29 +12,39 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.bdlepla.android.mymusicplayer.Extensions.toImagePainter
 import com.bdlepla.android.mymusicplayer.SampleData
-import com.bdlepla.android.mymusicplayer.business.SongInfo
+import com.bdlepla.android.mymusicplayer.business.ISongInfo
 import com.bdlepla.android.mymusicplayer.ui.theme.MyMusicPlayerTheme
 
 @Composable
-fun SongList(songInfos: List<SongInfo>, onClick: (SongInfo) -> Unit = { }) {
+fun SongList(songInfos: List<ISongInfo>,
+             onClick: (ISongInfo, List<ISongInfo>, Boolean) -> Unit = emptyFunction3()) {
     val listState = rememberLazyListState()
+    val myOnClick: (ISongInfo)->Unit = {
+        onClick(it, songInfos, false)
+    }
+
     LazyColumn(state = listState) {
-        items(items = songInfos, key={si -> si.title}) { songInfo ->
-            Song(songInfo, onClick)
+        items(items = songInfos, key = { it.songId }) { songInfo ->
+            Song(songInfo, myOnClick)
             Divider(color = MaterialTheme.colors.primary)
         }
     }
 }
 
 @Composable
-fun Song(songInfo:SongInfo, onClick: (SongInfo) -> Unit = { }) {
+fun Song(songInfo: ISongInfo, onClick: (ISongInfo) -> Unit = emptyFunction1()) {
     Row(verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.clickable { onClick(songInfo) }
-            .padding(all = 4.dp)) {
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick(songInfo) }
+            .padding(all = 4.dp)
+            .semantics(mergeDescendants = true){}) {
         Spacer(modifier = Modifier.padding(vertical = 4.dp))
         Image(
             painter = songInfo.albumArt.toImagePainter(),
@@ -46,20 +56,26 @@ fun Song(songInfo:SongInfo, onClick: (SongInfo) -> Unit = { }) {
             Text(
                 text = songInfo.title,
                 style = MaterialTheme.typography.subtitle2,
-                color = MaterialTheme.colors.primary
+                color = MaterialTheme.colors.primary,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
             )
             CompositionLocalProvider(LocalContentAlpha provides ContentAlpha.medium) {
-                Row {
+                Column {
                     Text(
                         text = songInfo.artist,
                         style = MaterialTheme.typography.body2,
-                        color = MaterialTheme.colors.secondary
+                        color = MaterialTheme.colors.secondary,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
                         text = songInfo.album,
                         style = MaterialTheme.typography.body2,
-                        color = MaterialTheme.colors.secondaryVariant
+                        color = MaterialTheme.colors.secondaryVariant,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }

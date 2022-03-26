@@ -120,7 +120,7 @@ object MediaItemTree {
         val artist = songInfo.artist
         val genre = songInfo.genre
 
-        val idInTree = ITEM_PREFIX + title
+        val idInTree = ITEM_PREFIX + songInfo.songId
         val albumFolderIdInTree = ALBUM_PREFIX + album
         val artistFolderIdInTree = ARTIST_PREFIX + artist
         val genreFolderIdInTree = GENRE_PREFIX + genre

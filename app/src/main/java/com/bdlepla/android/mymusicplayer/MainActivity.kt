@@ -2,13 +2,13 @@ package com.bdlepla.android.mymusicplayer
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.media.AudioManager
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import com.bdlepla.android.mymusicplayer.ui.MainScreen
-import com.google.android.material.color.DynamicColors
 import dagger.hilt.android.AndroidEntryPoint
 
 
@@ -33,6 +33,11 @@ class MainActivity : AppCompatActivity() {
                 requestPermissions(arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE), 1)
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        volumeControlStream = AudioManager.STREAM_MUSIC
     }
 }
 

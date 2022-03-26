@@ -5,8 +5,19 @@ import coil.compose.ImagePainter
 import coil.compose.rememberImagePainter
 import java.io.File
 
-@Composable
-fun String?.toImagePainter(): ImagePainter =
-    rememberImagePainter(
-        if (this != null) File(this) else null
-    )
+
+val ignoreBeginningArticles = listOf("A ", "The Very Best Of ", "The Best Of ", "The ")
+fun String.forSorting(): String {
+    val s = if (this.startsWith("(")){
+        val idx = this.indexOf(')')
+        this.substring(idx+1).trim()
+    } else {
+        this
+    }
+    for (i in ignoreBeginningArticles) {
+        if (s.startsWith(i,  ignoreCase = true)) {
+            return s.substring(i.length)
+        }
+    }
+    return s
+}

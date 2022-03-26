@@ -10,6 +10,7 @@ import androidx.core.app.TaskStackBuilder
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.MediaItem
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
 import androidx.media3.session.LibraryResult
 import androidx.media3.session.MediaLibraryService
 import androidx.media3.session.MediaSession
@@ -30,9 +31,8 @@ class PlayService: MediaLibraryService() {
         private const val SEARCH_QUERY_PREFIX = "androidx://media3-session/setMediaUri"
     }
 
-    override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaLibrarySession {
-        return mediaLibrarySession
-    }
+    override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaLibrarySession =
+        mediaLibrarySession
 
     private inner class CustomMediaLibrarySessionCallback :
         MediaLibrarySession.MediaLibrarySessionCallback {
@@ -40,14 +40,8 @@ class PlayService: MediaLibraryService() {
             session: MediaLibrarySession,
             browser: MediaSession.ControllerInfo,
             params: LibraryParams?
-        ): ListenableFuture<LibraryResult<MediaItem>> {
-            return Futures.immediateFuture(
-                LibraryResult.ofItem(
-                    MediaItemTree.getRootItem(),
-                    params
-                )
-            )
-        }
+        ): ListenableFuture<LibraryResult<MediaItem>> =
+            Futures.immediateFuture(LibraryResult.ofItem(MediaItemTree.getRootItem(), params))
 
         override fun onGetItem(
             session: MediaLibrarySession,
@@ -128,8 +122,10 @@ class PlayService: MediaLibraryService() {
                 getPendingIntent(0, immutableFlag or FLAG_UPDATE_CURRENT)
             }
 
+        val trackSelector = DefaultTrackSelector(this)
         player = ExoPlayer.Builder(this)
             .setAudioAttributes(AudioAttributes.DEFAULT, /* handleAudioFocus= */ true)
+            .setTrackSelector(trackSelector)
             .build()
 
         MediaItemTree.initialize(applicationContext)
@@ -162,8 +158,9 @@ class PlayService: MediaLibraryService() {
     }
 
     override fun onDestroy() {
-        player.release()
         mediaLibrarySession.release()
+        player.release()
         super.onDestroy()
     }
+
 }

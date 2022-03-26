@@ -3,15 +3,13 @@ package com.bdlepla.android.mymusicplayer
 import android.app.Application
 import android.content.ComponentName
 import androidx.lifecycle.AndroidViewModel
-import androidx.media3.common.MediaItem
+import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
+import androidx.media3.common.Timeline
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
-import com.bdlepla.android.mymusicplayer.Extensions.toSongInfo
-import com.bdlepla.android.mymusicplayer.business.AlbumInfo
-import com.bdlepla.android.mymusicplayer.business.ArtistInfo
-import com.bdlepla.android.mymusicplayer.business.SongInfo
-import com.bdlepla.android.mymusicplayer.business.isDifferentFrom
+import com.bdlepla.android.mymusicplayer.Extensions.forSorting
+import com.bdlepla.android.mymusicplayer.business.*
 import com.bdlepla.android.mymusicplayer.repository.Repository
 import com.bdlepla.android.mymusicplayer.ui.PlayService
 import com.google.common.util.concurrent.ListenableFuture
@@ -48,6 +46,8 @@ class MyMusicViewModel
         controller.addListener(this)
     }
 
+    private var currentPlayingSongs:List<ISongInfo> = mutableListOf()
+
     private val _allSongs = MutableStateFlow<List<SongInfo>>(emptyList())
     val allSongs : StateFlow<List<SongInfo>>
         get() = _allSongs.asStateFlow()
@@ -60,58 +60,88 @@ class MyMusicViewModel
     val allAlbums : StateFlow<List<AlbumInfo>>
         get() = _allAlbums.asStateFlow()
 
-    // Region - Currently Playing -- the song currently playing
+    //region Currently Playing - the song currently playing
     private val _currentlyPlaying = MutableStateFlow<SongInfo?>(null)
     val currentlyPlaying : StateFlow<SongInfo?>
         get() = _currentlyPlaying.asStateFlow()
 
-    fun setCurrentlyPlaying(songInfo: SongInfo) {
-        _currentlyPlaying.value = songInfo
-        mediaController?.setMediaItem(songInfo.toMediaItem())
+    fun setCurrentlyPlaying(iSongInfo: ISongInfo) {
+        if (iSongInfo !is SongInfo) return
+        val idx = currentPlayingSongs.indexOf(iSongInfo)
+        if (idx == -1) return
+        mediaController?.seekToDefaultPosition(idx)
         mediaController?.prepare()
-        if (!_isPaused.value) mediaController?.play()
+        mediaController?.play()
     }
 
-    override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
-        super.onMediaItemTransition(mediaItem, reason)
-        if (Player.MEDIA_ITEM_TRANSITION_REASON_PLAYLIST_CHANGED == reason) {
-            if (mediaItem != null ) {
-                if (_currentlyPlaying.value.isDifferentFrom(mediaItem)) {
-                    _currentlyPlaying.value = mediaItem.toSongInfo()
-                }
-            }
+    override fun onMediaMetadataChanged(mediaMetadata: MediaMetadata) {
+        super.onMediaMetadataChanged(mediaMetadata)
+        val songInfo = currentAllSongs
+            .find{it.data == mediaMetadata.mediaUri.toString()} ?: return
+        if (!_currentlyPlaying.value.isDifferentFrom(songInfo.toMediaItem())) return
+        _currentlyPlaying.value = songInfo
+
+//        // Set the proper album artwork on the media session, so it can be shown in the
+//        // locked screen and in other places.
+//        if (mediaMetadata.description.iconBitmap == null &&
+//            mediaMetadata.description.iconUri != null) {
+//            String albumUri = metadata.description.iconUri.toString();
+//            mediaController?.setMeta
+//
+//
         }
+
+
+
+
+    //endregion Currently Playing
+
+    fun setPlaylist(iSongs:List<ISongInfo>, shuffle:Boolean) {
+        val songs = iSongs.map {it as SongInfo}
+        currentPlayingSongs = songs
+        mediaController?.setMediaItems(songs.map{it.toMediaItem()})
+        mediaController?.shuffleModeEnabled = shuffle
+        mediaController?.prepare()
     }
-    // endRegion - Currently Playing
 
+    fun playNext() {
+        if (mediaController == null) return
+        if (mediaController?.hasNextMediaItem() != true) return
+        mediaController?.seekToNextMediaItem()
+    }
 
-    // Region - Is Paused - true if not playing; false if playing
+    //region Is Paused - true if not playing; false if playing
     private val _isPaused = MutableStateFlow<Boolean>(false)
     val isPaused : StateFlow<Boolean>
         get() = _isPaused.asStateFlow()
 
     fun togglePlayPause() {
         _isPaused.value = !_isPaused.value
-        if (_currentlyPlaying.value != null) {
-            if (_isPaused.value) {mediaController?.pause()}
-            else {mediaController?.play()}
-        }
+        if (_currentlyPlaying.value == null) return
+        if (_isPaused.value) {mediaController?.pause()}
+        else {mediaController?.play()}
+    }
+
+    fun play() {
+        _isPaused.value = false
+        mediaController?.play()
     }
 
     override fun onIsPlayingChanged(isPlaying: Boolean) {
         super.onIsPlayingChanged(isPlaying)
         _isPaused.value = !isPlaying
     }
-    // end Region - Is Paused
+    //endregion  Is Paused
 
     private var currentAllSongs: List<SongInfo> = emptyList()
     private var songsByArtist:Map<ArtistInfo, List<SongInfo>> = emptyMap()
     private var songsByAlbum:Map<AlbumInfo, List<SongInfo>> = emptyMap()
     private var albumsByArtist:Map<ArtistInfo, List<AlbumInfo>> = emptyMap()
+    private var songsByGenre:Map<GenreInfo, List<SongInfo>> = emptyMap()
 
     private val uiDispatcher = Dispatchers.Main
     private val uiScope = CoroutineScope(uiDispatcher)
-    private val ioDispatcher = Dispatchers.IO // + mViewModelJob + mHandler
+    private val ioDispatcher = Dispatchers.IO
 
     fun getAllSongsOnDevice() {
         uiScope.launch {
@@ -126,35 +156,43 @@ class MyMusicViewModel
         }
     }
 
+    fun toggleRepeat() {
+        mediaController?.repeatMode = Player.REPEAT_MODE_ALL
+    }
+
     private fun getAllSongs():List<SongInfo> {
         val allSongs = Repository.getAllSongs(getApplication())
-        currentAllSongs = allSongs.sortedBy{it.title}
+        currentAllSongs = allSongs.sortedBy{it.title.forSorting()}
         buildData(allSongs)
         return currentAllSongs
     }
 
     private fun buildData(allSongs:List<SongInfo>) {
         // TODO: take all songs and divide into the following:
+
+        // - albums by artist
+        albumsByArtist = allSongs
+            .groupBy({k -> ArtistInfo(k.artist, k.artistId)},{v->AlbumInfo(v.album, v.albumYear, v.albumId, v.artistId, v.albumArt) })
+            .mapValues { kv -> kv.value.distinct().sortedBy{it.albumYear} }
+            .toSortedMap(compareBy{it.name.forSorting()}) // sort by artist name
+
         // - songs by artist
         songsByArtist = allSongs
-            .groupBy { ArtistInfo(it.artist) }
-            .toSortedMap(compareBy{it.name}) // sort by artist name
+            .groupBy { ArtistInfo(it.artist, it.artistId, ) }
+            .toSortedMap(compareBy{it.name.forSorting()}) // sort by artist name
 
         // - songs by album
         songsByAlbum = allSongs
-            .groupBy { AlbumInfo(it.album, it.albumYear, it.albumArt) }
-            .toSortedMap(compareBy{it.name}) // sort by album name
+            .groupBy { AlbumInfo(it.album, it.albumYear, it.albumId, it.artistId, it.albumArt) }
+            .toSortedMap(compareBy{it.name.forSorting()}) // sort by album name
+
+
 
         // - songs by genre
+        songsByGenre = allSongs
+            .groupBy { k -> GenreInfo(k.genre, k.genreId) }
+            .toSortedMap(compareBy { it.genreName.forSorting() })
 
-        // - albums by artist
-        // TODO: Sort by album year
-        albumsByArtist = allSongs
-            .groupBy({k -> ArtistInfo(k.artist)},{v->AlbumInfo(v.album, v.albumYear, v.albumArt) })
-            .mapValues { kv -> kv.value.distinct().sortedBy{it.albumYear} }
-            .toSortedMap(compareBy{it.name}) // sort by artist name
-
-        // - artists by genre
         // - albums by genre
         // - songs by favorite
     }
