@@ -13,12 +13,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.media3.session.MediaController
 import com.bdlepla.android.mymusicplayer.MyMusicViewModel
 import com.bdlepla.android.mymusicplayer.R
 import com.bdlepla.android.mymusicplayer.SampleData
 import com.bdlepla.android.mymusicplayer.business.AlbumInfo
 import com.bdlepla.android.mymusicplayer.business.ArtistInfo
-import com.bdlepla.android.mymusicplayer.business.ISongInfo
+import com.bdlepla.android.mymusicplayer.business.SongInfo
 import com.bdlepla.android.mymusicplayer.ui.theme.MyMusicPlayerTheme
 
 // Main Screen uses the viewmodel to set the variables and callbacks
@@ -33,14 +34,14 @@ internal fun MainScreen(viewModel: MyMusicViewModel=viewModel()) {
 
     val currentlyPlaying by viewModel.currentlyPlaying.collectAsState()
     val isPaused by viewModel.isPaused.collectAsState()
-    val onSongClick: (ISongInfo, List<ISongInfo>, Boolean) -> Unit = { itSong, itSongs, itShuffle ->
-        viewModel.setPlaylist(itSongs, itShuffle)
+    val onSongClick: (SongInfo, List<SongInfo>, Boolean) -> Unit = { itSong, itSongs, itShuffle ->
+        viewModel.setPlaylist(itSongs)
         viewModel.setCurrentlyPlaying(itSong)
     }
     val onCategoryClick:(Int)->Unit = { selectedCategory = it }
     val onShuffleClick: ()->Unit = {
-        val shuffledSongs = songs.value.shuffled()
-        viewModel.setPlaylist(shuffledSongs, true)
+        viewModel.setPlaylist(songs.value)
+        viewModel.toggleShuffle()
         viewModel.play()
     }
     val onRepeatClick: ()->Unit = { viewModel.toggleRepeat() }
@@ -48,6 +49,7 @@ internal fun MainScreen(viewModel: MyMusicViewModel=viewModel()) {
     val onNextClick:()->Unit = { viewModel.playNext() }
 
     MainContent(
+        null,
         songs.value,
         artists.value,
         albums.value,
@@ -62,30 +64,42 @@ internal fun MainScreen(viewModel: MyMusicViewModel=viewModel()) {
         isPaused)
 }
 
+val categoryItems = listOf("Songs", "Artists", "Albums", "Playing")//, "Genres", "Playlists")
+val songsId = 0
+val artistsId = 1
+val albumsId = 2
+val playingId = 3 //categoryItems.count()
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun MainContent(
-    songs:List<ISongInfo>,
+    mediaController: MediaController?,
+    songs:List<SongInfo>,
     artists:List<ArtistInfo>,
     albums:List<AlbumInfo>,
     categorySelected:Int=0,
-    onSongClick:(ISongInfo, List<ISongInfo>, Boolean)->Unit= emptyFunction3(),
+    onSongClick:(SongInfo, List<SongInfo>, Boolean)->Unit= emptyFunction3(),
     onShuffleClick:()->Unit = emptyFunction(),
     onRepeatClick:()->Unit = emptyFunction(),
     onCategoryClick:(Int)->Unit = emptyFunction1(),
     onPlayPauseClick:()->Unit = emptyFunction(),
     onNextClick:()->Unit = emptyFunction(),
-    currentlyPlaying:ISongInfo? = null,
+    currentlyPlaying:SongInfo? = null,
     isPaused:Boolean = false) {
-    val items = listOf("Songs", "Artists", "Albums")//, "Genres", "Playlists")
+
+//    val myOnSongClick: (ISongInfo, List<ISongInfo>, Boolean)->Unit = {
+//        song, songs, shuffle ->
+//            onSongClick(song, songs, shuffle)
+//            onCategoryClick(largePlayerId)
+//    }
+
     MyMusicPlayerTheme {
         Surface {
             Scaffold(
                 topBar = { TopAppBar(onShuffleClick, onRepeatClick) },
                 bottomBar = {
                     BottomAppBar(
-                        items, categorySelected, onCategoryClick,
+                        categoryItems, categorySelected, onCategoryClick,
                         onPlayPauseClick, onNextClick, currentlyPlaying, isPaused
                     )
                 }
@@ -93,8 +107,9 @@ private fun MainContent(
                 // A surface container using the 'background' color from the theme
                 Column(modifier = Modifier.padding(paddingValues)) {
                     when (categorySelected) {
-                        1 -> ArtistList(artists, albums, songs, onSongClick)
-                        2 -> AlbumList(albums, songs, onSongClick)
+                        artistsId -> ArtistList(artists, albums, songs, onSongClick)
+                        albumsId -> AlbumList(albums, songs, onSongClick)
+                        playingId -> { if (currentlyPlaying != null) PlayScreen2(mediaController)}
                         else -> SongList(songs, onSongClick)
                     }
                 }
@@ -137,13 +152,24 @@ private fun BottomAppBar(
     onCategoryClick:(Int)->Unit= emptyFunction1(),
     onPlayPauseClick:()->Unit= emptyFunction(),
     onNextClick:()->Unit= emptyFunction(),
-    currentlyPlaying: ISongInfo? = null,
+    currentlyPlaying: SongInfo? = null,
     isPaused:Boolean = true
         ) {
+    val isCurrentlyPlaying = currentlyPlaying != null
+
     Column {
-        if (currentlyPlaying != null) {
-            CurrentlyPlayingSmallScreen(currentlyPlaying, isPaused, onPlayPauseClick, onNextClick)
+        if (isCurrentlyPlaying) {
+            val onClickSmallToLargePlayer: (SongInfo, List<SongInfo>, Boolean)->Unit = {
+                    _, _, _ ->
+            }
+            CurrentlyPlayingSmallScreen(
+                currentlyPlaying!!,
+                isPaused,
+                onPlayPauseClick,
+                onNextClick,
+            )
         }
+
         NavigationBar {
             items.forEachIndexed { index, item ->
                 BottomNavigationItem(
@@ -166,14 +192,15 @@ private fun BottomAppBar(
     showBackground = true,
     name = "Main Content Dark Mode"
 )
-@androidx.media3.common.util.UnstableApi
+
 @Composable
 fun MainContentPreview() {
     MyMusicPlayerTheme {
         MainContent(
-            SampleData.Songs,
-            SampleData.Artists,
-            SampleData.Albums
+            null,
+            SampleData().songs,
+            SampleData().artists,
+            SampleData().albums
         )
     }
 }
@@ -188,7 +215,7 @@ fun MainContentPreview() {
     showBackground = true,
     name = "Top App Bar Dark Mode"
 )
-@androidx.media3.common.util.UnstableApi
+
 @Composable
 fun TopAppBarPreview() {
     MyMusicPlayerTheme {
@@ -206,7 +233,7 @@ fun TopAppBarPreview() {
     showBackground = true,
     name = "Bottom App Bar Dark Mode"
 )
-@androidx.media3.common.util.UnstableApi
+
 @Composable
 fun BottomAppBarPreview() {
     MyMusicPlayerTheme {
@@ -224,10 +251,9 @@ fun BottomAppBarPreview() {
     name = "Bottom App Bar With Small Player Dark Mode"
 )
 
-@androidx.media3.common.util.UnstableApi
 @Composable
 fun BottomAppBarWithCurrentlyPlayingPreview() {
     MyMusicPlayerTheme {
-        BottomAppBar(listOf("Songs", "Artists", "Albums"), currentlyPlaying = SampleData.Songs[0])
+        BottomAppBar(listOf("Songs", "Artists", "Albums"), currentlyPlaying = SampleData().songs[0])
     }
 }

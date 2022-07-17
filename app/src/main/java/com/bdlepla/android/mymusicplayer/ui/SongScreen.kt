@@ -20,16 +20,16 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.bdlepla.android.mymusicplayer.*
 import com.bdlepla.android.mymusicplayer.Extensions.toImagePainter
-import com.bdlepla.android.mymusicplayer.SampleData
-import com.bdlepla.android.mymusicplayer.business.ISongInfo
+import com.bdlepla.android.mymusicplayer.business.SongInfo
 import com.bdlepla.android.mymusicplayer.ui.theme.MyMusicPlayerTheme
 
 @Composable
-fun SongList(songInfos: List<ISongInfo>,
-             onClick: (ISongInfo, List<ISongInfo>, Boolean) -> Unit = emptyFunction3()) {
+fun SongList(songInfos: List<SongInfo>,
+             onClick: (SongInfo, List<SongInfo>, Boolean) -> Unit = emptyFunction3()) {
     val listState = rememberLazyListState()
-    val myOnClick: (ISongInfo)->Unit = {
+    val myOnClick: (SongInfo)->Unit = {
         onClick(it, songInfos, false)
     }
 
@@ -42,7 +42,7 @@ fun SongList(songInfos: List<ISongInfo>,
 }
 
 @Composable
-fun Song(songInfo: ISongInfo, onClick: (ISongInfo) -> Unit = emptyFunction1()) {
+fun Song(songInfo: SongInfo, onClick: (SongInfo) -> Unit = emptyFunction1()) {
     Row(verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
@@ -52,7 +52,7 @@ fun Song(songInfo: ISongInfo, onClick: (ISongInfo) -> Unit = emptyFunction1()) {
         Spacer(modifier = Modifier.padding(vertical = 4.dp))
         Image(
             painter = songInfo.albumArt.toImagePainter(),
-            contentDescription = songInfo.title,
+            contentDescription = "wow", //songInfo.title,
             modifier = Modifier.size(50.dp)
         )
         Spacer(modifier = Modifier.padding(all = 4.dp))
@@ -99,7 +99,7 @@ fun Song(songInfo: ISongInfo, onClick: (ISongInfo) -> Unit = emptyFunction1()) {
 @Composable
 fun SongPreview() {
     MyMusicPlayerTheme {
-        Song(SampleData.Songs[0])
+        Song(SampleData().songs[0])
     }
 }
 
@@ -115,6 +115,6 @@ fun SongPreview() {
 @Composable
 fun SongListPreview() {
     MyMusicPlayerTheme {
-         SongList(SampleData.Songs )
+         SongList(SampleData().songs )
     }
 }

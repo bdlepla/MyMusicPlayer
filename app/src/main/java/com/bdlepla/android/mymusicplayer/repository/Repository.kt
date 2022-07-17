@@ -3,27 +3,22 @@ package com.bdlepla.android.mymusicplayer.repository
 import android.content.ContentUris
 import android.content.Context
 import android.graphics.Bitmap
+import android.os.Bundle
 import android.provider.MediaStore
 import android.util.Log
 import android.util.Size
 import androidx.core.database.getStringOrNull
 import androidx.core.net.toUri
-import androidx.core.os.bundleOf
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
-import androidx.media3.common.MediaMetadata.PICTURE_TYPE_FRONT_COVER
-import com.bdlepla.android.mymusicplayer.business.ALBUM_ID
-import com.bdlepla.android.mymusicplayer.business.ARTIST_ID
-import com.bdlepla.android.mymusicplayer.business.GENRE_ID
-import com.bdlepla.android.mymusicplayer.business.SongInfo
+import com.bdlepla.android.mymusicplayer.service.MediaItemTree.ITEM_PREFIX
 import java.io.File
 import java.io.FileOutputStream
-import java.nio.ByteBuffer
 
 object Repository {
 
-    fun getAllSongs(context: Context):List<SongInfo> {
-        val ret:MutableList<SongInfo> = mutableListOf()
+    fun getAllSongs(context: Context):List<MediaItem> {
+        val ret:MutableList<MediaItem> = mutableListOf()
         val collection = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
         val projection = arrayOf(
             MediaStore.Audio.AudioColumns._ID,
@@ -84,30 +79,39 @@ object Repository {
                 val genre = cursor.getString(genreColumn)
                 val genreId = cursor.getLong(genreIdColumn)
 
+                val bundle =  Bundle().apply {
+                    putString(ALBUM, album)
+                    putLong(ALBUM_ID, albumId)
+                    putString(ARTIST, artist)
+                    putLong(ARTIST_ID, artistId)
+                    putString(GENRE, genre)
+                    putLong(GENRE_ID, genreId)
+                    putString(MEDIA_URI, data)
+                    putInt(TRACK_NUMBER, track)
+                }
+
                 val metadata =
                     MediaMetadata.Builder()
-                        .setAlbumTitle(album)
                         .setTitle(title)
                         .setArtist(artist)
+                        .setAlbumTitle(album)
+                        .setAlbumArtist(artist)
+                        .setArtworkUri(albumArt?.toUri())
                         .setGenre(genre)
                         .setFolderType(MediaMetadata.FOLDER_TYPE_NONE)
                         .setIsPlayable(true)
-                        .setArtworkUri(albumArt?.toUri())
-                        .setMediaUri(data.toUri())
                         .setTrackNumber(track)
-                        .setRecordingYear(year)
-                        .setExtras(bundleOf(
-                            Pair(ALBUM_ID, albumId),
-                            Pair(ARTIST_ID, artistId),
-                            Pair(GENRE_ID, genreId)))
+                        .setReleaseYear(year)
+                        .setExtras(bundle)
                         .build()
-                val item =  MediaItem.Builder()
-                    .setMediaId(songId.toString())
+
+                val item = MediaItem.Builder()
+                    .setMediaId(ITEM_PREFIX+songId.toString())
                     .setMediaMetadata(metadata)
                     .setUri(data)
                     .build()
-                val songInfo = SongInfo(item)
-                ret.add(songInfo)
+
+                ret.add(item)
             }
         }
         return ret
@@ -123,9 +127,8 @@ object Repository {
                         FileOutputStream(it).use { fos ->
                             context.contentResolver
                                 .loadThumbnail(albumArtUri, Size(256, 256), null)
-                                .compress(Bitmap.CompressFormat.JPEG, 10, fos)
+                                .compress(Bitmap.CompressFormat.WEBP_LOSSY, 10, fos)
                             fos.flush()
-                            // use will automatically close fos
                         }
                     }
                 }
@@ -135,3 +138,15 @@ object Repository {
         }
     }
 }
+
+
+const val ALBUM = "album"
+const val ARTIST = "artist"
+const val GENRE = "genre"
+const val MEDIA_URI = "mediaUri"
+const val TRACK_NUMBER = "trackNumber"
+const val ROOT_ID = "[rootID]"
+const val ALBUM_ID = "[albumID]"
+const val GENRE_ID = "[genreID]"
+const val ITEM_ID = "[itemID]"
+const val ARTIST_ID = "[artistID]"

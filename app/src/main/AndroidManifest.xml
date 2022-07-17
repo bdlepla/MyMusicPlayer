@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.bdlepla.android.mymusicplayer">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
@@ -24,10 +23,11 @@
         </activity>
 
         <service
-            android:name="com.bdlepla.android.mymusicplayer.ui.PlayService"
+            android:name="com.bdlepla.android.mymusicplayer.service.PlayService"
+            android:foregroundServiceType="mediaPlayback"
             android:exported="false">
             <intent-filter>
-                <action android:name="androidx.media3.session.MediaSessionService"/>
+                <action android:name="androidx.media3.session.MediaLibraryService"/>
                 <action android:name="android.media.browse.MediaBrowserService"/>
             </intent-filter>
         </service>

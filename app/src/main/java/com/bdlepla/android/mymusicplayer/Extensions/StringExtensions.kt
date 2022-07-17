@@ -1,10 +1,5 @@
 package com.bdlepla.android.mymusicplayer.Extensions
 
-import androidx.compose.runtime.Composable
-import coil.compose.ImagePainter
-import coil.compose.rememberImagePainter
-import java.io.File
-
 
 val ignoreBeginningArticles = listOf("A ", "The Very Best Of ", "The Best Of ", "The ")
 fun String.forSorting(): String {

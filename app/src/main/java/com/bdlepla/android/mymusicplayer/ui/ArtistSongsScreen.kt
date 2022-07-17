@@ -15,14 +15,14 @@ import androidx.compose.ui.unit.dp
 import com.bdlepla.android.mymusicplayer.Extensions.toImagePainter
 import com.bdlepla.android.mymusicplayer.SampleData
 import com.bdlepla.android.mymusicplayer.business.ArtistInfo
-import com.bdlepla.android.mymusicplayer.business.ISongInfo
+import com.bdlepla.android.mymusicplayer.business.SongInfo
 import com.bdlepla.android.mymusicplayer.ui.theme.MyMusicPlayerTheme
 
 @Composable
 fun ArtistSongsScreen(
     artistInfo: ArtistInfo,
-    songsInArtist: List<ISongInfo>,
-    onSongClick:(ISongInfo)->Unit = emptyFunction1()) {
+    songsInArtist: List<SongInfo>,
+    onSongClick:(SongInfo)->Unit = emptyFunction1()) {
     Column {
         Box (modifier = Modifier.fillMaxWidth()){
             Image(
@@ -43,16 +43,16 @@ fun ArtistSongsScreen(
 
 @Preview(
     showBackground = true,
-    name = "Album Songs Screen Light Mode"
+    name = "Artist Songs Screen Light Mode"
 )
 @Preview(
     uiMode = Configuration.UI_MODE_NIGHT_YES,
     showBackground = true,
-    name = "Album Songs Screen Dark Mode"
+    name = "Artist Songs Screen Dark Mode"
 )
 @Composable
 fun ArtistSongsScreenPreview() {
     MyMusicPlayerTheme {
-        ArtistSongsScreen(SampleData.Artists[0], SampleData.Songs)
+        ArtistSongsScreen(SampleData().artists[0], SampleData().songs)
     }
 }

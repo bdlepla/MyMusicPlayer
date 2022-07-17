@@ -15,14 +15,15 @@ import androidx.compose.ui.unit.dp
 import com.bdlepla.android.mymusicplayer.Extensions.toImagePainter
 import com.bdlepla.android.mymusicplayer.SampleData
 import com.bdlepla.android.mymusicplayer.business.AlbumInfo
-import com.bdlepla.android.mymusicplayer.business.ISongInfo
+import com.bdlepla.android.mymusicplayer.business.SongInfo
 import com.bdlepla.android.mymusicplayer.ui.theme.MyMusicPlayerTheme
+
 
 @Composable
 fun AlbumSongsScreen(
-        albumInfo: AlbumInfo,
-        songsInAlbum: List<ISongInfo>,
-        onSongClick:(ISongInfo)->Unit = emptyFunction1()) {
+    albumInfo: AlbumInfo,
+    songsInAlbum: List<SongInfo>,
+    onSongClick:(SongInfo)->Unit = emptyFunction1()) {
     Column {
         Box (modifier = Modifier.fillMaxWidth()){
             Image(
@@ -53,6 +54,6 @@ fun AlbumSongsScreen(
 @Composable
 fun AlbumSongsScreenPreview() {
     MyMusicPlayerTheme {
-        AlbumSongsScreen(SampleData.Albums[0], SampleData.Songs)
+        AlbumSongsScreen(SampleData().albums[0], SampleData().songs)
     }
 }

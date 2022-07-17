@@ -19,7 +19,6 @@ class MainActivity : AppCompatActivity() {
 
         super.onCreate(savedInstanceState)
         checkPermissions()
-        myMusicViewModel.getAllSongsOnDevice()
 
         setContent {
             MainScreen(myMusicViewModel)

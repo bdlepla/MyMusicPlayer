@@ -23,16 +23,16 @@ import androidx.compose.ui.unit.dp
 import com.bdlepla.android.mymusicplayer.Extensions.toImagePainter
 import com.bdlepla.android.mymusicplayer.SampleData
 import com.bdlepla.android.mymusicplayer.business.AlbumInfo
-import com.bdlepla.android.mymusicplayer.business.ISongInfo
+import com.bdlepla.android.mymusicplayer.business.SongInfo
 import com.bdlepla.android.mymusicplayer.ui.theme.MyMusicPlayerTheme
 
 @Composable
 fun AlbumList(
     AlbumList:List<AlbumInfo>,
-    songList:List<ISongInfo>,
-    onSongClick:(ISongInfo, List<ISongInfo>, Boolean)->Unit = emptyFunction3()) {
+    songList:List<SongInfo>,
+    onSongClick:(SongInfo, List<SongInfo>, Boolean)->Unit = emptyFunction3()) {
     val listState = rememberLazyListState()
-    val selectedAlbum: MutableState<AlbumInfo?> = remember {mutableStateOf(null) }
+    val selectedAlbum: MutableState<AlbumInfo?> = remember { mutableStateOf(null) }
     val onClick: (AlbumInfo)->Unit = { selectedAlbum.value = it }
 
     BackHandler(enabled = selectedAlbum.value != null) {
@@ -45,7 +45,7 @@ fun AlbumList(
         val songsInAlbum = songList
             .filter { it.albumId == albumId }
             .sortedBy { it.trackNumber }
-        val myOnClick:(ISongInfo)->Unit = {
+        val myOnClick:(SongInfo)->Unit = {
             onSongClick(it, songsInAlbum, false)
         }
         AlbumSongsScreen(theAlbum, songsInAlbum, myOnClick)
@@ -93,7 +93,7 @@ fun Album(albumInfo:AlbumInfo, onClick: (AlbumInfo) -> Unit = emptyFunction1()) 
 @Composable
 fun AlbumPreview() {
     MyMusicPlayerTheme {
-        Album(SampleData.Albums[0])
+        Album(SampleData().albums[0])
     }
 }
 
@@ -109,7 +109,7 @@ fun AlbumPreview() {
 @Composable
 fun AlbumListPreview() {
     MyMusicPlayerTheme {
-        AlbumList(SampleData.Albums, emptyList())
+        AlbumList(SampleData().albums, emptyList())
     }
 }
 

@@ -20,20 +20,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.media3.common.util.Log
+import com.bdlepla.android.mymusicplayer.*
 import com.bdlepla.android.mymusicplayer.Extensions.toImagePainter
-import com.bdlepla.android.mymusicplayer.SampleData
 import com.bdlepla.android.mymusicplayer.business.AlbumInfo
 import com.bdlepla.android.mymusicplayer.business.ArtistInfo
-import com.bdlepla.android.mymusicplayer.business.ISongInfo
+import com.bdlepla.android.mymusicplayer.business.SongInfo
 import com.bdlepla.android.mymusicplayer.ui.theme.MyMusicPlayerTheme
 
 @Composable
 fun ArtistList(
-        artistList:List<ArtistInfo>,
-        allAlbums:List<AlbumInfo> = emptyList(),
-        allSongs:List<ISongInfo> = emptyList(),
-        onSongClick:(ISongInfo, List<ISongInfo>, Boolean)->Unit = emptyFunction3()
+    artistList:List<ArtistInfo>,
+    allAlbums:List<AlbumInfo> = emptyList(),
+    allSongs:List<SongInfo> = emptyList(),
+    onSongClick:(SongInfo, List<SongInfo>, Boolean)->Unit = emptyFunction3()
 
     ) {
     val listState = rememberLazyListState()
@@ -55,9 +54,9 @@ fun ArtistList(
                 val year = it.albumYear
                 val track = it.trackNumber
                 val message = "$year $track"
-                Log.e(title, message)
+                //Log.e(title, message)
             }
-        val myOnClick:(ISongInfo)->Unit = {
+        val myOnClick:(SongInfo)->Unit = {
             onSongClick(it, songsForArtist, false)
         }
         ArtistSongsScreen(theArtist, songsForArtist, myOnClick)
@@ -110,22 +109,22 @@ fun Artist(
 @Composable
 fun ArtistPreview() {
     MyMusicPlayerTheme {
-        Artist(SampleData.Artists[0])
+        Artist(SampleData().artists[0])
     }
 }
 
 @Preview(
     showBackground = true,
-    name = "Song List Light Mode"
+    name = "Artist List Light Mode"
 )
 @Preview(
     uiMode = Configuration.UI_MODE_NIGHT_YES,
     showBackground = true,
-    name = "Song List Dark Mode"
+    name = "Artist List Dark Mode"
 )
 @Composable
 fun ArtistListPreview() {
     MyMusicPlayerTheme {
-        ArtistList(SampleData.Artists)
+        ArtistList(SampleData().artists)
     }
 }

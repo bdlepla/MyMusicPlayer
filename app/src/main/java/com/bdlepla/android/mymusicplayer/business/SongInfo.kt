@@ -1,43 +1,62 @@
 package com.bdlepla.android.mymusicplayer.business
 
 import androidx.media3.common.MediaItem
+import androidx.media3.common.MediaMetadata
+import com.bdlepla.android.mymusicplayer.repository.*
 
-interface ISongInfo {
-    val title:String
-    val artist:String
-    val album:String
-    val albumArt:String?
-    val songId:Long
-    val albumYear:Int
-    val artistId:Long
-    val albumId:Long
-    val trackNumber:Int
-}
-
-class SongInfo(private val mediaItem: MediaItem):ISongInfo {
+class SongInfo(private val mediaItem: MediaItem) {
     fun toMediaItem() = mediaItem
-    override val title = mediaItem.mediaMetadata.title.toString()
-    override val trackNumber = mediaItem.mediaMetadata.trackNumber!!
-    override val artist = mediaItem.mediaMetadata.artist.toString()
-    override val album = mediaItem.mediaMetadata.albumTitle.toString()
-    override val albumYear = mediaItem.mediaMetadata.recordingYear!!
-    override val albumArt: String? = mediaItem.mediaMetadata.artworkUri.toString()
-    val genre = mediaItem.mediaMetadata.genre.toString()
-    val data = mediaItem.mediaMetadata.mediaUri.toString()
-    val mediaId = mediaItem.mediaId
-    override val songId = mediaId.toLong()
-    override val albumId = mediaItem.mediaMetadata.extras?.getLong(ALBUM_ID)
-        ?: throw NoSuchFieldException(ALBUM_ID)
-    override val artistId = mediaItem.mediaMetadata.extras?.getLong(ARTIST_ID)
-        ?: throw NoSuchFieldException(ARTIST_ID)
-    val genreId = mediaItem.mediaMetadata.extras?.getLong(GENRE_ID)
-        ?: throw NoSuchFieldException(GENRE_ID)
+    private val mediaMetadata = mediaItem.mediaMetadata
+    val title = mediaItem.mediaMetadata.title.toString()
+    val trackNumber = mediaItem.mediaMetadata.track
+    val artist = mediaItem.mediaMetadata.artistName
+    val album = mediaItem.mediaMetadata.albumName
+    val albumYear = mediaItem.mediaMetadata.releaseYear ?: 0
+    val albumArt = mediaItem.mediaMetadata.artworkUri.toString()
+    val genre = mediaItem.mediaMetadata.genreName
+    val mediaUri = mediaMetadata.mediaUri
+    private val mediaId = mediaItem.mediaId
+    val songId = mediaId.substring(6).toLong()
+    val albumId = mediaItem.mediaMetadata.albumId
+    val artistId = mediaItem.mediaMetadata.artistId
+    val genreId = mediaItem.mediaMetadata.genreId
+
+    override fun equals(other: Any?): Boolean {
+        val otherSong = other as? SongInfo ?: return false
+        return otherSong.songId == songId
+    }
+    override fun hashCode(): Int = songId.hashCode()
 }
 
-fun SongInfo?.isDifferentFrom(mediaItem:MediaItem): Boolean {
-    return if (this == null) true
-    else mediaId != mediaItem.mediaId
-}
-const val ALBUM_ID = "albumId"
-const val ARTIST_ID = "artistId"
-const val GENRE_ID = "genreId"
+val MediaMetadata.track: Int
+    get() = trackNumber ?: (extras?.getInt(TRACK_NUMBER) ?: 0)
+
+val MediaMetadata.artistName:String
+    get() {
+        return if (artist != null) artist.toString()
+        else extras?.getString(ARTIST) ?: throw NoSuchFieldException(ARTIST)
+    }
+
+val MediaMetadata.albumName:String
+    get() {
+        return if (albumTitle != null) albumTitle.toString()
+        else extras?.getString(ALBUM) ?: throw NoSuchFieldException(ALBUM)
+    }
+
+val MediaMetadata.genreName:String
+    get() {
+        return if (genre != null) genre.toString()
+        else extras?.getString(GENRE) ?: ""
+    }
+
+val MediaMetadata.mediaUri:String
+    get() = extras?.getString(MEDIA_URI) ?: throw NoSuchFieldException(MEDIA_URI)
+
+val MediaMetadata.albumId:Long
+    get() = extras?.getLong(ALBUM_ID) ?: throw NoSuchFieldException(ALBUM_ID)
+
+val MediaMetadata.artistId:Long
+    get() = extras?.getLong(ARTIST_ID) ?: throw NoSuchFieldException(ARTIST_ID)
+
+val MediaMetadata.genreId:Long
+    get() = extras?.getLong(GENRE_ID) ?: throw NoSuchFieldException(GENRE_ID)
