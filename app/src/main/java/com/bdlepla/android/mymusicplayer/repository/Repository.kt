@@ -120,7 +120,7 @@ object Repository {
     private fun getAlbumArt(context: Context, albumId:Long): String? {
         val albumArtUri = ContentUris.withAppendedId(MediaStore.Audio.Albums.EXTERNAL_CONTENT_URI, albumId)
          try {
-           val art = File(context.cacheDir, "albumart$albumId.webp")
+           val art = File(context.cacheDir, "albumArt$albumId.webp")
                 .also {
                     if (!it.exists()) {
                        it.createNewFile()

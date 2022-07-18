@@ -162,8 +162,8 @@ class MyMusicViewModel
         get() = _currentlyPlaying.asStateFlow()
 
     private val _shuffling = MutableStateFlow(false)
-    val isShuffling: StateFlow<Boolean>
-        get() = _shuffling.asStateFlow()
+//    val isShuffling: StateFlow<Boolean>
+//        get() = _shuffling.asStateFlow()
 
     fun setCurrentlyPlaying(songInfo: SongInfo) {
         val b = browser ?: return

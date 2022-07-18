@@ -65,10 +65,10 @@ internal fun MainScreen(viewModel: MyMusicViewModel=viewModel()) {
 }
 
 val categoryItems = listOf("Songs", "Artists", "Albums", "Playing")//, "Genres", "Playlists")
-val songsId = 0
-val artistsId = 1
-val albumsId = 2
-val playingId = 3 //categoryItems.count()
+//val songsId = 0
+const val artistsId = 1
+const val albumsId = 2
+const val playingId = 3 //categoryItems.count()
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

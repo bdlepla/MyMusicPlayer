@@ -71,24 +71,24 @@ class PlayService: MediaLibraryService() {
 //        customLayout = ImmutableList.of(customCommands[0])
 //    }
 
-    private fun getShuffleCommandButton(sessionCommand: SessionCommand): CommandButton {
-        val isOn = sessionCommand.customAction == CUSTOM_COMMAND_TOGGLE_SHUFFLE_MODE_ON
-        return CommandButton.Builder()
-            .setDisplayName(if (isOn) getShuffleOnDescription() else getShuffleOffDescription())
-            .setSessionCommand(sessionCommand)
-            //.setIconResId(if (isOn) R.drawable.exo_icon_shuffle_off else R.drawable.exo_icon_shuffle_on)
-            .build()
-    }
+//    private fun getShuffleCommandButton(sessionCommand: SessionCommand): CommandButton {
+//        val isOn = sessionCommand.customAction == CUSTOM_COMMAND_TOGGLE_SHUFFLE_MODE_ON
+//        return CommandButton.Builder()
+//            .setDisplayName(if (isOn) getShuffleOnDescription() else getShuffleOffDescription())
+//            .setSessionCommand(sessionCommand)
+//            //.setIconResId(if (isOn) R.drawable.exo_icon_shuffle_off else R.drawable.exo_icon_shuffle_on)
+//            .build()
+//    }
 
-    private fun getShuffleOnDescription(): String {
-        //getString( R.string.exo_controls_shuffle_on_description)
-        return "Shuffle on"
-    }
-
-    private fun getShuffleOffDescription(): String {
-        //getString(R.string.exo_controls_shuffle_off_description)
-        return "Shuffle off"
-    }
+//    private fun getShuffleOnDescription(): String {
+//        //getString( R.string.exo_controls_shuffle_on_description)
+//        return "Shuffle on"
+//    }
+//
+//    private fun getShuffleOffDescription(): String {
+//        //getString(R.string.exo_controls_shuffle_off_description)
+//        return "Shuffle off"
+//    }
 
     override fun onCreate() {
         super.onCreate()
@@ -106,26 +106,26 @@ class PlayService: MediaLibraryService() {
         return mediaLibrarySession
     }
 
-    private fun setMediaItemFromSearchQuery(query: String) {
-        // Only accept query with pattern "play [Title]" or "[Title]"
-        // Where [Title]: must be exactly matched
-        // If no media with exact name found, play a random media instead
-        val mediaTitle =
-            if (query.startsWith("play ", ignoreCase = true)) {
-                query.drop(5)
-            } else {
-                query
-            }
-
-        val item = MediaItemTree.getItemFromTitle(mediaTitle) ?: MediaItemTree.getRandomItem()
-        player.setMediaItem(item)
-        player.prepare()
-    }
+//    private fun setMediaItemFromSearchQuery(query: String) {
+//        // Only accept query with pattern "play [Title]" or "[Title]"
+//        // Where [Title]: must be exactly matched
+//        // If no media with exact name found, play a random media instead
+//        val mediaTitle =
+//            if (query.startsWith("play ", ignoreCase = true)) {
+//                query.drop(5)
+//            } else {
+//                query
+//            }
+//
+//        val item = MediaItemTree.getItemFromTitle(mediaTitle) ?: MediaItemTree.getRandomItem()
+//        player.setMediaItem(item)
+//        player.prepare()
+//    }
 
     companion object {
-        private const val SEARCH_QUERY_PREFIX_COMPAT = "androidx://media3-session/playFromSearch"
-        private const val SEARCH_QUERY_PREFIX = "androidx://media3-session/setMediaUri"
-        private const val TAG = "MusicService"
+        //private const val SEARCH_QUERY_PREFIX_COMPAT = "androidx://media3-session/playFromSearch"
+        //private const val SEARCH_QUERY_PREFIX = "androidx://media3-session/setMediaUri"
+        //private const val TAG = "MusicService"
         private const val CUSTOM_COMMAND_TOGGLE_SHUFFLE_MODE_ON =
             "android.media3.session.demo.SHUFFLE_ON"
         private const val CUSTOM_COMMAND_TOGGLE_SHUFFLE_MODE_OFF =
@@ -265,8 +265,8 @@ class PlayService: MediaLibraryService() {
     }
 }
 
-private fun ignoreFuture(customLayout: ListenableFuture<SessionResult>) {
-    /* Do nothing. */
-}
+//private fun ignoreFuture(customLayout: ListenableFuture<SessionResult>) {
+//    /* Do nothing. */
+//}
 
 
