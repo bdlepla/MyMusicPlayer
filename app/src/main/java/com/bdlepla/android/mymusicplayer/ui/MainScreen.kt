@@ -19,6 +19,7 @@ import com.bdlepla.android.mymusicplayer.R
 import com.bdlepla.android.mymusicplayer.SampleData
 import com.bdlepla.android.mymusicplayer.business.AlbumInfo
 import com.bdlepla.android.mymusicplayer.business.ArtistInfo
+import com.bdlepla.android.mymusicplayer.business.CurrentPlayingStats
 import com.bdlepla.android.mymusicplayer.business.SongInfo
 import com.bdlepla.android.mymusicplayer.ui.theme.MyMusicPlayerTheme
 
@@ -28,11 +29,13 @@ import com.bdlepla.android.mymusicplayer.ui.theme.MyMusicPlayerTheme
 @Composable
 internal fun MainScreen(viewModel: MyMusicViewModel=viewModel()) {
     var selectedCategory by remember { mutableStateOf(0) }
-    val songs = viewModel.allSongs.collectAsState()
-    val artists = viewModel.allArtists.collectAsState()
-    val albums = viewModel.allAlbums.collectAsState()
+    val songs by viewModel.allSongs.collectAsState()
+    val artists by viewModel.allArtists.collectAsState()
+    val albums by viewModel.allAlbums.collectAsState()
 
     val currentlyPlaying by viewModel.currentlyPlaying.collectAsState()
+    val currentlyPlayingStats by viewModel.currentlyPlayingStats.collectAsState()
+
     val isPaused by viewModel.isPaused.collectAsState()
     val onSongClick: (SongInfo, List<SongInfo>, Boolean) -> Unit = { itSong, itSongs, itShuffle ->
         viewModel.setPlaylist(itSongs)
@@ -40,7 +43,7 @@ internal fun MainScreen(viewModel: MyMusicViewModel=viewModel()) {
     }
     val onCategoryClick:(Int)->Unit = { selectedCategory = it }
     val onShuffleClick: ()->Unit = {
-        viewModel.setPlaylist(songs.value)
+        viewModel.setPlaylist(songs)
         viewModel.toggleShuffle()
         viewModel.play()
     }
@@ -49,10 +52,10 @@ internal fun MainScreen(viewModel: MyMusicViewModel=viewModel()) {
     val onNextClick:()->Unit = { viewModel.playNext() }
 
     MainContent(
-        null,
-        songs.value,
-        artists.value,
-        albums.value,
+        viewModel.browser,
+        songs,
+        artists,
+        albums,
         selectedCategory,
         onSongClick,
         onShuffleClick,
@@ -61,6 +64,7 @@ internal fun MainScreen(viewModel: MyMusicViewModel=viewModel()) {
         onPlayPauseClick,
         onNextClick,
         currentlyPlaying,
+        currentlyPlayingStats,
         isPaused)
 }
 
@@ -85,6 +89,7 @@ private fun MainContent(
     onPlayPauseClick:()->Unit = emptyFunction(),
     onNextClick:()->Unit = emptyFunction(),
     currentlyPlaying:SongInfo? = null,
+    currentPlayingStats:CurrentPlayingStats? = null,
     isPaused:Boolean = false) {
 
 //    val myOnSongClick: (ISongInfo, List<ISongInfo>, Boolean)->Unit = {
@@ -109,7 +114,8 @@ private fun MainContent(
                     when (categorySelected) {
                         artistsId -> ArtistList(artists, albums, songs, onSongClick)
                         albumsId -> AlbumList(albums, songs, onSongClick)
-                        playingId -> { if (currentlyPlaying != null) PlayScreen2(mediaController)}
+                        playingId -> { if (currentlyPlaying != null) PlayScreen(currentlyPlaying,
+                            currentPlayingStats, isPaused, mediaController)}
                         else -> SongList(songs, onSongClick)
                     }
                 }
@@ -158,7 +164,7 @@ private fun BottomAppBar(
     val isCurrentlyPlaying = currentlyPlaying != null
 
     Column {
-        if (isCurrentlyPlaying) {
+        if (isCurrentlyPlaying && selected != playingId) {
             val onClickSmallToLargePlayer: (SongInfo, List<SongInfo>, Boolean)->Unit = {
                     _, _, _ ->
             }

@@ -6,10 +6,7 @@ import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import androidx.core.app.TaskStackBuilder
-import androidx.media3.common.AudioAttributes
-import androidx.media3.common.C
-import androidx.media3.common.MediaItem
-import androidx.media3.common.Player
+import androidx.media3.common.*
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.*
 import com.bdlepla.android.mymusicplayer.MainActivity
@@ -23,6 +20,7 @@ class PlayService: MediaLibraryService() {
     private lateinit var mediaLibrarySession: MediaLibrarySession
 
     private val librarySessionCallback = CustomMediaLibrarySessionCallback()
+    private val playerListener = PlayerListener()
 //    private lateinit var customCommands: List<CommandButton>
 //    private var customLayout = ImmutableList.of<CommandButton>()
 
@@ -54,6 +52,7 @@ class PlayService: MediaLibraryService() {
         }
 
         player = exoPlayer
+        player.addListener(playerListener)
         mediaLibrarySession =
             MediaLibrarySession.Builder(this, player, librarySessionCallback).build()
     }
@@ -130,6 +129,21 @@ class PlayService: MediaLibraryService() {
             "android.media3.session.demo.SHUFFLE_ON"
         private const val CUSTOM_COMMAND_TOGGLE_SHUFFLE_MODE_OFF =
             "android.media3.session.demo.SHUFFLE_OFF"
+    }
+
+    private inner class PlayerListener: Player.Listener {
+        override fun onMediaMetadataChanged(mediaMetadata: MediaMetadata) {
+            super.onMediaMetadataChanged(mediaMetadata)
+//            val uri = mediaMetadata.artworkUri?.toString() ?: return
+//            val fis = FileInputStream(uri)
+//            val buffer = fis.readBytes()
+//            val newMetadata = MediaMetadata.Builder()
+//                .populate(mediaMetadata)
+//                .setArtworkData(buffer, MediaMetadata.PICTURE_TYPE_FRONT_COVER)
+//                .build()
+            //sessionCompat.setMetadata(newMetadata)
+
+        }
     }
 
     private inner class CustomMediaLibrarySessionCallback : MediaLibrarySession.Callback {
@@ -264,6 +278,7 @@ class PlayService: MediaLibraryService() {
         }
     }
 }
+
 
 //private fun ignoreFuture(customLayout: ListenableFuture<SessionResult>) {
 //    /* Do nothing. */

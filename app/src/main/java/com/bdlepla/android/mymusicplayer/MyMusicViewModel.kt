@@ -3,10 +3,15 @@ package com.bdlepla.android.mymusicplayer
 import android.app.Application
 import android.content.ComponentName
 import android.content.Context
+import android.os.Handler
+import android.os.Looper
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.media3.common.MediaMetadata
+import androidx.media3.common.Metadata
+import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.Player
+import androidx.media3.common.Timeline
 import androidx.media3.session.MediaBrowser
 import androidx.media3.session.SessionToken
 import com.bdlepla.android.mymusicplayer.Extensions.forSorting
@@ -27,11 +32,11 @@ import javax.inject.Inject
 class MyMusicViewModel
 @Inject constructor(application: Application): AndroidViewModel(application) {
     private val playerListener = PlayerListener()
-
+    private val handler = Handler(Looper.getMainLooper())
     private lateinit var browserFuture: ListenableFuture<MediaBrowser>
-    private val browser: MediaBrowser?
+    val browser: MediaBrowser?
         get() = if (browserFuture.isDone) browserFuture.get() else null
-
+    private val POSITION_UPDATE_INTERVAL_MILLIS = 100L
    init {
         initializeBrowser(application.applicationContext)
     }
@@ -47,8 +52,21 @@ class MyMusicViewModel
         val b = browser ?: return
         b.addListener(playerListener)
         loadSongs(b, context)
-
+        checkPlaybackPosition(b)
     }
+
+    private fun checkPlaybackPosition(browser: MediaBrowser): Boolean = handler.postDelayed({
+        val currPosition = browser.currentPosition.toInt() / 1000
+        val maxPosition = browser.duration.toInt() / 1000
+        val stats = CurrentPlayingStats(
+            currPosition,
+            maxPosition
+        )
+
+        _currentlyPlayingStats.value = stats
+        checkPlaybackPosition(browser)
+    }, POSITION_UPDATE_INTERVAL_MILLIS)
+
 
     private fun loadSongs(browser: MediaBrowser, context: Context) {
         fun doLoadSongs(browser: MediaBrowser, page:Int, pageSize:Int) {
@@ -122,7 +140,7 @@ class MyMusicViewModel
     }
 
 
-    inner class PlayerListener :Player.Listener {
+    inner class PlayerListener: Player.Listener {
 
         override fun onIsPlayingChanged(isPlaying: Boolean) {
             super.onIsPlayingChanged(isPlaying)
@@ -136,7 +154,14 @@ class MyMusicViewModel
 
         override fun onMediaMetadataChanged(mediaMetadata: MediaMetadata) {
             super.onMediaMetadataChanged(mediaMetadata)
-            _currentlyPlaying.value = mediaMetadata.toSongInfo()
+            val item = mediaMetadata.toSongInfo() ?: return
+            _currentlyPlaying.value = item
+        }
+
+        override fun onEvents(player: Player, events: Player.Events) {
+            super.onEvents(player, events)
+            val b = browser ?: return
+            if (_isPaused.value) return
         }
     }
 
@@ -160,6 +185,10 @@ class MyMusicViewModel
     private val _currentlyPlaying = MutableStateFlow<SongInfo?>(null)
     val currentlyPlaying : StateFlow<SongInfo?>
         get() = _currentlyPlaying.asStateFlow()
+
+    private val _currentlyPlayingStats = MutableStateFlow<CurrentPlayingStats?>(null)
+    val currentlyPlayingStats : StateFlow<CurrentPlayingStats?>
+        get() = _currentlyPlayingStats.asStateFlow()
 
     private val _shuffling = MutableStateFlow(false)
 //    val isShuffling: StateFlow<Boolean>

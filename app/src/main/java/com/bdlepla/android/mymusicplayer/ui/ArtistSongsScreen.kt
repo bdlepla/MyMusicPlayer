@@ -34,7 +34,7 @@ fun ArtistSongsScreen(
         Spacer(modifier= Modifier.padding(all=4.dp))
         LazyColumn {
             items(items = songsInArtist, key = { it.songId }){ songInfo ->
-                Song(songInfo, onSongClick)
+                SongWithImage(songInfo, onSongClick)
                 Divider(color = MaterialTheme.colorScheme.primary)
             }
         }

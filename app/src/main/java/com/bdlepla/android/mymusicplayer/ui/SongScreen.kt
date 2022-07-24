@@ -35,14 +35,46 @@ fun SongList(songInfos: List<SongInfo>,
 
     LazyColumn(state = listState) {
         items(items = songInfos, key = { it.songId }) { songInfo ->
-            Song(songInfo, myOnClick)
+            SongWithImage(songInfo, myOnClick)
             Divider(color = MaterialTheme.colorScheme.inversePrimary)
         }
     }
 }
 
 @Composable
-fun Song(songInfo: SongInfo, onClick: (SongInfo) -> Unit = emptyFunction1()) {
+fun Song(songInfo:SongInfo, onClick: (SongInfo) -> Unit = emptyFunction1()) {
+    Column(modifier = Modifier.padding(all = 4.dp)) {
+        Text(
+            text = songInfo.title,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.primary,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis
+        )
+        CompositionLocalProvider(LocalContentAlpha provides ContentAlpha.medium) {
+            Column {
+                Text(
+                    text = songInfo.artist,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.secondary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = songInfo.album,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.tertiary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun SongWithImage(songInfo: SongInfo, onClick: (SongInfo) -> Unit = emptyFunction1()) {
     Row(verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
@@ -52,54 +84,27 @@ fun Song(songInfo: SongInfo, onClick: (SongInfo) -> Unit = emptyFunction1()) {
         Spacer(modifier = Modifier.padding(vertical = 4.dp))
         Image(
             painter = songInfo.albumArt.toImagePainter(),
-            contentDescription = "wow", //songInfo.title,
+            contentDescription = songInfo.title,
             modifier = Modifier.size(50.dp)
         )
         Spacer(modifier = Modifier.padding(all = 4.dp))
-        Column(modifier = Modifier.padding(all = 4.dp)) {
-            Text(
-                text = songInfo.title,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.primary,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
-            )
-            CompositionLocalProvider(LocalContentAlpha provides ContentAlpha.medium) {
-                Column {
-                    Text(
-                        text = songInfo.artist,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.secondary,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = songInfo.album,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.tertiary,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-            }
-        }
+        Song(songInfo, onClick)
     }
 }
 
 @Preview(
     showBackground = true,
-    name="Song Light Mode"
+    name="Song with Image Light Mode"
 )
 @Preview(
     uiMode = Configuration.UI_MODE_NIGHT_YES,
     showBackground = true,
-    name = "Song Dark Mode"
+    name = "Song with Image Dark Mode"
 )
 @Composable
-fun SongPreview() {
+fun SongWithImagePreview() {
     MyMusicPlayerTheme {
-        Song(SampleData().songs[0])
+        SongWithImage(SampleData().songs[0])
     }
 }
 
@@ -116,5 +121,21 @@ fun SongPreview() {
 fun SongListPreview() {
     MyMusicPlayerTheme {
          SongList(SampleData().songs )
+    }
+}
+
+@Preview(
+    showBackground = true,
+    name="Song Light Mode"
+)
+@Preview(
+    uiMode = Configuration.UI_MODE_NIGHT_YES,
+    showBackground = true,
+    name = "Song Dark Mode"
+)
+@Composable
+fun SongPreview() {
+    MyMusicPlayerTheme {
+        Song(SampleData().songs[0])
     }
 }
