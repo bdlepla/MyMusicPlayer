@@ -191,9 +191,12 @@ class MyMusicViewModel
 //    val isShuffling: StateFlow<Boolean>
 //        get() = _shuffling.asStateFlow()
 
+    private var currentPlaylist: List<SongInfo>? = null
+
     fun setCurrentlyPlaying(songInfo: SongInfo) {
         val b = browser ?: return
-        val idx = songCollection.indexOf(songInfo)
+        val c = currentPlaylist ?: return
+        val idx = c.indexOf(songInfo)
         if (idx == -1) return
         b.seekTo(idx, 0)
         b.prepare()
@@ -203,6 +206,7 @@ class MyMusicViewModel
     fun setPlaylist(songs: List<SongInfo>) {
         val b = browser ?: return
         val mediaItems = songs.map{ it.toMediaItem() }
+        currentPlaylist = songs
         b.setMediaItems(mediaItems)
         b.prepare()
     }
@@ -249,7 +253,10 @@ class MyMusicViewModel
 
     private fun addSongs(songs:List<SongInfo>) {
         songCollection.addAll(songs)
-        _allSongs.value = songCollection.sortedBy { it.title.forSorting() }
+
+        val songList = songCollection.sortedBy { it.title.forSorting() }
+        _allSongs.value = songList
+        currentPlaylist = songList
     }
 
     private fun addArtists(artists:List<ArtistInfo>) {
