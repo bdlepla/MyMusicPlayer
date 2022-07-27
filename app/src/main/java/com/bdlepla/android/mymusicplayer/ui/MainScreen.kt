@@ -3,19 +3,18 @@ package com.bdlepla.android.mymusicplayer.ui
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.BottomNavigationItem
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.media3.session.MediaController
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
 import com.bdlepla.android.mymusicplayer.MyMusicViewModel
-import com.bdlepla.android.mymusicplayer.R
 import com.bdlepla.android.mymusicplayer.SampleData
 import com.bdlepla.android.mymusicplayer.business.AlbumInfo
 import com.bdlepla.android.mymusicplayer.business.ArtistInfo
@@ -23,12 +22,11 @@ import com.bdlepla.android.mymusicplayer.business.CurrentPlayingStats
 import com.bdlepla.android.mymusicplayer.business.SongInfo
 import com.bdlepla.android.mymusicplayer.ui.theme.MyMusicPlayerTheme
 
-// Main Screen uses the viewmodel to set the variables and callbacks
+// Main Screen uses the view model to set the variables and callbacks
 // to view model. This is so I can see previews for everything in
 // the MainContents and its components.
 @Composable
 internal fun MainScreen(viewModel: MyMusicViewModel=viewModel()) {
-    var selectedCategory by remember { mutableStateOf(0) }
     val songs by viewModel.allSongs.collectAsState()
     val artists by viewModel.allArtists.collectAsState()
     val albums by viewModel.allAlbums.collectAsState()
@@ -41,7 +39,6 @@ internal fun MainScreen(viewModel: MyMusicViewModel=viewModel()) {
         viewModel.setPlaylist(itSongs)
         viewModel.setCurrentlyPlaying(itSong)
     }
-    val onCategoryClick:(Int)->Unit = { selectedCategory = it }
     val onShuffleClick: ()->Unit = {
         viewModel.setPlaylist(songs)
         viewModel.toggleShuffle()
@@ -56,41 +53,33 @@ internal fun MainScreen(viewModel: MyMusicViewModel=viewModel()) {
         songs,
         artists,
         albums,
-        selectedCategory,
         onSongClick,
         onShuffleClick,
         onRepeatClick,
-        onCategoryClick,
         onPlayPauseClick,
         onNextClick,
         currentlyPlaying,
         currentlyPlayingStats,
-        isPaused)
+        isPaused
+    )
 }
-
-val categoryItems = listOf("Songs", "Artists", "Albums", "Playing")//, "Genres", "Playlists")
-//val songsId = 0
-const val artistsId = 1
-const val albumsId = 2
-const val playingId = 3 //categoryItems.count()
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun MainContent(
     mediaController: MediaController?,
-    songs:List<SongInfo>,
-    artists:List<ArtistInfo>,
-    albums:List<AlbumInfo>,
-    categorySelected:Int=0,
-    onSongClick:(SongInfo, List<SongInfo>, Boolean)->Unit= emptyFunction3(),
-    onShuffleClick:()->Unit = emptyFunction(),
-    onRepeatClick:()->Unit = emptyFunction(),
-    onCategoryClick:(Int)->Unit = emptyFunction1(),
-    onPlayPauseClick:()->Unit = emptyFunction(),
-    onNextClick:()->Unit = emptyFunction(),
-    currentlyPlaying:SongInfo? = null,
-    currentPlayingStats:CurrentPlayingStats? = null,
-    isPaused:Boolean = false) {
+    songs: List<SongInfo>,
+    artists: List<ArtistInfo>,
+    albums: List<AlbumInfo>,
+    onSongClick: (SongInfo, List<SongInfo>, Boolean) -> Unit = emptyFunction3(),
+    onShuffleClick: () -> Unit = emptyFunction(),
+    onRepeatClick: () -> Unit = emptyFunction(),
+    onPlayPauseClick: () -> Unit = emptyFunction(),
+    onNextClick: () -> Unit = emptyFunction(),
+    currentlyPlaying: SongInfo? = null,
+    currentPlayingStats: CurrentPlayingStats? = null,
+    isPaused: Boolean = false
+) {
 
 //    val myOnSongClick: (ISongInfo, List<ISongInfo>, Boolean)->Unit = {
 //        song, songs, shuffle ->
@@ -98,26 +87,25 @@ private fun MainContent(
 //            onCategoryClick(largePlayerId)
 //    }
 
+    val navController = rememberNavController()
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    //val currentRoute = navBackStackEntry?.destination?.route
     MyMusicPlayerTheme {
         Surface {
             Scaffold(
                 topBar = { TopAppBar(onShuffleClick, onRepeatClick) },
                 bottomBar = {
                     BottomAppBar(
-                        categoryItems, categorySelected, onCategoryClick,
-                        onPlayPauseClick, onNextClick, currentlyPlaying, isPaused
+                        onPlayPauseClick,
+                        onNextClick, currentlyPlaying, isPaused,
+                        navController
                     )
                 }
             ) { paddingValues ->
                 // A surface container using the 'background' color from the theme
                 Column(modifier = Modifier.padding(paddingValues)) {
-                    when (categorySelected) {
-                        artistsId -> ArtistList(artists, albums, songs, onSongClick)
-                        albumsId -> AlbumList(albums, songs, onSongClick)
-                        playingId -> { if (currentlyPlaying != null) PlayScreen(currentlyPlaying,
-                            currentPlayingStats, isPaused, mediaController)}
-                        else -> SongList(songs, onSongClick)
-                    }
+                    Navigation(navController, mediaController, songs, artists, albums,
+                    onSongClick, currentlyPlaying, currentPlayingStats, isPaused)
                 }
             }
         }
@@ -125,66 +113,31 @@ private fun MainContent(
 }
 
 @Composable
-private fun TopAppBar(
-    onShuffleClick: ()->Unit = emptyFunction(),
-    onRepeatClick: ()->Unit = emptyFunction()) {
-    Column {
-        SmallTopAppBar(
-            title = {
-                Text(
-                    text = "My Music Player",
-                    style = MaterialTheme.typography.headlineSmall
-                )
-            },
-            actions = {
-                IconButton(onClick = { onShuffleClick() }) {
-                    Icon(painter=painterResource(id = R.drawable.ic_shuffle), contentDescription = "Shuffle")
-                }
-                IconButton(onClick = { onRepeatClick() }) {
-                    Icon(painter=painterResource(id = R.drawable.ic_repeat), contentDescription = "Repeat")
-                }
-                IconButton(onClick = { /*TODO*/ }) {
-                    Icon(Icons.Filled.Refresh, contentDescription = "Refresh")
-                }
-            }
-        )
-    }
-}
-
-@Composable
-private fun BottomAppBar(
-    items:List<String>,
-    selected:Int=0,
-    onCategoryClick:(Int)->Unit= emptyFunction1(),
-    onPlayPauseClick:()->Unit= emptyFunction(),
-    onNextClick:()->Unit= emptyFunction(),
+fun Navigation(
+    navController: NavHostController,
+    mediaController: MediaController?,
+    songs: List<SongInfo>,
+    artists: List<ArtistInfo>,
+    albums: List<AlbumInfo>,
+    onSongClick: (SongInfo, List<SongInfo>, Boolean) -> Unit = emptyFunction3(),
     currentlyPlaying: SongInfo? = null,
-    isPaused:Boolean = true
-        ) {
-    val isCurrentlyPlaying = currentlyPlaying != null
+    currentPlayingStats: CurrentPlayingStats? = null,
+    isPaused: Boolean = false
 
-    Column {
-        if (isCurrentlyPlaying && selected != playingId) {
-            val onClickSmallToLargePlayer: (SongInfo, List<SongInfo>, Boolean)->Unit = {
-                    _, _, _ ->
-            }
-            CurrentlyPlayingSmallScreen(
-                currentlyPlaying!!,
-                isPaused,
-                onPlayPauseClick,
-                onNextClick,
-            )
+) {
+    NavHost(navController, startDestination = NavigationItem.Songs.route) {
+        composable(NavigationItem.Songs.route) {
+            SongList(songs, onSongClick)
         }
-
-        NavigationBar {
-            items.forEachIndexed { index, item ->
-                BottomNavigationItem(
-                    icon = { Icon(Icons.Filled.Info, contentDescription = null) },
-                    label = { Text(item) },
-                    selected = selected == index,
-                    onClick = { onCategoryClick(index) }
-                )
-            }
+        composable(NavigationItem.Artists.route) {
+            ArtistList(artists, albums, songs, onSongClick)
+        }
+        composable(NavigationItem.Albums.route) {
+            AlbumList(albums, songs, onSongClick)
+        }
+        composable(NavigationItem.Playing.route) {
+            if (currentlyPlaying != null)
+                PlayScreen(currentlyPlaying, currentPlayingStats, isPaused, mediaController)
         }
     }
 }
@@ -212,54 +165,3 @@ fun MainContentPreview() {
 }
 
 
-@Preview(
-    showBackground = true,
-    name="Top App Bar Light Mode"
-)
-@Preview(
-    uiMode = Configuration.UI_MODE_NIGHT_YES,
-    showBackground = true,
-    name = "Top App Bar Dark Mode"
-)
-
-@Composable
-fun TopAppBarPreview() {
-    MyMusicPlayerTheme {
-        TopAppBar()
-    }
-}
-
-
-@Preview(
-    showBackground = true,
-    name="Bottom App Bar Light Mode"
-)
-@Preview(
-    uiMode = Configuration.UI_MODE_NIGHT_YES,
-    showBackground = true,
-    name = "Bottom App Bar Dark Mode"
-)
-
-@Composable
-fun BottomAppBarPreview() {
-    MyMusicPlayerTheme {
-        BottomAppBar(listOf("Songs", "Artists", "Albums"))
-    }
-}
-
-@Preview(
-    showBackground = true,
-    name="Bottom App Bar With Small Player Light Mode"
-)
-@Preview(
-    uiMode = Configuration.UI_MODE_NIGHT_YES,
-    showBackground = true,
-    name = "Bottom App Bar With Small Player Dark Mode"
-)
-
-@Composable
-fun BottomAppBarWithCurrentlyPlayingPreview() {
-    MyMusicPlayerTheme {
-        BottomAppBar(listOf("Songs", "Artists", "Albums"), currentlyPlaying = SampleData().songs[0])
-    }
-}

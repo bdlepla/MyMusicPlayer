@@ -68,13 +68,14 @@ dependencies {
     implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.5.0'
     implementation 'androidx.lifecycle:lifecycle-viewmodel-compose:2.6.0-alpha01'
     implementation 'androidx.media:media:1.6.0'
-    implementation 'androidx.media3:media3-ui:1.0.0-beta01'
-    implementation 'androidx.media3:media3-exoplayer:1.0.0-beta01'
-    implementation 'androidx.media3:media3-session:1.0.0-beta01'
+    implementation 'androidx.media3:media3-ui:1.0.0-beta02'
+    implementation 'androidx.media3:media3-exoplayer:1.0.0-beta02'
+    implementation 'androidx.media3:media3-session:1.0.0-beta02'
     //implementation project(':media-lib-ui')
     //implementation project(':media-lib-exoplayer')
     //implementation project(':media-lib-session')
-    implementation 'com.google.android.material:material:1.7.0-alpha02'
+    implementation "androidx.navigation:navigation-compose:2.5.0"
+    implementation 'com.google.android.material:material:1.7.0-alpha03'
     implementation 'com.google.dagger:hilt-android:2.42'
     implementation 'io.coil-kt:coil:2.1.0'
     implementation 'io.coil-kt:coil-compose:2.1.0'

@@ -8,10 +8,7 @@ import android.os.Looper
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.media3.common.MediaMetadata
-import androidx.media3.common.Metadata
-import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.Player
-import androidx.media3.common.Timeline
 import androidx.media3.session.MediaBrowser
 import androidx.media3.session.SessionToken
 import com.bdlepla.android.mymusicplayer.Extensions.forSorting
@@ -158,11 +155,11 @@ class MyMusicViewModel
             _currentlyPlaying.value = item
         }
 
-        override fun onEvents(player: Player, events: Player.Events) {
-            super.onEvents(player, events)
-            val b = browser ?: return
-            if (_isPaused.value) return
-        }
+//        override fun onEvents(player: Player, events: Player.Events) {
+//            super.onEvents(player, events)
+//            val b = browser ?: return
+//            if (_isPaused.value) return
+//        }
     }
 
     private fun MediaMetadata.toSongInfo(): SongInfo? =
