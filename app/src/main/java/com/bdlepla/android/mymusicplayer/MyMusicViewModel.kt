@@ -217,14 +217,6 @@ class MyMusicViewModel
         b.seekToNextMediaItem()
     }
 
-    fun toggleShuffle() {
-        val b = browser ?: return
-        b.shuffleModeEnabled = !_shuffling.value
-        b.seekTo(0, 0)
-        b.prepare()
-        b.play()
-    }
-
     //region Is Paused - true if not playing; false if playing
     private val _isPaused = MutableStateFlow(false)
     val isPaused : StateFlow<Boolean>

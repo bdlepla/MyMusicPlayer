@@ -40,8 +40,8 @@ internal fun MainScreen(viewModel: MyMusicViewModel=viewModel()) {
         viewModel.setCurrentlyPlaying(itSong)
     }
     val onShuffleClick: ()->Unit = {
-        viewModel.setPlaylist(songs)
-        viewModel.toggleShuffle()
+        val shuffledSongs = songs.shuffled()
+        viewModel.setPlaylist(shuffledSongs)
         viewModel.play()
     }
     val onRepeatClick: ()->Unit = { viewModel.toggleRepeat() }
