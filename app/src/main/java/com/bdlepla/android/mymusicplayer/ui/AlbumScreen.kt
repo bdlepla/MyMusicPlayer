@@ -20,41 +20,29 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.bdlepla.android.mymusicplayer.Extensions.toImagePainter
 import com.bdlepla.android.mymusicplayer.SampleData
 import com.bdlepla.android.mymusicplayer.business.AlbumInfo
+import com.bdlepla.android.mymusicplayer.business.ArtistInfo
 import com.bdlepla.android.mymusicplayer.business.SongInfo
 import com.bdlepla.android.mymusicplayer.ui.theme.MyMusicPlayerTheme
 
 @Composable
 fun AlbumList(
     AlbumList:List<AlbumInfo>,
-    songList:List<SongInfo>,
-    onSongClick:(SongInfo, List<SongInfo>, Boolean)->Unit = emptyFunction3()) {
+    navController: NavController? = null) {
     val listState = rememberLazyListState()
-    val selectedAlbum: MutableState<AlbumInfo?> = remember { mutableStateOf(null) }
-    val onClick: (AlbumInfo)->Unit = { selectedAlbum.value = it }
-
-    BackHandler(enabled = selectedAlbum.value != null) {
-        selectedAlbum.value = null
+    val onClick: (AlbumInfo)->Unit = {
+        val albumId = it.albumId
+        val route = "albumsongs/${albumId}"
+        navController?.navigate(route)
     }
 
-    if (selectedAlbum.value != null) {
-        val theAlbum = selectedAlbum.value!!
-        val albumId = theAlbum.albumId
-        val songsInAlbum = songList
-            .filter { it.albumId == albumId }
-            .sortedBy { it.trackNumber }
-        val myOnClick:(SongInfo)->Unit = {
-            onSongClick(it, songsInAlbum, false)
-        }
-        AlbumSongsScreen(theAlbum, songsInAlbum, myOnClick)
-    } else {
-        LazyColumn(state = listState) {
-            items(items = AlbumList, key = { it.albumId }) { albumInfo ->
-                Album(albumInfo, onClick)
-                Divider(color = MaterialTheme.colorScheme.primary)
-            }
+    LazyColumn(state = listState) {
+        items(items = AlbumList, key = { it.albumId }) { albumInfo ->
+            Album(albumInfo, onClick)
+            Divider(color = MaterialTheme.colorScheme.primary)
         }
     }
 }
@@ -109,7 +97,7 @@ fun AlbumPreview() {
 @Composable
 fun AlbumListPreview() {
     MyMusicPlayerTheme {
-        AlbumList(SampleData().albums, emptyList())
+        AlbumList(SampleData().albums)
     }
 }
 

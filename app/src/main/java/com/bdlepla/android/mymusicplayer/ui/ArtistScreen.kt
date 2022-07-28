@@ -1,7 +1,6 @@
 package com.bdlepla.android.mymusicplayer.ui
 
 import android.content.res.Configuration
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
@@ -12,62 +11,35 @@ import androidx.compose.material3.Divider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.bdlepla.android.mymusicplayer.*
 import com.bdlepla.android.mymusicplayer.Extensions.toImagePainter
 import com.bdlepla.android.mymusicplayer.business.AlbumInfo
 import com.bdlepla.android.mymusicplayer.business.ArtistInfo
-import com.bdlepla.android.mymusicplayer.business.SongInfo
 import com.bdlepla.android.mymusicplayer.ui.theme.MyMusicPlayerTheme
 
 @Composable
 fun ArtistList(
-    artistList:List<ArtistInfo>,
-    allAlbums:List<AlbumInfo> = emptyList(),
-    allSongs:List<SongInfo> = emptyList(),
-    onSongClick:(SongInfo, List<SongInfo>, Boolean)->Unit = emptyFunction3()
-
-    ) {
+    artistList: List<ArtistInfo>,
+    allAlbums: List<AlbumInfo> = emptyList(),
+    navController: NavController? = null) {
     val listState = rememberLazyListState()
-    val selectedArtist: MutableState<ArtistInfo?> = remember { mutableStateOf(null) }
-    val onClick: (ArtistInfo)->Unit = { selectedArtist.value = it }
-
-    BackHandler(enabled = selectedArtist.value != null) {
-        selectedArtist.value = null
+    val onClick: (ArtistInfo)->Unit = {
+        val artistId = it.artistId
+        val route = "artistsongs/${artistId}"
+        navController?.navigate(route)
     }
 
-    if (selectedArtist.value != null) {
-        val theArtist = selectedArtist.value!!
-        val artistId = theArtist.artistId
-        val songsForArtist = allSongs
-            .filter { it.artistId == artistId}
-            .sortedBy { it.albumYear * 1_000 + it.trackNumber }
-            .onEach{
-                val title = it.title
-                val year = it.albumYear
-                val track = it.trackNumber
-                val message = "$year $track"
-                //Log.e(title, message)
-            }
-        val myOnClick:(SongInfo)->Unit = {
-            onSongClick(it, songsForArtist, false)
-        }
-        ArtistSongsScreen(theArtist, songsForArtist, myOnClick)
-    }
-    else {
-        LazyColumn(state = listState) {
-            items(items = artistList, key = { it.artistId }) { artistInfo ->
-                val album = allAlbums.filter { it.artistId == artistInfo.artistId }.randomOrNull()
-                Artist(artistInfo, album, onClick)
-                Divider(color = MaterialTheme.colorScheme.primary)
-            }
+    LazyColumn(state = listState) {
+        items(items = artistList, key = { it.artistId }) { artistInfo ->
+            val album = allAlbums.filter { it.artistId == artistInfo.artistId }.randomOrNull()
+            Artist(artistInfo, album, onClick)
+            Divider(color = MaterialTheme.colorScheme.primary)
         }
     }
 }

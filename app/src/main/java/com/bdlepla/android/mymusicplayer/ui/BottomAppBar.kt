@@ -58,7 +58,7 @@ fun BottomAppBar(
                 BottomNavigationItem(
                     icon = {Icon(painterResource(id = item.icon), contentDescription = item.title)},
                     label = { item.title },
-                    selected =currentRoute == item.route,
+                    selected = currentRoute == item.route,
                     onClick = {
                         navController.navigate(item.route) {
                             // Pop up to the start destination of the graph to

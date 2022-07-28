@@ -130,10 +130,44 @@ fun Navigation(
             SongList(songs, onSongClick)
         }
         composable(NavigationItem.Artists.route) {
-            ArtistList(artists, albums, songs, onSongClick)
+            ArtistList(artists, albums, navController)
+        }
+        composable("artistsongs/{artistId}") {
+            val backStack = navController.currentBackStackEntry?: return@composable
+            val args = backStack.arguments ?: return@composable
+            val artistIdArg = args["artistId"] ?: return@composable
+            val artistId = artistIdArg.toString().toLong()
+            val theArtist = artists.firstOrNull{it.artistId == artistId} ?: return@composable
+            val songsForArtist = songs
+                .filter { it.artistId == artistId}
+                .sortedBy { it.albumYear * 1_000 + it.trackNumber }
+                .onEach{
+                    val title = it.title
+                    val year = it.albumYear
+                    val track = it.trackNumber
+                    val message = "$year $track"
+                }
+            val myOnClick:(SongInfo)->Unit = {
+                onSongClick(it, songsForArtist, false)
+            }
+            ArtistSongsScreen(theArtist, songsForArtist, myOnClick)
         }
         composable(NavigationItem.Albums.route) {
-            AlbumList(albums, songs, onSongClick)
+            AlbumList(albums, navController)
+        }
+        composable("albumsongs/{albumId}") {
+            val backStack = navController.currentBackStackEntry?: return@composable
+            val args = backStack.arguments ?: return@composable
+            val albumIdArg = args["albumId"] ?: return@composable
+            val albumId = albumIdArg.toString().toLong()
+            val theAlbum = albums.firstOrNull{it.albumId == albumId} ?: return@composable
+            val songsInAlbum = songs
+                .filter { it.albumId == albumId }
+                .sortedBy { it.trackNumber }
+            val myOnClick:(SongInfo)->Unit = {
+                onSongClick(it, songsInAlbum, false)
+            }
+            AlbumSongsScreen(theAlbum, songsInAlbum, myOnClick)
         }
         composable(NavigationItem.Playing.route) {
             if (currentlyPlaying != null)
