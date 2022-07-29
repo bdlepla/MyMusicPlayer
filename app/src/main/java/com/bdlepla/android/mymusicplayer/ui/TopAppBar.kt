@@ -13,6 +13,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.bdlepla.android.mymusicplayer.R
 import com.bdlepla.android.mymusicplayer.ui.theme.MyMusicPlayerTheme
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopAppBar(
     onShuffleClick: ()->Unit = emptyFunction(),
