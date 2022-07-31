@@ -3,8 +3,12 @@ package com.bdlepla.android.mymusicplayer.ui
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -12,7 +16,6 @@ import androidx.media3.session.MediaController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.bdlepla.android.mymusicplayer.MyMusicViewModel
 import com.bdlepla.android.mymusicplayer.SampleData
@@ -31,11 +34,10 @@ internal fun MainScreen(viewModel: MyMusicViewModel=viewModel()) {
     val artists by viewModel.allArtists.collectAsState()
     val albums by viewModel.allAlbums.collectAsState()
 
-    val currentlyPlaying by viewModel.currentlyPlaying.collectAsState()
     val currentlyPlayingStats by viewModel.currentlyPlayingStats.collectAsState()
 
     val isPaused by viewModel.isPaused.collectAsState()
-    val onSongClick: (SongInfo, List<SongInfo>, Boolean) -> Unit = { itSong, itSongs, itShuffle ->
+    val onSongClick: (SongInfo, List<SongInfo>) -> Unit = { itSong, itSongs ->
         viewModel.setPlaylist(itSongs)
         viewModel.setCurrentlyPlaying(itSong)
     }
@@ -58,7 +60,6 @@ internal fun MainScreen(viewModel: MyMusicViewModel=viewModel()) {
         onRepeatClick,
         onPlayPauseClick,
         onNextClick,
-        currentlyPlaying,
         currentlyPlayingStats,
         isPaused
     )
@@ -71,12 +72,11 @@ private fun MainContent(
     songs: List<SongInfo>,
     artists: List<ArtistInfo>,
     albums: List<AlbumInfo>,
-    onSongClick: (SongInfo, List<SongInfo>, Boolean) -> Unit = emptyFunction3(),
+    onSongClick: (SongInfo, List<SongInfo>) -> Unit = emptyFunction2(),
     onShuffleClick: () -> Unit = emptyFunction(),
     onRepeatClick: () -> Unit = emptyFunction(),
     onPlayPauseClick: () -> Unit = emptyFunction(),
     onNextClick: () -> Unit = emptyFunction(),
-    currentlyPlaying: SongInfo? = null,
     currentPlayingStats: CurrentPlayingStats? = null,
     isPaused: Boolean = false
 ) {
@@ -97,7 +97,9 @@ private fun MainContent(
                 bottomBar = {
                     BottomAppBar(
                         onPlayPauseClick,
-                        onNextClick, currentlyPlaying, isPaused,
+                        onNextClick,
+                        currentPlayingStats?.currentPlaying,
+                        isPaused,
                         navController
                     )
                 }
@@ -105,7 +107,7 @@ private fun MainContent(
                 // A surface container using the 'background' color from the theme
                 Column(modifier = Modifier.padding(paddingValues)) {
                     Navigation(navController, mediaController, songs, artists, albums,
-                    onSongClick, currentlyPlaying, currentPlayingStats, isPaused)
+                    onSongClick, currentPlayingStats, isPaused)
                 }
             }
         }
@@ -119,8 +121,7 @@ fun Navigation(
     songs: List<SongInfo>,
     artists: List<ArtistInfo>,
     albums: List<AlbumInfo>,
-    onSongClick: (SongInfo, List<SongInfo>, Boolean) -> Unit = emptyFunction3(),
-    currentlyPlaying: SongInfo? = null,
+    onSongClick: (SongInfo, List<SongInfo>) -> Unit = emptyFunction2(),
     currentPlayingStats: CurrentPlayingStats? = null,
     isPaused: Boolean = false
 
@@ -148,7 +149,7 @@ fun Navigation(
 //                    val message = "$year $track"
 //                }
             val myOnClick:(SongInfo)->Unit = {
-                onSongClick(it, songsForArtist, false)
+                onSongClick(it, songsForArtist)
             }
             ArtistSongsScreen(theArtist, songsForArtist, myOnClick)
         }
@@ -165,13 +166,12 @@ fun Navigation(
                 .filter { it.albumId == albumId }
                 .sortedBy { it.trackNumber }
             val myOnClick:(SongInfo)->Unit = {
-                onSongClick(it, songsInAlbum, false)
+                onSongClick(it, songsInAlbum)
             }
             AlbumSongsScreen(theAlbum, songsInAlbum, myOnClick)
         }
         composable(NavigationItem.Playing.route) {
-            if (currentlyPlaying != null)
-                PlayScreen(currentlyPlaying, currentPlayingStats, isPaused, mediaController)
+                PlayScreen(currentPlayingStats, isPaused, mediaController)
         }
     }
 }

@@ -27,10 +27,10 @@ import com.bdlepla.android.mymusicplayer.ui.theme.MyMusicPlayerTheme
 
 @Composable
 fun SongList(songInfos: List<SongInfo>,
-             onClick: (SongInfo, List<SongInfo>, Boolean) -> Unit = emptyFunction3()) {
+             onClick: (SongInfo, List<SongInfo>) -> Unit = emptyFunction2()) {
     val listState = rememberLazyListState()
     val myOnClick: (SongInfo)->Unit = {
-        onClick(it, songInfos, false)
+        onClick(it, songInfos)
     }
 
     LazyColumn(state = listState) {
@@ -42,7 +42,7 @@ fun SongList(songInfos: List<SongInfo>,
 }
 
 @Composable
-fun Song(songInfo:SongInfo, onClick: (SongInfo) -> Unit = emptyFunction1()) {
+fun Song(songInfo: SongInfo) {
     Column(modifier = Modifier.padding(all = 4.dp)) {
         Text(
             text = songInfo.title,
@@ -88,7 +88,7 @@ fun SongWithImage(songInfo: SongInfo, onClick: (SongInfo) -> Unit = emptyFunctio
             modifier = Modifier.size(50.dp)
         )
         Spacer(modifier = Modifier.padding(all = 4.dp))
-        Song(songInfo, onClick)
+        Song(songInfo)
     }
 }
 

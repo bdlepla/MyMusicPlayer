@@ -56,6 +56,7 @@ class MyMusicViewModel
         val currPosition = browser.currentPosition.toInt() / 1000
         val maxPosition = browser.duration.toInt() / 1000
         val stats = CurrentPlayingStats(
+            _currentlyPlaying,
             currPosition,
             maxPosition
         )
@@ -158,7 +159,7 @@ class MyMusicViewModel
         override fun onMediaMetadataChanged(mediaMetadata: MediaMetadata) {
             super.onMediaMetadataChanged(mediaMetadata)
             val item = mediaMetadata.toSongInfo() ?: return
-            _currentlyPlaying.value = item
+            _currentlyPlaying = item
         }
 
 //        override fun onEvents(player: Player, events: Player.Events) {
@@ -185,9 +186,7 @@ class MyMusicViewModel
         get() = _allAlbums.asStateFlow()
 
     //region Currently Playing - the song currently playing
-    private val _currentlyPlaying = MutableStateFlow<SongInfo?>(null)
-    val currentlyPlaying : StateFlow<SongInfo?>
-        get() = _currentlyPlaying.asStateFlow()
+    private var _currentlyPlaying:SongInfo? = null
 
     private val _currentlyPlayingStats = MutableStateFlow<CurrentPlayingStats?>(null)
     val currentlyPlayingStats : StateFlow<CurrentPlayingStats?>
@@ -231,7 +230,7 @@ class MyMusicViewModel
     fun togglePlayPause() {
         val b = browser ?: return
         _isPaused.value = !_isPaused.value
-        if (_currentlyPlaying.value == null) return
+        if (_currentlyPlaying == null) return
         if (_isPaused.value) {b.pause()}
         else {b.play()}
     }
