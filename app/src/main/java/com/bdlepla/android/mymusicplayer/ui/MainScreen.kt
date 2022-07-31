@@ -88,7 +88,7 @@ private fun MainContent(
 //    }
 
     val navController = rememberNavController()
-    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    //val navBackStackEntry by navController.currentBackStackEntryAsState()
     //val currentRoute = navBackStackEntry?.destination?.route
     MyMusicPlayerTheme {
         Surface {
@@ -130,7 +130,7 @@ fun Navigation(
             SongList(songs, onSongClick)
         }
         composable(NavigationItem.Artists.route) {
-            ArtistList(artists, albums, navController)
+            ArtistList(artists, navController)
         }
         composable("artistsongs/{artistId}") {
             val backStack = navController.currentBackStackEntry?: return@composable
@@ -141,12 +141,12 @@ fun Navigation(
             val songsForArtist = songs
                 .filter { it.artistId == artistId}
                 .sortedBy { it.albumYear * 1_000 + it.trackNumber }
-                .onEach{
-                    val title = it.title
-                    val year = it.albumYear
-                    val track = it.trackNumber
-                    val message = "$year $track"
-                }
+//                .onEach{
+//                    val title = it.title
+//                    val year = it.albumYear
+//                    val track = it.trackNumber
+//                    val message = "$year $track"
+//                }
             val myOnClick:(SongInfo)->Unit = {
                 onSongClick(it, songsForArtist, false)
             }

@@ -26,7 +26,7 @@ fun ArtistSongsScreen(
     Column {
         Box (modifier = Modifier.fillMaxWidth()){
             Image(
-                painter = songsInArtist.random().albumArt.toImagePainter(),
+                painter = artistInfo.anAlbum?.albumArt.toImagePainter(),
                 contentDescription = artistInfo.name,
                 modifier = Modifier.size(256.dp).align(Alignment.Center)
             )

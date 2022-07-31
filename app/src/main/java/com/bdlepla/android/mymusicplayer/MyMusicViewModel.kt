@@ -78,7 +78,7 @@ class MyMusicViewModel
                         doLoadSongs(browser, page+1, pageSize)
                     }
                 else {
-                        loadArtists(browser, context)
+                        loadAlbums(browser, context)
                     }
                 },
                 ContextCompat.getMainExecutor(context))
@@ -97,7 +97,10 @@ class MyMusicViewModel
                     val artists = children.map {
                         val artistName = it.mediaMetadata.artistName
                         val artistId = it.mediaMetadata.artistId
-                        ArtistInfo(artistName, artistId)
+                        val songsForArtist = songCollection.filter{si -> si.artistId == artistId}
+                        val randomSong = songsForArtist.random()
+                        val albumForRandomSong = allAlbums.value.find{ai->ai.albumId == randomSong.albumId}
+                        ArtistInfo(artistName, artistId, albumForRandomSong)
                     }
                     addArtists(artists)
                     doLoadArtists(browser, page+1, pageSize)
@@ -129,6 +132,9 @@ class MyMusicViewModel
                     }
                     addAlbums(albums)
                     doLoadAlbums(browser, page+1, pageSize)
+                }
+                else {
+                    loadArtists(browser, context)
                 }
             },
                 ContextCompat.getMainExecutor(context))

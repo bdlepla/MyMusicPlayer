@@ -19,15 +19,14 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.bdlepla.android.mymusicplayer.*
 import com.bdlepla.android.mymusicplayer.Extensions.toImagePainter
-import com.bdlepla.android.mymusicplayer.business.AlbumInfo
 import com.bdlepla.android.mymusicplayer.business.ArtistInfo
 import com.bdlepla.android.mymusicplayer.ui.theme.MyMusicPlayerTheme
 
 @Composable
 fun ArtistList(
     artistList: List<ArtistInfo>,
-    allAlbums: List<AlbumInfo> = emptyList(),
-    navController: NavController? = null) {
+    navController: NavController? = null
+) {
     val listState = rememberLazyListState()
     val onClick: (ArtistInfo)->Unit = {
         val artistId = it.artistId
@@ -37,8 +36,7 @@ fun ArtistList(
 
     LazyColumn(state = listState) {
         items(items = artistList, key = { it.artistId }) { artistInfo ->
-            val album = allAlbums.filter { it.artistId == artistInfo.artistId }.randomOrNull()
-            Artist(artistInfo, album, onClick)
+            Artist(artistInfo, onClick)
             Divider(color = MaterialTheme.colorScheme.primary)
         }
     }
@@ -47,7 +45,6 @@ fun ArtistList(
 @Composable
 fun Artist(
         artistInfo:ArtistInfo,
-        albumForArtist: AlbumInfo? = null,
         onClick: (ArtistInfo) -> Unit = emptyFunction1()) {
     Row(verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
@@ -56,8 +53,8 @@ fun Artist(
             .padding(all = 4.dp)
             .semantics(mergeDescendants = true) {}) {
         Image(
-            painter = albumForArtist?.albumArt.toImagePainter(),
-            contentDescription = albumForArtist?.name,
+            painter = artistInfo.anAlbum?.albumArt.toImagePainter(),
+            contentDescription = artistInfo.anAlbum?.name,
             modifier = Modifier.size(50.dp)
         )
         Spacer(modifier=Modifier.padding(all=4.dp))
