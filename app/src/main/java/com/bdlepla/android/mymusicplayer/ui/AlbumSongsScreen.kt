@@ -3,10 +3,6 @@ package com.bdlepla.android.mymusicplayer.ui
 import android.content.res.Configuration
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Divider
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -33,12 +29,7 @@ fun AlbumSongsScreen(
             )
         }
         Spacer(modifier= Modifier.padding(all=4.dp))
-        LazyColumn {
-            items(items = songsInAlbum, key = { it.songId }){ songInfo ->
-                SongWithImage(songInfo, onSongClick)
-                Divider(color = MaterialTheme.colorScheme.primary)
-            }
-        }
+        SongList(songsInAlbum, onSongClick)
     }
 }
 

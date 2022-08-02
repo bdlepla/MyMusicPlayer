@@ -27,10 +27,10 @@ import com.bdlepla.android.mymusicplayer.ui.theme.MyMusicPlayerTheme
 
 @Composable
 fun SongList(songInfos: List<SongInfo>,
-             onClick: (SongInfo, List<SongInfo>) -> Unit = emptyFunction2()) {
+             onClick: (SongInfo) -> Unit = emptyFunction1()) {
     val listState = rememberLazyListState()
     val myOnClick: (SongInfo)->Unit = {
-        onClick(it, songInfos)
+        onClick(it)
     }
 
     LazyColumn(state = listState) {

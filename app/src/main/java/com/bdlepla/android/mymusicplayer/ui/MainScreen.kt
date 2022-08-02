@@ -128,7 +128,10 @@ fun Navigation(
 ) {
     NavHost(navController, startDestination = NavigationItem.Songs.route) {
         composable(NavigationItem.Songs.route) {
-            SongList(songs, onSongClick)
+            val myOnClick:(SongInfo)->Unit = {
+                onSongClick(it, songs)
+            }
+            SongList(songs, myOnClick)
         }
         composable(NavigationItem.Artists.route) {
             ArtistList(artists, navController)
