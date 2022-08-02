@@ -26,8 +26,7 @@ import com.bdlepla.android.mymusicplayer.business.SongInfo
 import com.bdlepla.android.mymusicplayer.ui.theme.MyMusicPlayerTheme
 
 @Composable
-fun SongList(songInfos: List<SongInfo>,
-             onClick: (SongInfo) -> Unit = emptyFunction1()) {
+fun SongList(songInfos: List<SongInfo>, onClick: (SongInfo) -> Unit = emptyFunction1()) {
     val listState = rememberLazyListState()
     val myOnClick: (SongInfo)->Unit = {
         onClick(it)

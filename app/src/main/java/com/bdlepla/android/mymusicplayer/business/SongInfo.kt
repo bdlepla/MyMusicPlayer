@@ -3,7 +3,6 @@ package com.bdlepla.android.mymusicplayer.business
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import com.bdlepla.android.mymusicplayer.repository.*
-import java.io.FileInputStream
 
 class SongInfo(private val mediaItem: MediaItem) {
     fun toMediaItem() = mediaItem
@@ -21,7 +20,6 @@ class SongInfo(private val mediaItem: MediaItem) {
     val albumId = mediaMetadata.albumId
     val artistId = mediaMetadata.artistId
     //val genreId = mediaMetadata.genreId
-    val durationInSeconds = mediaMetadata.durationInSeconds
 
     override fun equals(other: Any?): Boolean {
         val otherSong = other as? SongInfo ?: return false
@@ -29,15 +27,15 @@ class SongInfo(private val mediaItem: MediaItem) {
     }
     override fun hashCode(): Int = songId.hashCode()
 
-    fun copyMediaMetadata(): MediaMetadata {
-        val fis = FileInputStream(albumArt)
-        val buf = fis.readBytes()
-        fis.close()
-        return MediaMetadata.Builder()
-            .populate(mediaMetadata)
-            .setArtworkData(buf, MediaMetadata.PICTURE_TYPE_FRONT_COVER)
-            .build()
-    }
+//    fun copyMediaMetadata(): MediaMetadata {
+//        val fis = FileInputStream(albumArt)
+//        val buf = fis.readBytes()
+//        fis.close()
+//        return MediaMetadata.Builder()
+//            .populate(mediaMetadata)
+//            .setArtworkData(buf, MediaMetadata.PICTURE_TYPE_FRONT_COVER)
+//            .build()
+//    }
 }
 
 val MediaMetadata.track: Int
@@ -69,9 +67,6 @@ val MediaMetadata.albumId:Long
 
 val MediaMetadata.artistId:Long
     get() = extras?.getLong(ARTIST_ID) ?: throw NoSuchFieldException(ARTIST_ID)
-
-val MediaMetadata.durationInSeconds:Int
-    get() = extras?.getInt(DURATION_ID) ?: throw NoSuchFieldException(DURATION_ID)
 
 //val MediaMetadata.genreId:Long
 //    get() = extras?.getLong(GENRE_ID) ?: throw NoSuchFieldException(GENRE_ID)

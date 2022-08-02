@@ -80,16 +80,7 @@ private fun MainContent(
     currentPlayingStats: CurrentPlayingStats? = null,
     isPaused: Boolean = false
 ) {
-
-//    val myOnSongClick: (ISongInfo, List<ISongInfo>, Boolean)->Unit = {
-//        song, songs, shuffle ->
-//            onSongClick(song, songs, shuffle)
-//            onCategoryClick(largePlayerId)
-//    }
-
     val navController = rememberNavController()
-    //val navBackStackEntry by navController.currentBackStackEntryAsState()
-    //val currentRoute = navBackStackEntry?.destination?.route
     MyMusicPlayerTheme {
         Surface {
             Scaffold(
