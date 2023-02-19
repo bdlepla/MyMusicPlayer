@@ -1,4 +1,4 @@
-package com.bdlepla.android.mymusicplayer.Extensions
+package com.bdlepla.android.mymusicplayer.extensions
 
 
 val ignoreBeginningArticles = listOf("A ", "The Very Best Of ", "The Best Of ", "The ")

@@ -20,7 +20,7 @@ fun TopAppBar(
     onRepeatClick: ()->Unit = emptyFunction(),
 ) {
     Column {
-        SmallTopAppBar(
+        TopAppBar(
             modifier = Modifier.background(MaterialTheme.colorScheme.primaryContainer),
             title = {
                 Text(

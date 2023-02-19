@@ -6,7 +6,7 @@ import android.os.Bundle
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.MediaMetadata.*
-import com.bdlepla.android.mymusicplayer.Extensions.forSorting
+import com.bdlepla.android.mymusicplayer.extensions.forSorting
 import com.bdlepla.android.mymusicplayer.business.albumId
 import com.bdlepla.android.mymusicplayer.business.artistId
 import com.bdlepla.android.mymusicplayer.repository.*
@@ -14,7 +14,7 @@ import com.google.common.collect.ImmutableList
 
 object MediaItemTree {
     private var treeNodes: MutableMap<String, MediaItemNode> = mutableMapOf()
-    private var titleMap: MutableMap<String, String> = mutableMapOf()
+    private var titleMap: MutableMap<String, MediaItem> = mutableMapOf()
     private var isInitialized = false
     private const val ALBUM_PREFIX = "[album]"
     private const val GENRE_PREFIX = "[genre]"
@@ -28,16 +28,15 @@ object MediaItemTree {
             this.children.add(childID)
         }
 
-        fun getChildren(): List<MediaItem> {
-            return ImmutableList.copyOf(children.mapNotNull{treeNodes[it]?.item})
-        }
+        fun getChildren(): List<MediaItem> =
+            ImmutableList.copyOf(children.mapNotNull{treeNodes[it]?.item})
     }
 
     private fun buildMediaItem(
         title: String,
         mediaId: String,
         isPlayable: Boolean,
-        @MediaMetadata.FolderType folderType: Int,
+        @FolderType folderType: Int,
         album: String? = null,
         albumId: Long = 0L,
         artist: String? = null,
@@ -139,6 +138,8 @@ object MediaItemTree {
             val idInTree = it.mediaId
             treeNodes[idInTree] = MediaItemNode(it)
             itemListInTree.addChild(idInTree)
+            val title = it.mediaMetadata.title.toString().forSorting().lowercase()
+            titleMap[title] = it
         }
 
         val songsByAlbum = sortedSongs
@@ -241,7 +242,13 @@ object MediaItemTree {
     }
 
     fun getItemFromTitle(title: String): MediaItem? {
-        val itemId = titleMap[title] ?: return null
-        return treeNodes[itemId]?.item
+        val titleForSorting = title.trim().forSorting().lowercase()
+        val result = titleMap.getOrDefault(titleForSorting, null)
+        if (result != null) return result
+        val titleSplits = titleForSorting.split(' ')
+        val key = titleMap.keys.map{key -> key to key.split(' ')
+            .count{it in titleSplits}}.maxByOrNull { it.second } ?: return null
+        return titleMap[key.first]
     }
 }
+

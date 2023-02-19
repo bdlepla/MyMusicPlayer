@@ -14,7 +14,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
-import com.bdlepla.android.mymusicplayer.Extensions.toMinutesSeconds
+import com.bdlepla.android.mymusicplayer.extensions.toMinutesSeconds
 import com.bdlepla.android.mymusicplayer.business.CurrentPlayingStats
 import com.bdlepla.android.mymusicplayer.ui.theme.MyMusicPlayerTheme
 

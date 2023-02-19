@@ -5,10 +5,13 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.provider.MediaStore
+import android.support.v4.media.MediaDescriptionCompat
+import android.support.v4.media.MediaMetadataCompat
 import android.util.Log
 import android.util.Size
 import androidx.core.database.getStringOrNull
 import androidx.core.net.toUri
+import androidx.media.utils.MediaConstants
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import com.bdlepla.android.mymusicplayer.service.MediaItemTree.ITEM_PREFIX
@@ -39,13 +42,15 @@ object Repository {
         val selectionArgs = null
         val sortOrder =  "year ASC, track ASC"
 
-        context.contentResolver.query(
+        val query = context.contentResolver.query(
             collection,
             projection,
             selection,
             selectionArgs,
             sortOrder
-        )?.use { cursor ->
+        )
+
+        query?.use { cursor ->
             val songIdColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media._ID)
             val titleColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.TITLE)
             val albumColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM)
@@ -92,6 +97,14 @@ object Repository {
                     putString(MEDIA_URI, data)
                     putInt(TRACK_NUMBER, track)
                     putInt(DURATION_ID, durationInSeconds)
+                    putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE, title)
+                    putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_SUBTITLE, artist)
+                    putString(MediaMetadataCompat.METADATA_KEY_ART_URI, albumArt)
+                    putLong(MediaConstants.METADATA_KEY_IS_EXPLICIT,
+                        MediaConstants.METADATA_VALUE_ATTRIBUTE_PRESENT)
+                    putLong(
+                        MediaDescriptionCompat.EXTRA_DOWNLOAD_STATUS,
+                        MediaDescriptionCompat.STATUS_DOWNLOADED)
                 }
 
                 val metadata =

@@ -11,7 +11,7 @@ import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
 import androidx.media3.session.MediaBrowser
 import androidx.media3.session.SessionToken
-import com.bdlepla.android.mymusicplayer.Extensions.forSorting
+import com.bdlepla.android.mymusicplayer.extensions.forSorting
 import com.bdlepla.android.mymusicplayer.business.*
 import com.bdlepla.android.mymusicplayer.repository.ALBUM_ID
 import com.bdlepla.android.mymusicplayer.repository.ARTIST_ID
@@ -33,6 +33,7 @@ class MyMusicViewModel
     private lateinit var browserFuture: ListenableFuture<MediaBrowser>
     val browser: MediaBrowser?
         get() = if (browserFuture.isDone) browserFuture.get() else null
+    @Suppress("PrivatePropertyName")
     private val POSITION_UPDATE_INTERVAL_MILLIS = 100L
    init {
         initializeBrowser(application.applicationContext)
@@ -87,34 +88,6 @@ class MyMusicViewModel
         doLoadSongs(browser, 0, 300)
     }
 
-    private fun loadArtists(browser: MediaBrowser, context: Context) {
-        fun doLoadArtists(browser: MediaBrowser, page:Int, pageSize:Int) {
-            val childrenFuture = browser.getChildren(ARTIST_ID, page, pageSize, null)
-
-            childrenFuture.addListener( {
-                val childrenResult = childrenFuture.get()
-                val children = childrenResult.value!!
-                if (children.size > 0) {
-                    val artists = children.map {
-                        val artistName = it.mediaMetadata.artistName
-                        val artistId = it.mediaMetadata.artistId
-                        val songsForArtist = songCollection.filter{si -> si.artistId == artistId}
-                        val randomSong = songsForArtist.random()
-                        val albumForRandomSong = allAlbums.value.find{ai->ai.albumId == randomSong.albumId}
-                        ArtistInfo(artistName, artistId, albumForRandomSong)
-                    }
-                    addArtists(artists)
-                    doLoadArtists(browser, page+1, pageSize)
-                }
-                else {
-                    loadAlbums(browser, context)
-                }
-            },
-                ContextCompat.getMainExecutor(context))
-        }
-        doLoadArtists(browser, 0, Int.MAX_VALUE)
-    }
-
     private fun loadAlbums(browser: MediaBrowser, context: Context) {
         fun doLoadAlbums(browser: MediaBrowser, page:Int, pageSize:Int) {
             val childrenFuture = browser.getChildren(ALBUM_ID, page, pageSize, null)
@@ -143,9 +116,34 @@ class MyMusicViewModel
         doLoadAlbums(browser, 0, Int.MAX_VALUE)
     }
 
+    private fun loadArtists(browser: MediaBrowser, context: Context) {
+        fun doLoadArtists(browser: MediaBrowser, page:Int, pageSize:Int) {
+            val childrenFuture = browser.getChildren(ARTIST_ID, page, pageSize, null)
+
+            childrenFuture.addListener( {
+                val childrenResult = childrenFuture.get()
+                val children = childrenResult.value!!
+                if (children.size > 0) {
+                    val artists = children.map {
+                        val artistName = it.mediaMetadata.artistName
+                        val artistId = it.mediaMetadata.artistId
+                        val songsForArtist = songCollection.filter{si -> si.artistId == artistId}
+                        val randomSong = songsForArtist.random()
+                        val albumForRandomSong = allAlbums.value.find{ai->ai.albumId == randomSong.albumId}
+                        ArtistInfo(artistName, artistId, albumForRandomSong)
+                    }
+                    addArtists(artists)
+                    doLoadArtists(browser, page+1, pageSize)
+                }
+            },
+                ContextCompat.getMainExecutor(context))
+        }
+        doLoadArtists(browser, 0, Int.MAX_VALUE)
+    }
+
+
 
     inner class PlayerListener: Player.Listener {
-
         override fun onIsPlayingChanged(isPlaying: Boolean) {
             super.onIsPlayingChanged(isPlaying)
             _isPaused.value = !isPlaying
@@ -160,13 +158,8 @@ class MyMusicViewModel
             super.onMediaMetadataChanged(mediaMetadata)
             val item = mediaMetadata.toSongInfo() ?: return
             _currentlyPlaying = item
+            //val b = browser ?: return
         }
-
-//        override fun onEvents(player: Player, events: Player.Events) {
-//            super.onEvents(player, events)
-//            val b = browser ?: return
-//            if (_isPaused.value) return
-//        }
     }
 
     private fun MediaMetadata.toSongInfo(): SongInfo? =
@@ -204,7 +197,6 @@ class MyMusicViewModel
         val idx = c.indexOf(songInfo)
         if (idx == -1) return
         b.seekTo(idx, 0)
-        b.prepare()
         b.play()
     }
 

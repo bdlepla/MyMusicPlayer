@@ -118,6 +118,7 @@ fun Navigation(
 
 ) {
     NavHost(navController, startDestination = NavigationItem.Songs.route) {
+        val isExpandedWindow = false
         composable(NavigationItem.Songs.route) {
             val myOnClick:(SongInfo)->Unit = {
                 onSongClick(it, songs)
@@ -162,7 +163,7 @@ fun Navigation(
             val myOnClick:(SongInfo)->Unit = {
                 onSongClick(it, songsInAlbum)
             }
-            AlbumSongsScreen(theAlbum, songsInAlbum, myOnClick)
+            AlbumSongsScreen(isExpandedWindow, theAlbum, songsInAlbum, myOnClick)
         }
         composable(NavigationItem.Playing.route) {
                 PlayScreen(currentPlayingStats, isPaused, mediaController)

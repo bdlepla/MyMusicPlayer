@@ -1,4 +1,4 @@
-package com.bdlepla.android.mymusicplayer.Extensions
+package com.bdlepla.android.mymusicplayer.extensions
 
 import androidx.compose.runtime.Composable
 import coil.compose.AsyncImagePainter

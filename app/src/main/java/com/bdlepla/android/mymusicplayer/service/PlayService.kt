@@ -57,6 +57,7 @@ class PlayService: MediaLibraryService() {
             MediaLibrarySession.Builder(this, player, librarySessionCallback).build()
     }
 
+
 //    private fun setupCustomCommands() {
 //        customCommands =
 //            listOf(
@@ -131,19 +132,19 @@ class PlayService: MediaLibraryService() {
             "android.media3.session.demo.SHUFFLE_OFF"
     }
 
-    private inner class PlayerListener: Player.Listener {
-        override fun onMediaMetadataChanged(mediaMetadata: MediaMetadata) {
-            super.onMediaMetadataChanged(mediaMetadata)
-//            val uri = mediaMetadata.artworkUri?.toString() ?: return
-//            val fis = FileInputStream(uri)
-//            val buffer = fis.readBytes()
-//            val newMetadata = MediaMetadata.Builder()
-//                .populate(mediaMetadata)
-//                .setArtworkData(buffer, MediaMetadata.PICTURE_TYPE_FRONT_COVER)
-//                .build()
-            //sessionCompat.setMetadata(newMetadata)
-
-        }
+   private inner class PlayerListener: Player.Listener {
+//        override fun onMediaMetadataChanged(mediaMetadata: MediaMetadata) {
+//            super.onMediaMetadataChanged(mediaMetadata)
+////            val uri = mediaMetadata.artworkUri?.toString() ?: return
+////            val fis = FileInputStream(uri)
+////            val buffer = fis.readBytes()
+////            val newMetadata = MediaMetadata.Builder()
+////                .populate(mediaMetadata)
+////                .setArtworkData(buffer, MediaMetadata.PICTURE_TYPE_FRONT_COVER)
+////                .build()
+//            //sessionCompat.setMetadata(newMetadata)
+//
+//        }
     }
 
     private inner class CustomMediaLibrarySessionCallback : MediaLibrarySession.Callback {
@@ -214,7 +215,7 @@ class PlayService: MediaLibraryService() {
                     ?: return Futures.immediateFuture(
                         LibraryResult.ofError(LibraryResult.RESULT_ERROR_BAD_VALUE)
                     )
-            return Futures.immediateFuture(LibraryResult.ofItem(item, /* params= */ null))
+            return Futures.immediateFuture(LibraryResult.ofItem(item, null))
         }
 
         override fun onSubscribe(
