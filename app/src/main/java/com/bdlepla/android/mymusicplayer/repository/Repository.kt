@@ -21,7 +21,7 @@ import java.io.FileOutputStream
 object Repository {
 
     fun getAllSongs(context: Context):List<MediaItem> {
-        val ret:MutableList<MediaItem> = mutableListOf()
+        val ret = mutableListOf<MediaItem>()
         val collection = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
         val projection = arrayOf(
             MediaStore.Audio.AudioColumns._ID,

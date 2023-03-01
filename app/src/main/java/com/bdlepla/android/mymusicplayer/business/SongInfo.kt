@@ -14,7 +14,7 @@ class SongInfo(private val mediaItem: MediaItem) {
     val albumYear = mediaMetadata.releaseYear ?: 0
     val albumArt = mediaMetadata.artworkUri.toString()
     //val genre = mediaMetadata.genreName
-    //val mediaUri = mediaMetadata.mediaUri
+    val mediaUri = mediaMetadata.mediaUri
     private val mediaId = mediaItem.mediaId
     val songId = mediaId.substring(6).toLong()
     val albumId = mediaMetadata.albumId
@@ -59,8 +59,9 @@ val MediaMetadata.albumName:String
 //        else extras?.getString(GENRE) ?: ""
 //    }
 //
-//val MediaMetadata.mediaUri:String
-//    get() = extras?.getString(MEDIA_URI) ?: throw NoSuchFieldException(MEDIA_URI)
+
+val MediaMetadata.mediaUri:String
+    get() = extras?.getString(MEDIA_URI) ?: throw NoSuchFieldException(MEDIA_URI)
 
 val MediaMetadata.albumId:Long
     get() = extras?.getLong(ALBUM_ID) ?: throw NoSuchFieldException(ALBUM_ID)

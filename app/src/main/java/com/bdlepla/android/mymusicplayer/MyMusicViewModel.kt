@@ -33,6 +33,7 @@ class MyMusicViewModel
     private lateinit var browserFuture: ListenableFuture<MediaBrowser>
     val browser: MediaBrowser?
         get() = if (browserFuture.isDone) browserFuture.get() else null
+    private val playlistManager:PlaylistManager = PlaylistManager()
     @Suppress("PrivatePropertyName")
     private val POSITION_UPDATE_INTERVAL_MILLIS = 100L
    init {
@@ -66,7 +67,6 @@ class MyMusicViewModel
         checkPlaybackPosition(browser)
     }, POSITION_UPDATE_INTERVAL_MILLIS)
 
-
     private fun loadSongs(browser: MediaBrowser, context: Context) {
         fun doLoadSongs(browser: MediaBrowser, page:Int, pageSize:Int) {
             val childrenFuture = browser.getChildren(ITEM_ID, page, pageSize, null)
@@ -82,8 +82,7 @@ class MyMusicViewModel
                 else {
                         loadAlbums(browser, context)
                     }
-                },
-                ContextCompat.getMainExecutor(context))
+                }, ContextCompat.getMainExecutor(context))
         }
         doLoadSongs(browser, 0, 300)
     }
@@ -110,8 +109,7 @@ class MyMusicViewModel
                 else {
                     loadArtists(browser, context)
                 }
-            },
-                ContextCompat.getMainExecutor(context))
+            }, ContextCompat.getMainExecutor(context))
         }
         doLoadAlbums(browser, 0, Int.MAX_VALUE)
     }
@@ -135,13 +133,10 @@ class MyMusicViewModel
                     addArtists(artists)
                     doLoadArtists(browser, page+1, pageSize)
                 }
-            },
-                ContextCompat.getMainExecutor(context))
+            }, ContextCompat.getMainExecutor(context))
         }
         doLoadArtists(browser, 0, Int.MAX_VALUE)
     }
-
-
 
     inner class PlayerListener: Player.Listener {
         override fun onIsPlayingChanged(isPlaying: Boolean) {
@@ -178,6 +173,10 @@ class MyMusicViewModel
     val allAlbums : StateFlow<List<AlbumInfo>>
         get() = _allAlbums.asStateFlow()
 
+    private val _allPlaylists = MutableStateFlow<List<PlaylistInfo>>(emptyList())
+    val allPlaylists : StateFlow<List<PlaylistInfo>>
+        get() = _allPlaylists.asStateFlow()
+
     //region Currently Playing - the song currently playing
     private var _currentlyPlaying:SongInfo? = null
 
@@ -189,11 +188,11 @@ class MyMusicViewModel
 //    val isShuffling: StateFlow<Boolean>
 //        get() = _shuffling.asStateFlow()
 
-    private var currentPlaylist: List<SongInfo>? = null
+
 
     fun setCurrentlyPlaying(songInfo: SongInfo) {
         val b = browser ?: return
-        val c = currentPlaylist ?: return
+        val c = playlistManager.currentPlaylist ?: return
         val idx = c.indexOf(songInfo)
         if (idx == -1) return
         b.seekTo(idx, 0)
@@ -203,7 +202,7 @@ class MyMusicViewModel
     fun setPlaylist(songs: List<SongInfo>) {
         val b = browser ?: return
         val mediaItems = songs.map{ it.toMediaItem() }
-        currentPlaylist = songs
+        playlistManager.setPlaylist(songs)
         b.setMediaItems(mediaItems)
         b.prepare()
     }
@@ -242,10 +241,10 @@ class MyMusicViewModel
 
     private fun addSongs(songs:List<SongInfo>) {
         songCollection.addAll(songs)
+        _allPlaylists.value = playlistManager.updatePlaylistInfo(songCollection)
 
         val songList = songCollection.sortedBy { it.title.forSorting() }
         _allSongs.value = songList
-        currentPlaylist = songList
     }
 
     private fun addArtists(artists:List<ArtistInfo>) {
