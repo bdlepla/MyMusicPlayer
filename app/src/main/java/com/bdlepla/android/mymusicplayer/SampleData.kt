@@ -5,6 +5,7 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import com.bdlepla.android.mymusicplayer.business.AlbumInfo
 import com.bdlepla.android.mymusicplayer.business.ArtistInfo
+import com.bdlepla.android.mymusicplayer.business.PlaylistInfo
 import com.bdlepla.android.mymusicplayer.business.SongInfo
 import com.bdlepla.android.mymusicplayer.repository.*
 import com.bdlepla.android.mymusicplayer.service.MediaItemTree.ITEM_PREFIX
@@ -19,6 +20,10 @@ class SampleData {
     val songs = songData.mapIndexed { idx, sd -> sd.toSongInfo(idx+1) }
     val artists = songs.map{ ArtistInfo(it.artist, it.artistId) }
     val albums = songs.map{AlbumInfo(it.album, it.albumYear, it.albumId, it.artistId, it.albumArt)}
+    val playlists = listOf(
+        PlaylistInfo("Beginning", songs.take(2)),
+        PlaylistInfo("Ending", songs.drop(2))
+    )
 }
 
 private fun List<String>.toSongInfo(songId: Int): SongInfo {

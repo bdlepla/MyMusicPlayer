@@ -1,3 +1,3 @@
 package com.bdlepla.android.mymusicplayer.business
 
-data class PlaylistInfo(private val name:String, private val songs:List<SongInfo>)
+data class PlaylistInfo(val name:String, val songs:List<SongInfo>, val artwork:String?=null)

@@ -7,8 +7,8 @@ import kotlin.io.path.Path
 import kotlin.io.path.PathWalkOption
 import kotlin.io.path.walk
 
-class PlaylistManager() {
-    var _currentPlaylist:List<SongInfo>? = null
+class PlaylistManager {
+    private var _currentPlaylist:List<SongInfo>? = null
     val currentPlaylist: List<SongInfo>?
         get() = _currentPlaylist
 
@@ -22,23 +22,32 @@ class PlaylistManager() {
     private fun loadPlaylists():Map<String, List<String>> =
         Path(Environment.getExternalStorageDirectory().toString()+"/Music")
             .walk(PathWalkOption.INCLUDE_DIRECTORIES)
-            .map{it.toString()}
-            .filter{it.endsWith(".m3u")}
-            .map{it to loadPlaylistSongs(it)}
-            .associate{it.first to it.second}
+            .map{it.toFile().nameWithoutExtension to it.toString()}
+            .filter{it.second.endsWith(".m3u")}
+            .map{it to loadPlaylistSongs(it.second)}
+            .associate{it.first.first to it.second}
 
     private fun loadPlaylistSongs(m3uName:String):List<String> =
         File(m3uName)
             .readLines()
+            .map{it.trim()}
             .filter{it.isNotEmpty() }
             .filter{it[0] != '#'}
 
     fun updatePlaylistInfo(songs:List<SongInfo>):List<PlaylistInfo> =
         playLists.map {
-            val playListSongs = it.value.map { s->
-                songs.firstOrNull{it.mediaUri.endsWith(s)}
-            }.filterNotNull()
-            PlaylistInfo(it.key, playListSongs)
+            val playListSongs = it.value.mapNotNull { playListSong ->
+                songs.firstOrNull { songInCollection ->
+                    songInCollection.mediaUri.endsWith(playListSong)
+                }
+            }
+            var artworkString:String? = null
+            if (playListSongs.any()){
+                val songsForArtwork = playListSongs.random()
+                artworkString = songsForArtwork.albumArt
+            }
+
+            PlaylistInfo(it.key, playListSongs, artworkString)
         }
 
      // add and remove playlists

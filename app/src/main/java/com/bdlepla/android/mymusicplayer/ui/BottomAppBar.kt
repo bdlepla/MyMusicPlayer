@@ -23,6 +23,7 @@ sealed class NavigationItem(var route: String, var icon: Int, var title: String)
     object Artists : NavigationItem("artists", R.drawable.ic_people_alt, "Artists")
     object Albums : NavigationItem("albums", R.drawable.ic_album, "Albums")
     object Playing : NavigationItem("playing", R.drawable.ic_airplay, "Playing")
+    object Playlist: NavigationItem("playlists", R.drawable.ic_library_music, "Playlist")
 }
 
 @Composable
@@ -37,7 +38,8 @@ fun BottomAppBar(
         NavigationItem.Songs,
         NavigationItem.Artists,
         NavigationItem.Albums,
-        NavigationItem.Playing
+        NavigationItem.Playing,
+        NavigationItem.Playlist
     )
     val isCurrentlyPlaying = currentlyPlaying != null
     val navBackStackEntry by navController.currentBackStackEntryAsState()

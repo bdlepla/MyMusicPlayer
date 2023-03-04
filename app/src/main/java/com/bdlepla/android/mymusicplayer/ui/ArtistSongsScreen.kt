@@ -20,7 +20,7 @@ fun ArtistSongsScreen(
     songsInArtist: List<SongInfo>,
     onSongClick:(SongInfo)->Unit = emptyFunction1()) {
     Column {
-        Box (modifier = Modifier.fillMaxWidth()){
+        Box (modifier = Modifier.fillMaxWidth()) {
             Image(
                 painter = artistInfo.anAlbum?.albumArt.toImagePainter(),
                 contentDescription = artistInfo.name,
