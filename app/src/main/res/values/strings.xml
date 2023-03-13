@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">MyMusicPlayer</string>
     <string name="service_name">My Music Play Service</string>
+    <string name="pick_playlist">Pick playlist to add song</string>
 </resources>

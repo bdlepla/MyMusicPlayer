@@ -33,7 +33,7 @@ class MyMusicViewModel
     private lateinit var browserFuture: ListenableFuture<MediaBrowser>
     val browser: MediaBrowser?
         get() = if (browserFuture.isDone) browserFuture.get() else null
-    private val playlistManager:PlaylistManager = PlaylistManager()
+    private val playlistManager:PlaylistManager = PlaylistManager(application)
     @Suppress("PrivatePropertyName")
     private val POSITION_UPDATE_INTERVAL_MILLIS = 100L
    init {
@@ -57,13 +57,11 @@ class MyMusicViewModel
     private fun checkPlaybackPosition(browser: MediaBrowser): Boolean = handler.postDelayed({
         val currPosition = browser.currentPosition.toInt() / 1000
         val maxPosition = browser.duration.toInt() / 1000
-        val stats = CurrentPlayingStats(
+        _currentlyPlayingStats.value =  CurrentPlayingStats(
             _currentlyPlaying,
             currPosition,
             maxPosition
         )
-
-        _currentlyPlayingStats.value = stats
         checkPlaybackPosition(browser)
     }, POSITION_UPDATE_INTERVAL_MILLIS)
 
@@ -242,9 +240,7 @@ class MyMusicViewModel
     private fun addSongs(songs:List<SongInfo>) {
         songCollection.addAll(songs)
         _allPlaylists.value = playlistManager.updatePlaylistInfo(songCollection)
-
-        val songList = songCollection.sortedBy { it.title.forSorting() }
-        _allSongs.value = songList
+        _allSongs.value =  songCollection.sortedBy { it.title.forSorting() }
     }
 
     private fun addArtists(artists:List<ArtistInfo>) {
@@ -253,5 +249,15 @@ class MyMusicViewModel
 
     private fun addAlbums(albums:List<AlbumInfo>) {
         _allAlbums.value = albums.sortedBy { it.name.forSorting() }
+    }
+
+    fun addSongsToPlaylist(playListInfo: PlaylistInfo, songs: List<SongInfo>) {
+        playlistManager.addSongsToPlaylist(playListInfo, songs)
+        _allPlaylists.value = playlistManager.updatePlaylistInfo(songCollection)
+    }
+
+    fun addNewPlaylist(it: String) {
+        playlistManager.addNewPlaylist(it)
+        _allPlaylists.value = playlistManager.updatePlaylistInfo(songCollection)
     }
 }

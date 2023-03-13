@@ -16,11 +16,16 @@ fun Navigation(
     artists: List<ArtistInfo>,
     albums: List<AlbumInfo>,
     playlists: List<PlaylistInfo>,
+    onAddNewPlaylist: ()->Unit = emptyFunction(),
+    pickPlaylistToAddSongs: (List<SongInfo>)->Unit = emptyFunction1(),
     setSongsForScreen: (List<SongInfo>) -> Unit = emptyFunction1(),
     onSongClick: (SongInfo, List<SongInfo>) -> Unit = emptyFunction2(),
     currentPlayingStats: CurrentPlayingStats? = null,
     isPaused: Boolean = false
 ) {
+    val onAddSongsToPlaylist: (List<SongInfo>)->Unit = {
+        pickPlaylistToAddSongs(it)
+    }
     NavHost(navController, startDestination = NavigationItem.Songs.route) {
         val isExpandedWindow = false
 
@@ -29,7 +34,7 @@ fun Navigation(
             val myOnClick:(SongInfo)->Unit = {
                 onSongClick(it, songs)
             }
-            SongList(songs, myOnClick)
+            SongList(songs, myOnClick, onAddSongsToPlaylist)
         }
 
         composable(NavigationItem.Artists.route) {
@@ -44,12 +49,6 @@ fun Navigation(
             val songsForArtist = songs
                 .filter { it.artistId == artistId}
                 .sortedBy { it.albumYear * 1_000 + it.trackNumber }
-//                .onEach{
-//                    val title = it.title
-//                    val year = it.albumYear
-//                    val track = it.trackNumber
-//                    val message = "$year $track"
-//                }
             setSongsForScreen(songsForArtist)
             val myOnClick:(SongInfo)->Unit = {
                 onSongClick(it, songsForArtist)
@@ -81,7 +80,12 @@ fun Navigation(
         }
 
         composable(NavigationItem.Playlist.route) {
-            PlaylistList(playlists, navController)
+            val onClick: (PlaylistInfo) -> Unit = {
+                val playlistName = it.name
+                val route = "playlistsongs/${playlistName}"
+                navController.navigate(route)
+            }
+            PlaylistScreen(playlists, onClick, onAddNewPlaylist)
         }
 
         composable("playlistsongs/{playlistId}") {

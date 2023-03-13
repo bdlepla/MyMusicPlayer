@@ -13,6 +13,7 @@ class SongInfo(private val mediaItem: MediaItem) {
     val album = mediaMetadata.albumName
     val albumYear = mediaMetadata.releaseYear ?: 0
     val albumArt = mediaMetadata.artworkUri.toString()
+
     //val genre = mediaMetadata.genreName
     val mediaUri = mediaMetadata.mediaUri
     private val mediaId = mediaItem.mediaId
@@ -25,17 +26,8 @@ class SongInfo(private val mediaItem: MediaItem) {
         val otherSong = other as? SongInfo ?: return false
         return otherSong.songId == songId
     }
-    override fun hashCode(): Int = songId.hashCode()
 
-//    fun copyMediaMetadata(): MediaMetadata {
-//        val fis = FileInputStream(albumArt)
-//        val buf = fis.readBytes()
-//        fis.close()
-//        return MediaMetadata.Builder()
-//            .populate(mediaMetadata)
-//            .setArtworkData(buf, MediaMetadata.PICTURE_TYPE_FRONT_COVER)
-//            .build()
-//    }
+    override fun hashCode(): Int = songId.hashCode()
 }
 
 val MediaMetadata.track: Int

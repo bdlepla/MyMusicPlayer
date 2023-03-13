@@ -28,7 +28,8 @@ class MainActivity : AppCompatActivity() {
     private fun checkPermissions() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE)
-                != PackageManager.PERMISSION_GRANTED) {
+                != PackageManager.PERMISSION_GRANTED
+            ) {
                 requestPermissions(arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE), 1)
             }
         }

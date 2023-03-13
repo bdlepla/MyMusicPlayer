@@ -1,13 +1,14 @@
 package com.bdlepla.android.mymusicplayer.business
 
+import android.app.Application
 import android.os.Environment
+import android.util.Log
 import java.io.File
-import kotlin.io.path.ExperimentalPathApi
-import kotlin.io.path.Path
-import kotlin.io.path.PathWalkOption
-import kotlin.io.path.walk
+import java.io.FileWriter
+import java.nio.file.Path
+import kotlin.io.path.*
 
-class PlaylistManager {
+class PlaylistManager(private val application: Application) {
     private var _currentPlaylist:List<SongInfo>? = null
     val currentPlaylist: List<SongInfo>?
         get() = _currentPlaylist
@@ -16,23 +17,46 @@ class PlaylistManager {
         _currentPlaylist = songs
     }
 
-    private var playLists: Map<String, List<String>> = loadPlaylists()
+    private var playLists: MutableMap<String, MutableList<String>> = loadPlaylists()
+    private val appStoragePath
+        get() = Path(application.getExternalFilesDir(null).toString())
+    private val mediaPath: Path
+        get() = Path(Environment.getExternalStorageDirectory().path+"/Music")
+
+    private fun getFullFilename(name:String) = "$appStoragePath/$name.m3u"
 
     @OptIn(ExperimentalPathApi::class)
-    private fun loadPlaylists():Map<String, List<String>> =
-        Path(Environment.getExternalStorageDirectory().toString()+"/Music")
+    private fun loadPlaylists():MutableMap<String, MutableList<String>> =
+        appStoragePath
             .walk(PathWalkOption.INCLUDE_DIRECTORIES)
             .map{it.toFile().nameWithoutExtension to it.toString()}
             .filter{it.second.endsWith(".m3u")}
             .map{it to loadPlaylistSongs(it.second)}
-            .associate{it.first.first to it.second}
+            .associate{it.first.first to it.second.toMutableList()}.toMutableMap()
 
-    private fun loadPlaylistSongs(m3uName:String):List<String> =
-        File(m3uName)
+    private fun loadPlaylistSongs(m3uName:String):List<String> {
+        Log.d("PlaylistManager","Loading $m3uName")
+        return File(m3uName)
             .readLines()
-            .map{it.trim()}
-            .filter{it.isNotEmpty() }
-            .filter{it[0] != '#'}
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+            .filter { it[0] != '#' }
+            .filter {!it.contains("/Music/")}
+            .onEach { Log.d("PlaylistManager", it) }
+    }
+    private fun savePlaylistSongs(m3uname:String, songNames:List<String>) {
+        if (File(m3uname).exists()){
+            Log.d("PlaylistManager", "deleting $m3uname")
+            File(m3uname).delete()
+        }
+        Log.d("PlaylistManager", "creating $m3uname")
+        FileWriter(m3uname).use { fw ->
+            songNames.forEach { songName ->
+                fw.write(songName+"\n")
+                Log.d("PlaylistManager", "writing $songName")
+            }
+        }
+    }
 
     fun updatePlaylistInfo(songs:List<SongInfo>):List<PlaylistInfo> =
         playLists.map {
@@ -50,9 +74,29 @@ class PlaylistManager {
             PlaylistInfo(it.key, playListSongs, artworkString)
         }
 
-     // add and remove playlists
+    fun addSongsToPlaylist(playListInfo: PlaylistInfo, songInfos: List<SongInfo>) {
+        val songs = songInfos.map{ Path(it.mediaUri).relativeToOrSelf(mediaPath).toString()}
+        val name = playListInfo.name
+        if (playLists.containsKey(name)){
+            val playlistSongNames = playLists[name]
+            playlistSongNames!!.addAll(songs)
+            playLists[name] = playlistSongNames
+            val fileName = getFullFilename(name)
+            savePlaylistSongs(fileName, playlistSongNames)
+        }
+    }
+
+    fun addNewPlaylist(name: String) {
+        val songs = mutableListOf<String>()
+        playLists[name]= songs
+        val m3uname = getFullFilename(name)
+        savePlaylistSongs(m3uname, songs)
+    }
+
+    // add and remove playlists
     // add and remove songs from a playlist
     // support the current playlist; save it so that upon restart, can pick up where left off
 
 }
+
 

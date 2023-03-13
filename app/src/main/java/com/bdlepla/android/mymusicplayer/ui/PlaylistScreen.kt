@@ -1,41 +1,69 @@
 package com.bdlepla.android.mymusicplayer.ui
 
 import android.content.res.Configuration
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.Divider
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
 import com.bdlepla.android.mymusicplayer.SampleData
 import com.bdlepla.android.mymusicplayer.business.PlaylistInfo
 import com.bdlepla.android.mymusicplayer.extensions.toImagePainter
 import com.bdlepla.android.mymusicplayer.ui.theme.MyMusicPlayerTheme
 
 @Composable
-fun PlaylistList(
-    playlistList:List<PlaylistInfo>,
-    navController: NavController? = null) {
-    val listState = rememberLazyListState()
-    val onClick: (PlaylistInfo) -> Unit = {
-        val playlistName = it.name
-        val route = "playlistsongs/${playlistName}"
-        navController?.navigate(route)
-    }
-    LazyColumn(state = listState) {
-        items(items = playlistList, key = { it.name }) { playlistInfo ->
-            Playlist(playlistInfo, onClick)
+fun PlaylistScreen(
+    playlistList: List<PlaylistInfo>,
+    onClick: (PlaylistInfo) -> Unit = emptyFunction1(),
+    onAddNewPlaylist: () -> Unit = emptyFunction()){
+    Box {
+        FloatingActionButton(
+            onClick = onAddNewPlaylist,
+            modifier = Modifier
+                .align(alignment = Alignment.BottomEnd)
+                .padding(40.dp)
+        ) {
+            Icon(Icons.Filled.Add, "")
+        }
+        Column {
+            Text(
+                modifier = Modifier.align(alignment = Alignment.CenterHorizontally),
+                text = "Playlists",
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.primary,
+            )
+            Spacer(modifier = Modifier.padding(all = 4.dp))
             Divider(color = MaterialTheme.colorScheme.primary)
+            PlaylistList(playlistList, onClick)
+        }
+    }
+}
+
+@Composable
+fun PlaylistList(
+    playlistList: List<PlaylistInfo>,
+    onClick: (PlaylistInfo) -> Unit = emptyFunction1()) {
+    val listState = rememberLazyListState()
+    Column {
+        Box(modifier = Modifier
+            .fillMaxWidth()
+            .fillMaxHeight()) {
+            LazyColumn(state = listState) {
+                items(items = playlistList, key = { it.name }) { playlistInfo ->
+                    Playlist(playlistInfo, onClick)
+                    Divider(color = MaterialTheme.colorScheme.primary)
+                }
+            }
         }
     }
 }
@@ -47,7 +75,7 @@ fun Playlist(playlistInfo: PlaylistInfo, onClick: (PlaylistInfo)->Unit=emptyFunc
             .fillMaxWidth()
             .clickable { onClick(playlistInfo) }
             .padding(all = 4.dp)
-            .semantics(mergeDescendants = true){}) {
+            .semantics(mergeDescendants = true) {}) {
         Spacer(modifier = Modifier.padding(vertical = 4.dp))
         Image(
             painter = playlistInfo.artwork.toImagePainter(),

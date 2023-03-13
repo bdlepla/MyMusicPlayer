@@ -43,7 +43,7 @@ fun CurrentlyPlayingSmallScreen(
             Box(
                 modifier = Modifier.weight(3f)
             ) {
-                SongWithImage(currentSong, onClick = onClick)
+                SongWithImage(currentSong, onClick)
             }
             Image(painter = playPauseIcon,
                 contentDescription = if (isPaused) "Play" else "Pause",

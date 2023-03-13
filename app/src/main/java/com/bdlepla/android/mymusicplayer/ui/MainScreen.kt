@@ -1,18 +1,28 @@
 package com.bdlepla.android.mymusicplayer.ui
 
 import android.content.res.Configuration
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.Button
+import androidx.compose.material.Text
+import androidx.compose.material.TextField
+import androidx.compose.material3.Divider
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.media3.session.MediaController
 import androidx.navigation.compose.rememberNavController
 import com.bdlepla.android.mymusicplayer.MyMusicViewModel
 import com.bdlepla.android.mymusicplayer.Navigation
+import com.bdlepla.android.mymusicplayer.R
 import com.bdlepla.android.mymusicplayer.SampleData
 import com.bdlepla.android.mymusicplayer.business.*
 import com.bdlepla.android.mymusicplayer.ui.theme.MyMusicPlayerTheme
@@ -43,8 +53,85 @@ internal fun MainScreen(viewModel: MyMusicViewModel=viewModel()) {
     val onPlayPauseClick: ()->Unit = { viewModel.togglePlayPause() }
     val onNextClick:()->Unit = { viewModel.playNext() }
 
-    val setSongListForScreen: (songs:List<SongInfo>)->Unit = {
-        songsByScreen.value = it
+    val setSongListForScreen: (List<SongInfo>)->Unit = { songsByScreen.value = it }
+
+    val nameNewPlaylist = remember { mutableStateOf(false) }
+    val savedPlaylistNameToAdd = remember { mutableStateOf("") }
+    val onAddNewPlaylist: ()->Unit = {
+        savedPlaylistNameToAdd.value = ""
+        nameNewPlaylist.value = true
+    }
+    val onCreateNewPlaylist: ()->Unit = {
+        viewModel.addNewPlaylist(savedPlaylistNameToAdd.value)
+        nameNewPlaylist.value = false
+    }
+    if (nameNewPlaylist.value) {
+        MyMusicPlayerTheme {
+            Dialog(onDismissRequest = { nameNewPlaylist.value = false }) {
+
+                val onTextBoxUpdate: (String) -> Unit = {
+                    savedPlaylistNameToAdd.value = it
+                }
+
+                Box(
+                    Modifier
+                        .background(MaterialTheme.colorScheme.background)
+                        .size(500.dp, 300.dp)) {
+                    Column(modifier=Modifier.align(Alignment.Center)) {
+                        Row {
+                            Spacer(modifier = Modifier.padding(all = 4.dp))
+                            Text(
+                                text = "Name New Playlist",
+                                style = MaterialTheme.typography.titleLarge,
+                                color = MaterialTheme.colorScheme.primary,
+                            )
+                        }
+                        Spacer(modifier = Modifier.padding(all = 4.dp))
+                        TextField(value=savedPlaylistNameToAdd.value, onValueChange = onTextBoxUpdate)
+                        Spacer(modifier = Modifier.padding(all = 4.dp))
+                        Button(onClick = onCreateNewPlaylist) {
+                            Text("Add")
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    val songsToAddToPlaylist = remember { mutableStateOf<List<SongInfo>>(emptyList())}
+    val pickPlaylist = remember { mutableStateOf(false) }
+    val onAddSongsToPlaylist: (List<SongInfo>)->Unit = {
+        songsToAddToPlaylist.value = it
+        pickPlaylist.value = true
+    }
+
+    if (pickPlaylist.value) {
+        MyMusicPlayerTheme {
+            Dialog(onDismissRequest = { pickPlaylist.value = false }) {
+                val onCLick: (PlaylistInfo) -> Unit = {
+                    viewModel.addSongsToPlaylist(it, songsToAddToPlaylist.value)
+                    pickPlaylist.value = false
+                }
+
+                Box(
+                    Modifier.background(MaterialTheme.colorScheme.background).size(500.dp, 300.dp)
+                ) {
+                    Column {
+                        Row {
+                            Spacer(modifier = Modifier.padding(all = 4.dp))
+                            Text(
+                                text = stringResource(R.string.pick_playlist),
+                                style = MaterialTheme.typography.titleLarge,
+                                color = MaterialTheme.colorScheme.primary,
+                            )
+                        }
+                        Spacer(modifier = Modifier.padding(all = 4.dp))
+                        Divider(color = MaterialTheme.colorScheme.primary)
+                        PlaylistList(playlists, onCLick)
+                    }
+                }
+            }
+        }
     }
 
     MainContent(
@@ -53,6 +140,8 @@ internal fun MainScreen(viewModel: MyMusicViewModel=viewModel()) {
         artists,
         albums,
         playlists,
+        onAddNewPlaylist,
+        onAddSongsToPlaylist,
         setSongListForScreen,
         onSongClick,
         onShuffleClick,
@@ -64,6 +153,8 @@ internal fun MainScreen(viewModel: MyMusicViewModel=viewModel()) {
     )
 }
 
+// Main content is the main screen but without relying on the view model
+// so previews will work.
 @Composable
 private fun MainContent(
     mediaController: MediaController?,
@@ -71,6 +162,8 @@ private fun MainContent(
     artists: List<ArtistInfo>,
     albums: List<AlbumInfo>,
     playlists: List<PlaylistInfo>,
+    onAddNewPlaylist: ()->Unit = emptyFunction(),
+    onAddSongsToPlaylist: (List<SongInfo>)->Unit = emptyFunction1(),
     setSongsForScreen: (List<SongInfo>) -> Unit = emptyFunction1(),
     onSongClick: (SongInfo, List<SongInfo>) -> Unit = emptyFunction2(),
     onShuffleClick: () -> Unit = emptyFunction(),
@@ -98,7 +191,8 @@ private fun MainContent(
                 // A surface container using the 'background' color from the theme
                 Column(modifier = Modifier.padding(paddingValues)) {
                     Navigation(navController, mediaController, songs, artists, albums,
-                    playlists, setSongsForScreen, onSongClick, currentPlayingStats, isPaused)
+                        playlists, onAddNewPlaylist, onAddSongsToPlaylist, setSongsForScreen,
+                        onSongClick, currentPlayingStats, isPaused)
                 }
             }
         }
