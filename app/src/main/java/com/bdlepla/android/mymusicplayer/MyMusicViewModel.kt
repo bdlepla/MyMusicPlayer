@@ -256,8 +256,18 @@ class MyMusicViewModel
         _allPlaylists.value = playlistManager.updatePlaylistInfo(songCollection)
     }
 
+    fun removePlaylist(playListInfo: PlaylistInfo) {
+        playlistManager.removePlaylist(playListInfo)
+        _allPlaylists.value = playlistManager.updatePlaylistInfo(songCollection)
+    }
+
     fun addNewPlaylist(it: String) {
         playlistManager.addNewPlaylist(it)
+        _allPlaylists.value = playlistManager.updatePlaylistInfo(songCollection)
+    }
+
+    fun removeSongFromPlaylist(playListInfo: PlaylistInfo, songInfo: SongInfo) {
+        playlistManager.removeSongFromPlaylist(playListInfo, songInfo)
         _allPlaylists.value = playlistManager.updatePlaylistInfo(songCollection)
     }
 }

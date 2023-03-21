@@ -100,7 +100,7 @@ object Repository {
                     putLong(GENRE_ID, genreId)
                     putString(MEDIA_URI, data)
                     putInt(TRACK_NUMBER, track)
-                    putInt(DURATION_ID, durationInSeconds)
+                    putInt(DURATION, durationInSeconds)
                     putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE, title)
                     putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_SUBTITLE, artist)
                     putString(MediaMetadataCompat.METADATA_KEY_ART_URI, albumArt)
@@ -171,4 +171,4 @@ const val ALBUM_ID = "[albumID]"
 const val GENRE_ID = "[genreID]"
 const val ITEM_ID = "[itemID]"
 const val ARTIST_ID = "[artistID]"
-const val DURATION_ID = "[durationId]"
+const val DURATION = "[duration]"

@@ -38,11 +38,13 @@ class PlaylistManager(private val application: Application) {
         Log.d("PlaylistManager","Loading $m3uName")
         return File(m3uName)
             .readLines()
+            .asSequence()
             .map { it.trim() }
             .filter { it.isNotEmpty() }
             .filter { it[0] != '#' }
             .filter {!it.contains("/Music/")}
             .onEach { Log.d("PlaylistManager", it) }
+            .toList()
     }
     private fun savePlaylistSongs(m3uname:String, songNames:List<String>) {
         if (File(m3uname).exists()){
@@ -86,6 +88,18 @@ class PlaylistManager(private val application: Application) {
         }
     }
 
+    fun removeSongFromPlaylist(playListInfo: PlaylistInfo, songInfo: SongInfo) {
+        val song = Path(songInfo.mediaUri).relativeToOrSelf(mediaPath).toString()
+        val name = playListInfo.name
+        if (playLists.containsKey(name)){
+            val playlistSongNames = playLists[name]
+            playlistSongNames!!.remove(song)
+            playLists[name] = playlistSongNames
+            val fileName = getFullFilename(name)
+            savePlaylistSongs(fileName, playlistSongNames)
+        }
+    }
+
     fun addNewPlaylist(name: String) {
         val songs = mutableListOf<String>()
         playLists[name]= songs
@@ -93,8 +107,17 @@ class PlaylistManager(private val application: Application) {
         savePlaylistSongs(m3uname, songs)
     }
 
-    // add and remove playlists
-    // add and remove songs from a playlist
+    fun removePlaylist(playListInfo: PlaylistInfo){
+        playLists.remove(playListInfo.name)
+        val fileName = getFullFilename(playListInfo.name)
+        if (File(fileName).exists()){
+            Log.d("PlaylistManager", "deleting $fileName")
+            File(fileName).delete()
+        }
+    }
+
+    // add and remove playlists -- add done
+    // add and remove songs from a playlist -- add done; working on removing
     // support the current playlist; save it so that upon restart, can pick up where left off
 
 }

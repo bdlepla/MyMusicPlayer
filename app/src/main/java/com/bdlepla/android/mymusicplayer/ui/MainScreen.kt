@@ -3,15 +3,12 @@ package com.bdlepla.android.mymusicplayer.ui
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.Button
 import androidx.compose.material.Text
-import androidx.compose.material.TextField
 import androidx.compose.material3.Divider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -55,47 +52,9 @@ internal fun MainScreen(viewModel: MyMusicViewModel=viewModel()) {
 
     val setSongListForScreen: (List<SongInfo>)->Unit = { songsByScreen.value = it }
 
-    val nameNewPlaylist = remember { mutableStateOf(false) }
-    val savedPlaylistNameToAdd = remember { mutableStateOf("") }
-    val onAddNewPlaylist: ()->Unit = {
-        savedPlaylistNameToAdd.value = ""
-        nameNewPlaylist.value = true
-    }
-    val onCreateNewPlaylist: ()->Unit = {
-        viewModel.addNewPlaylist(savedPlaylistNameToAdd.value)
-        nameNewPlaylist.value = false
-    }
-    if (nameNewPlaylist.value) {
-        MyMusicPlayerTheme {
-            Dialog(onDismissRequest = { nameNewPlaylist.value = false }) {
-
-                val onTextBoxUpdate: (String) -> Unit = {
-                    savedPlaylistNameToAdd.value = it
-                }
-
-                Box(
-                    Modifier
-                        .background(MaterialTheme.colorScheme.background)
-                        .size(500.dp, 300.dp)) {
-                    Column(modifier=Modifier.align(Alignment.Center)) {
-                        Row {
-                            Spacer(modifier = Modifier.padding(all = 4.dp))
-                            Text(
-                                text = "Name New Playlist",
-                                style = MaterialTheme.typography.titleLarge,
-                                color = MaterialTheme.colorScheme.primary,
-                            )
-                        }
-                        Spacer(modifier = Modifier.padding(all = 4.dp))
-                        TextField(value=savedPlaylistNameToAdd.value, onValueChange = onTextBoxUpdate)
-                        Spacer(modifier = Modifier.padding(all = 4.dp))
-                        Button(onClick = onCreateNewPlaylist) {
-                            Text("Add")
-                        }
-                    }
-                }
-            }
-        }
+    val onCreateNewPlaylist: (String)->Unit = { viewModel.addNewPlaylist(it) }
+    val onRemovePlaylist:(PlaylistInfo)->Unit = {
+        viewModel.removePlaylist(it)
     }
 
     val songsToAddToPlaylist = remember { mutableStateOf<List<SongInfo>>(emptyList())}
@@ -134,14 +93,20 @@ internal fun MainScreen(viewModel: MyMusicViewModel=viewModel()) {
         }
     }
 
+    val onRemoveSongFromPlaylist:(PlaylistInfo, SongInfo)->Unit = { playListInfo, songInfo ->
+        viewModel.removeSongFromPlaylist(playListInfo, songInfo)
+    }
+
     MainContent(
         viewModel.browser,
         songs,
         artists,
         albums,
         playlists,
-        onAddNewPlaylist,
+        onCreateNewPlaylist,
+        onRemovePlaylist,
         onAddSongsToPlaylist,
+        onRemoveSongFromPlaylist,
         setSongListForScreen,
         onSongClick,
         onShuffleClick,
@@ -162,8 +127,10 @@ private fun MainContent(
     artists: List<ArtistInfo>,
     albums: List<AlbumInfo>,
     playlists: List<PlaylistInfo>,
-    onAddNewPlaylist: ()->Unit = emptyFunction(),
+    onCreateNewPlaylist: (String) -> Unit = emptyFunction1(),
+    onRemovePlaylist: (PlaylistInfo) -> Unit = emptyFunction1(),
     onAddSongsToPlaylist: (List<SongInfo>)->Unit = emptyFunction1(),
+    onRemoveSongFromPlaylist:(PlaylistInfo, SongInfo)->Unit = emptyFunction2(),
     setSongsForScreen: (List<SongInfo>) -> Unit = emptyFunction1(),
     onSongClick: (SongInfo, List<SongInfo>) -> Unit = emptyFunction2(),
     onShuffleClick: () -> Unit = emptyFunction(),
@@ -191,8 +158,9 @@ private fun MainContent(
                 // A surface container using the 'background' color from the theme
                 Column(modifier = Modifier.padding(paddingValues)) {
                     Navigation(navController, mediaController, songs, artists, albums,
-                        playlists, onAddNewPlaylist, onAddSongsToPlaylist, setSongsForScreen,
-                        onSongClick, currentPlayingStats, isPaused)
+                        playlists, onCreateNewPlaylist, onRemovePlaylist, onAddSongsToPlaylist,
+                        onRemoveSongFromPlaylist, setSongsForScreen, onSongClick,
+                        currentPlayingStats, isPaused)
                 }
             }
         }

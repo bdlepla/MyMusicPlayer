@@ -16,8 +16,10 @@ fun Navigation(
     artists: List<ArtistInfo>,
     albums: List<AlbumInfo>,
     playlists: List<PlaylistInfo>,
-    onAddNewPlaylist: ()->Unit = emptyFunction(),
+    onCreateNewPlaylist: (String) -> Unit = emptyFunction1(),
+    onRemovePlaylist: (PlaylistInfo) -> Unit = emptyFunction1(),
     pickPlaylistToAddSongs: (List<SongInfo>)->Unit = emptyFunction1(),
+    onRemoveSongFromPlaylist:(PlaylistInfo, SongInfo)->Unit = emptyFunction2(),
     setSongsForScreen: (List<SongInfo>) -> Unit = emptyFunction1(),
     onSongClick: (SongInfo, List<SongInfo>) -> Unit = emptyFunction2(),
     currentPlayingStats: CurrentPlayingStats? = null,
@@ -85,7 +87,7 @@ fun Navigation(
                 val route = "playlistsongs/${playlistName}"
                 navController.navigate(route)
             }
-            PlaylistScreen(playlists, onClick, onAddNewPlaylist)
+            PlaylistScreen(playlists, onClick, onCreateNewPlaylist, onRemovePlaylist)
         }
 
         composable("playlistsongs/{playlistId}") {
@@ -98,7 +100,7 @@ fun Navigation(
             val myOnClick:(SongInfo)->Unit = {
                 onSongClick(it, songsInPlaylist)
             }
-            PlaylistSongsScreen(playlist, songsInPlaylist, myOnClick)
+            PlaylistSongsScreen(playlist, songsInPlaylist, myOnClick, onRemoveSongFromPlaylist)
         }
     }
 }

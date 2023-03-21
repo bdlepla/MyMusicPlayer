@@ -27,15 +27,12 @@ import com.bdlepla.android.mymusicplayer.ui.theme.MyMusicPlayerTheme
 @Composable
 fun SongList(songInfos: List<SongInfo>,
              onClick: (SongInfo) -> Unit = emptyFunction1(),
-             onAddSongsToPlaylist:(List<SongInfo>)->Unit = emptyFunction1()) {
+             onLongPress:(List<SongInfo>)->Unit = emptyFunction1()) {
     val listState = rememberLazyListState()
-    val myOnClick: (SongInfo)->Unit = {
-        onClick(it)
-    }
 
     LazyColumn(state = listState) {
         items(items = songInfos, key = { it.songId }) { songInfo ->
-            SongWithImage(songInfo, myOnClick, onAddSongsToPlaylist)
+            SongWithImage(songInfo, onClick, onLongPress)
             Divider(color = MaterialTheme.colorScheme.inversePrimary)
         }
     }
@@ -77,13 +74,13 @@ fun Song(songInfo: SongInfo) {
 @Composable
 fun SongWithImage(songInfo: SongInfo,
                   onClick: (SongInfo) -> Unit = emptyFunction1(),
-                  onAddSongsToPlaylist:(List<SongInfo>)->Unit = emptyFunction1()) {
+                  onLongPress: (List<SongInfo>) -> Unit = emptyFunction1()) {
     Row(verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
             .combinedClickable (
                 onClick = { onClick(songInfo) },
-                onLongClick = { onAddSongsToPlaylist(listOf(songInfo))}
+                onLongClick = { onLongPress(listOf(songInfo))}
             )
             .padding(all = 4.dp)
             .semantics(mergeDescendants = true){}) {

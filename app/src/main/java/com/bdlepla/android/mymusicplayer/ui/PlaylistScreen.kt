@@ -1,8 +1,7 @@
 package com.bdlepla.android.mymusicplayer.ui
 
 import android.content.res.Configuration
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -11,13 +10,17 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import com.bdlepla.android.mymusicplayer.SampleData
 import com.bdlepla.android.mymusicplayer.business.PlaylistInfo
+import com.bdlepla.android.mymusicplayer.extensions.toHourMinutesSeconds
 import com.bdlepla.android.mymusicplayer.extensions.toImagePainter
 import com.bdlepla.android.mymusicplayer.ui.theme.MyMusicPlayerTheme
 
@@ -25,7 +28,56 @@ import com.bdlepla.android.mymusicplayer.ui.theme.MyMusicPlayerTheme
 fun PlaylistScreen(
     playlistList: List<PlaylistInfo>,
     onClick: (PlaylistInfo) -> Unit = emptyFunction1(),
-    onAddNewPlaylist: () -> Unit = emptyFunction()){
+    onCreateNewPlaylist: (String) -> Unit = emptyFunction1(),
+    onRemovePlaylist: (PlaylistInfo) -> Unit = emptyFunction1()){
+
+    val nameNewPlaylist = remember { mutableStateOf(false) }
+    val savedPlaylistNameToAdd = remember { mutableStateOf("") }
+    val onAddNewPlaylist: ()->Unit = {
+        savedPlaylistNameToAdd.value = ""
+        nameNewPlaylist.value = true
+    }
+
+    val onLongPress: (PlaylistInfo)->Unit = onRemovePlaylist
+
+    if (nameNewPlaylist.value) {
+        MyMusicPlayerTheme {
+            Dialog(onDismissRequest = { nameNewPlaylist.value = false }) {
+
+                val onTextBoxUpdate: (String) -> Unit = {
+                    savedPlaylistNameToAdd.value = it
+                }
+
+                val onAddButtonClick:() -> Unit = {
+                    onCreateNewPlaylist( savedPlaylistNameToAdd.value)
+                    nameNewPlaylist.value = false
+                }
+
+                Box(
+                    Modifier
+                        .background(MaterialTheme.colorScheme.background)
+                        .size(500.dp, 300.dp)) {
+                    Column(modifier=Modifier.align(Alignment.Center)) {
+                        Row {
+                            Spacer(modifier = Modifier.padding(all = 4.dp))
+                            androidx.compose.material.Text(
+                                text = "Name New Playlist",
+                                style = MaterialTheme.typography.titleLarge,
+                                color = MaterialTheme.colorScheme.primary,
+                            )
+                        }
+                        Spacer(modifier = Modifier.padding(all = 4.dp))
+                        androidx.compose.material.TextField(value=savedPlaylistNameToAdd.value, onValueChange = onTextBoxUpdate)
+                        Spacer(modifier = Modifier.padding(all = 4.dp))
+                        androidx.compose.material.Button(onClick = onAddButtonClick) {
+                            androidx.compose.material.Text("Add")
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     Box {
         FloatingActionButton(
             onClick = onAddNewPlaylist,
@@ -44,7 +96,7 @@ fun PlaylistScreen(
             )
             Spacer(modifier = Modifier.padding(all = 4.dp))
             Divider(color = MaterialTheme.colorScheme.primary)
-            PlaylistList(playlistList, onClick)
+            PlaylistList(playlistList, onClick, onLongPress)
         }
     }
 }
@@ -52,7 +104,8 @@ fun PlaylistScreen(
 @Composable
 fun PlaylistList(
     playlistList: List<PlaylistInfo>,
-    onClick: (PlaylistInfo) -> Unit = emptyFunction1()) {
+    onClick: (PlaylistInfo) -> Unit = emptyFunction1(),
+    onLongPress: (PlaylistInfo)->Unit=emptyFunction1()) {
     val listState = rememberLazyListState()
     Column {
         Box(modifier = Modifier
@@ -60,7 +113,7 @@ fun PlaylistList(
             .fillMaxHeight()) {
             LazyColumn(state = listState) {
                 items(items = playlistList, key = { it.name }) { playlistInfo ->
-                    Playlist(playlistInfo, onClick)
+                    Playlist(playlistInfo, onClick, onLongPress)
                     Divider(color = MaterialTheme.colorScheme.primary)
                 }
             }
@@ -68,12 +121,20 @@ fun PlaylistList(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun Playlist(playlistInfo: PlaylistInfo, onClick: (PlaylistInfo)->Unit=emptyFunction1()) {
+fun Playlist(playlistInfo: PlaylistInfo,
+             onClick: (PlaylistInfo)->Unit=emptyFunction1(),
+             onLongPress: (PlaylistInfo)->Unit=emptyFunction1()) {
     Row(verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick(playlistInfo) }
+            .combinedClickable(
+                onClick = { onClick(playlistInfo) },
+                onLongClick = {
+                    onLongPress(playlistInfo)
+                }
+            )
             .padding(all = 4.dp)
             .semantics(mergeDescendants = true) {}) {
         Spacer(modifier = Modifier.padding(vertical = 4.dp))
@@ -91,6 +152,11 @@ fun Playlist(playlistInfo: PlaylistInfo, onClick: (PlaylistInfo)->Unit=emptyFunc
             )
             Text(
                 text = "${playlistInfo.songs.count()} songs",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.secondary,
+            )
+            Text(
+                text = playlistInfo.songs.sumOf{it.duration}.toHourMinutesSeconds() + " Total time",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.secondary,
             )

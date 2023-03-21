@@ -14,7 +14,13 @@ import com.bdlepla.android.mymusicplayer.extensions.toImagePainter
 fun PlaylistSongsScreen(
     playlist:PlaylistInfo,
     songs:List<SongInfo>,
-    onSongClick:(SongInfo)->Unit = emptyFunction1()) {
+    onSongClick:(SongInfo)->Unit = emptyFunction1(),
+    onRemoveSongFromPlayList:(PlaylistInfo, SongInfo)->Unit = emptyFunction2()) {
+    val onLongPress:(List<SongInfo>)->Unit = {
+        if (it.any()) {
+            onRemoveSongFromPlayList(playlist, it.first())
+        }
+    }
     Column {
         Box (modifier = Modifier.fillMaxWidth()) {
             Image(
@@ -26,6 +32,6 @@ fun PlaylistSongsScreen(
             )
         }
         Spacer(modifier= Modifier.padding(all=4.dp))
-        SongList(songInfos = songs, onSongClick)
+        SongList(songInfos = songs, onSongClick, onLongPress)
     }
 }
