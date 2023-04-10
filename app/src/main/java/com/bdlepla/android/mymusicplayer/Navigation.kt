@@ -25,22 +25,19 @@ fun Navigation(
     currentPlayingStats: CurrentPlayingStats? = null,
     isPaused: Boolean = false
 ) {
-    val onAddSongsToPlaylist: (List<SongInfo>)->Unit = {
-        pickPlaylistToAddSongs(it)
-    }
+    val onAddSongsToPlaylist: (List<SongInfo>)->Unit = { pickPlaylistToAddSongs(it) }
+
     NavHost(navController, startDestination = NavigationItem.Songs.route) {
         val isExpandedWindow = false
 
         composable(NavigationItem.Songs.route) {
             setSongsForScreen(songs)
-            val myOnClick:(SongInfo)->Unit = {
-                onSongClick(it, songs)
-            }
+            val myOnClick:(SongInfo)->Unit = { onSongClick(it, songs) }
             SongList(songs, myOnClick, onAddSongsToPlaylist)
         }
 
         composable(NavigationItem.Artists.route) {
-            ArtistList(artists, navController)
+            ArtistList(artists, navController, onAddSongsToPlaylist)
         }
 
         composable("artistsongs/{artistId}") {
@@ -48,18 +45,14 @@ fun Navigation(
             val args = backStack.arguments ?: return@composable
             val artistId = args.getString("artistId")?.toLong()?: return@composable
             val theArtist = artists.firstOrNull{it.artistId == artistId} ?: return@composable
-            val songsForArtist = songs
-                .filter { it.artistId == artistId}
-                .sortedBy { it.albumYear * 1_000 + it.trackNumber }
+            val songsForArtist = theArtist.songs
             setSongsForScreen(songsForArtist)
-            val myOnClick:(SongInfo)->Unit = {
-                onSongClick(it, songsForArtist)
-            }
+            val myOnClick:(SongInfo)->Unit = { onSongClick(it, songsForArtist) }
             ArtistSongsScreen(theArtist, songsForArtist, myOnClick)
         }
 
         composable(NavigationItem.Albums.route) {
-            AlbumList(albums, navController)
+            AlbumList(albums, navController, onAddSongsToPlaylist)
         }
 
         composable("albumsongs/{albumId}") {
@@ -67,13 +60,9 @@ fun Navigation(
             val args = backStack.arguments ?: return@composable
             val albumId = args.getString("albumId")?.toLong() ?: return@composable
             val theAlbum = albums.firstOrNull{it.albumId == albumId} ?: return@composable
-            val songsInAlbum = songs
-                .filter { it.albumId == albumId }
-                .sortedBy { it.trackNumber }
+            val songsInAlbum = theAlbum.songs
             setSongsForScreen(songsInAlbum)
-            val myOnClick:(SongInfo)->Unit = {
-                onSongClick(it, songsInAlbum)
-            }
+            val myOnClick:(SongInfo)->Unit = { onSongClick(it, songsInAlbum) }
             AlbumSongsScreen(isExpandedWindow, theAlbum, songsInAlbum, myOnClick)
         }
 
@@ -97,9 +86,7 @@ fun Navigation(
             val playlist = playlists.firstOrNull{it.name == playlistName} ?: return@composable
             val songsInPlaylist = playlist.songs
             setSongsForScreen(songsInPlaylist)
-            val myOnClick:(SongInfo)->Unit = {
-                onSongClick(it, songsInPlaylist)
-            }
+            val myOnClick:(SongInfo)->Unit = { onSongClick(it, songsInPlaylist) }
             PlaylistSongsScreen(playlist, songsInPlaylist, myOnClick, onRemoveSongFromPlaylist)
         }
     }

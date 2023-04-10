@@ -1,8 +1,9 @@
 package com.bdlepla.android.mymusicplayer.ui
 
 import android.content.res.Configuration
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -17,15 +18,17 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.bdlepla.android.mymusicplayer.extensions.toImagePainter
 import com.bdlepla.android.mymusicplayer.SampleData
 import com.bdlepla.android.mymusicplayer.business.AlbumInfo
+import com.bdlepla.android.mymusicplayer.business.SongInfo
+import com.bdlepla.android.mymusicplayer.extensions.toImagePainter
 import com.bdlepla.android.mymusicplayer.ui.theme.MyMusicPlayerTheme
 
 @Composable
 fun AlbumList(
     AlbumList:List<AlbumInfo>,
-    navController: NavController? = null) {
+    navController: NavController? = null,
+    onLongPress:(List<SongInfo>)->Unit = emptyFunction1()) {
     val listState = rememberLazyListState()
     val onClick: (AlbumInfo)->Unit = {
         val albumId = it.albumId
@@ -35,18 +38,24 @@ fun AlbumList(
 
     LazyColumn(state = listState) {
         items(items = AlbumList, key = { it.albumId }) { albumInfo ->
-            Album(albumInfo, onClick)
+            Album(albumInfo, onClick, onLongPress)
             Divider(color = MaterialTheme.colorScheme.primary)
         }
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun Album(albumInfo:AlbumInfo, onClick: (AlbumInfo) -> Unit = emptyFunction1()) {
+fun Album(albumInfo:AlbumInfo,
+          onClick: (AlbumInfo) -> Unit = emptyFunction1(),
+          onLongPress:(List<SongInfo>)->Unit = emptyFunction1()) {
     Row(verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick(albumInfo) }
+            .combinedClickable (
+                onClick = {onClick(albumInfo)},
+                onLongClick = {onLongPress(albumInfo.songs)}
+            )
             .padding(all = 4.dp)
             .semantics(mergeDescendants = true) {}) {
         Image(

@@ -244,10 +244,22 @@ class MyMusicViewModel
     }
 
     private fun addArtists(artists:List<ArtistInfo>) {
+        artists.forEach{artist ->
+            val songs = this.songCollection
+                .filter { it.artistId == artist.artistId}
+                .sortedBy { it.albumYear * 1_000 + it.trackNumber }
+            artist.songs.addAll(songs)
+        }
         _allArtists.value = artists.sortedBy { it.name.forSorting() }
     }
 
     private fun addAlbums(albums:List<AlbumInfo>) {
+        albums.forEach{album ->
+            val songs = this.songCollection
+                .filter { it.albumId == album.albumId }
+                .sortedBy { it.trackNumber }
+            album.songs.addAll(songs)
+        }
         _allAlbums.value = albums.sortedBy { it.name.forSorting() }
     }
 

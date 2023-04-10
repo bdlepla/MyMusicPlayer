@@ -1,8 +1,9 @@
 package com.bdlepla.android.mymusicplayer.ui
 
 import android.content.res.Configuration
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -18,14 +19,16 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.bdlepla.android.mymusicplayer.*
-import com.bdlepla.android.mymusicplayer.extensions.toImagePainter
 import com.bdlepla.android.mymusicplayer.business.ArtistInfo
+import com.bdlepla.android.mymusicplayer.business.SongInfo
+import com.bdlepla.android.mymusicplayer.extensions.toImagePainter
 import com.bdlepla.android.mymusicplayer.ui.theme.MyMusicPlayerTheme
 
 @Composable
 fun ArtistList(
     artistList: List<ArtistInfo>,
-    navController: NavController? = null
+    navController: NavController? = null,
+    onLongPress: (List<SongInfo>) -> Unit = emptyFunction1()
 ) {
     val listState = rememberLazyListState()
     val onClick: (ArtistInfo)->Unit = {
@@ -36,20 +39,25 @@ fun ArtistList(
 
     LazyColumn(state = listState) {
         items(items = artistList, key = { it.artistId }) { artistInfo ->
-            Artist(artistInfo, onClick)
+            Artist(artistInfo, onClick, onLongPress)
             Divider(color = MaterialTheme.colorScheme.primary)
         }
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun Artist(
         artistInfo:ArtistInfo,
-        onClick: (ArtistInfo) -> Unit = emptyFunction1()) {
+        onClick: (ArtistInfo) -> Unit = emptyFunction1(),
+        onLongPress:(List<SongInfo>)->Unit = emptyFunction1()) {
     Row(verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick(artistInfo) }
+            .combinedClickable (
+                onClick = { onClick(artistInfo) },
+                onLongClick = { onLongPress(artistInfo.songs) }
+            )
             .padding(all = 4.dp)
             .semantics(mergeDescendants = true) {}) {
         Image(
