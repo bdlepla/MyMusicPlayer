@@ -19,12 +19,13 @@ import com.bdlepla.android.mymusicplayer.ui.theme.MyMusicPlayerTheme
 fun AlbumSongsScreen(isExpandedWindowSize: Boolean = false,
                      albumInfo: AlbumInfo,
                      songsInAlbum: List<SongInfo>,
-                     onSongClick:(SongInfo)->Unit = emptyFunction1()) {
+                     onSongClick:(SongInfo)->Unit = emptyFunction1(),
+                     onLongPress:(List<SongInfo>)->Unit = emptyFunction1()) {
     if (isExpandedWindowSize) {
-        AlbumSongsScreenLandscape(albumInfo, songsInAlbum, onSongClick)
+        AlbumSongsScreenLandscape(albumInfo, songsInAlbum, onSongClick, onLongPress)
     }
     else {
-        AlbumSongsScreenPortrait(albumInfo, songsInAlbum, onSongClick)
+        AlbumSongsScreenPortrait(albumInfo, songsInAlbum, onSongClick, onLongPress)
     }
 }
 
@@ -32,7 +33,8 @@ fun AlbumSongsScreen(isExpandedWindowSize: Boolean = false,
 fun AlbumSongsScreenPortrait(
     albumInfo: AlbumInfo,
     songsInAlbum: List<SongInfo>,
-    onSongClick:(SongInfo)->Unit = emptyFunction1()) {
+    onSongClick:(SongInfo)->Unit = emptyFunction1(),
+    onLongPress:(List<SongInfo>)->Unit = emptyFunction1()) {
     Column {
         Box (modifier = Modifier.fillMaxWidth()){
             Image(
@@ -44,7 +46,7 @@ fun AlbumSongsScreenPortrait(
             )
         }
         Spacer(modifier= Modifier.padding(all=4.dp))
-        SongList(songsInAlbum, onSongClick)
+        SongList(songsInAlbum, onSongClick, onLongPress)
     }
 }
 
@@ -67,7 +69,8 @@ fun AlbumSongsScreenPortraitPreview() {
 fun AlbumSongsScreenLandscape(
     albumInfo: AlbumInfo,
     songsInAlbum: List<SongInfo>,
-    onSongClick:(SongInfo)->Unit = emptyFunction1()) {
+    onSongClick:(SongInfo)->Unit = emptyFunction1(),
+    onLongPress:(List<SongInfo>)->Unit = emptyFunction1()) {
     Row {
         //PlayScreen(currentPlayingStats = playingStats, isPaused = isPaused)
         //SongList
@@ -83,7 +86,7 @@ fun AlbumSongsScreenLandscape(
             )
         }
         Spacer(modifier= Modifier.padding(all=4.dp))
-        SongList(songsInAlbum, onSongClick)
+        SongList(songsInAlbum, onSongClick, onLongPress)
     }
 }
 

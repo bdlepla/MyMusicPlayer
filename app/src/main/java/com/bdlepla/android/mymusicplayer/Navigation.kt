@@ -48,7 +48,7 @@ fun Navigation(
             val songsForArtist = theArtist.songs
             setSongsForScreen(songsForArtist)
             val myOnClick:(SongInfo)->Unit = { onSongClick(it, songsForArtist) }
-            ArtistSongsScreen(theArtist, songsForArtist, myOnClick)
+            ArtistSongsScreen(theArtist, songsForArtist, myOnClick, onAddSongsToPlaylist)
         }
 
         composable(NavigationItem.Albums.route) {
@@ -63,7 +63,7 @@ fun Navigation(
             val songsInAlbum = theAlbum.songs
             setSongsForScreen(songsInAlbum)
             val myOnClick:(SongInfo)->Unit = { onSongClick(it, songsInAlbum) }
-            AlbumSongsScreen(isExpandedWindow, theAlbum, songsInAlbum, myOnClick)
+            AlbumSongsScreen(isExpandedWindow, theAlbum, songsInAlbum, myOnClick, onAddSongsToPlaylist)
         }
 
         composable(NavigationItem.Playing.route) {

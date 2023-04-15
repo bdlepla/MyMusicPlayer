@@ -18,7 +18,9 @@ import com.bdlepla.android.mymusicplayer.ui.theme.MyMusicPlayerTheme
 fun ArtistSongsScreen(
     artistInfo: ArtistInfo,
     songsInArtist: List<SongInfo>,
-    onSongClick:(SongInfo)->Unit = emptyFunction1()) {
+    onSongClick:(SongInfo)->Unit = emptyFunction1(),
+    onLongPress:(List<SongInfo>)->Unit = emptyFunction1()
+) {
     Column {
         Box (modifier = Modifier.fillMaxWidth()) {
             Image(
@@ -30,7 +32,7 @@ fun ArtistSongsScreen(
             )
         }
         Spacer(modifier= Modifier.padding(all=4.dp))
-        SongList(songInfos = songsInArtist, onSongClick)
+        SongList(songInfos = songsInArtist, onSongClick, onLongPress)
     }
 }
 

@@ -21,8 +21,6 @@ class PlayService: MediaLibraryService() {
 
     private val librarySessionCallback = CustomMediaLibrarySessionCallback()
     private val playerListener = PlayerListener()
-//    private lateinit var customCommands: List<CommandButton>
-//    private var customLayout = ImmutableList.of<CommandButton>()
 
     private val uAmpAudioAttributes = AudioAttributes.Builder()
         .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
