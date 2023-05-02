@@ -29,10 +29,10 @@ fun CurrentlyPlayingSmallScreen(
 ) {
     val playPauseIcon = painterResource(
         id =
-        if (isPaused) R.drawable.media3_notification_play
-        else R.drawable.media3_notification_pause
+        if (isPaused) androidx.media3.session.R.drawable.media3_notification_play
+        else androidx.media3.session.R.drawable.media3_notification_pause
     )
-    val nextIcon = painterResource(id = R.drawable.media3_notification_seek_to_next)
+    val nextIcon = painterResource(id = androidx.media3.session.R.drawable.media3_notification_seek_to_next)
 
     Column {
         Divider(

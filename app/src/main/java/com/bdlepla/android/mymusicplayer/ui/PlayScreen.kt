@@ -55,12 +55,12 @@ fun PlayScreen(currentPlayingStats: CurrentPlayingStats?,
 
 @Composable
 fun PlayerControllerButtons(isPaused: Boolean, callbacks: Callbacks) {
-    val prevIcon = painterResource(id = R.drawable.media3_notification_seek_to_previous)
-    val reverseIcon = painterResource(id = R.drawable.media3_notification_seek_back)
-    val playIcon = painterResource(id = R.drawable.media3_notification_play)
-    val pauseIcon = painterResource(id = R.drawable.media3_notification_pause)
-    val forwardIcon = painterResource(id = R.drawable.media3_notification_seek_forward)
-    val nextIcon = painterResource(id = R.drawable.media3_notification_seek_to_next)
+    val prevIcon = painterResource(id = androidx.media3.session.R.drawable.media3_notification_seek_to_previous)
+    val reverseIcon = painterResource(id = androidx.media3.session.R.drawable.media3_notification_seek_back)
+    val playIcon = painterResource(id = androidx.media3.session.R.drawable.media3_notification_play)
+    val pauseIcon = painterResource(id = androidx.media3.session.R.drawable.media3_notification_pause)
+    val forwardIcon = painterResource(id = androidx.media3.session.R.drawable.media3_notification_seek_forward)
+    val nextIcon = painterResource(id = androidx.media3.session.R.drawable.media3_notification_seek_to_next)
 
     Row {
         Image(painter = prevIcon,
