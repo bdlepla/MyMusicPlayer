@@ -3,6 +3,7 @@ package com.bdlepla.android.mymusicplayer.ui
 import android.content.res.Configuration
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -39,7 +40,7 @@ fun AlbumList(
     LazyColumn(state = listState) {
         items(items = AlbumList, key = { it.albumId }) { albumInfo ->
             Album(albumInfo, onClick, onLongPress)
-            Divider(color = MaterialTheme.colorScheme.primary)
+            Divider(color = MaterialTheme.colorScheme.background, thickness = 10.dp)
         }
     }
 }
@@ -51,6 +52,7 @@ fun Album(albumInfo:AlbumInfo,
           onLongPress:(List<SongInfo>)->Unit = emptyFunction1()) {
     Row(verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
+            .background(color=MaterialTheme.colorScheme.background)
             .fillMaxWidth()
             .combinedClickable (
                 onClick = {onClick(albumInfo)},
@@ -66,7 +68,7 @@ fun Album(albumInfo:AlbumInfo,
         Spacer(modifier=Modifier.padding(all=4.dp))
         Text(
             text = albumInfo.name,
-            style = MaterialTheme.typography.bodyMedium,
+            style = MaterialTheme.typography.titleLarge,
             color = MaterialTheme.colorScheme.secondary
         )
     }

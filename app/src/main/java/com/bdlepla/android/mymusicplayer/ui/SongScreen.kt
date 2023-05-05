@@ -6,13 +6,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material.ContentAlpha
-import androidx.compose.material.LocalContentAlpha
 import androidx.compose.material3.Divider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.semantics
@@ -33,7 +30,7 @@ fun SongList(songInfos: List<SongInfo>,
     LazyColumn(state = listState) {
         items(items = songInfos, key = { it.songId }) { songInfo ->
             SongWithImage(songInfo, onClick, onLongPress)
-            Divider(color = MaterialTheme.colorScheme.inversePrimary)
+            Divider(color = MaterialTheme.colorScheme.background, thickness=10.dp)
         }
     }
 }
@@ -43,30 +40,18 @@ fun Song(songInfo: SongInfo) {
     Column(modifier = Modifier.padding(all = 4.dp)) {
         Text(
             text = songInfo.title,
-            style = MaterialTheme.typography.bodyMedium,
+            style = MaterialTheme.typography.titleLarge,
             color = MaterialTheme.colorScheme.primary,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis
         )
-        CompositionLocalProvider(LocalContentAlpha provides ContentAlpha.medium) {
-            Column {
-                Text(
-                    text = songInfo.artist,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.secondary,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                    text = songInfo.album,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.tertiary,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-        }
+        Text(
+            text = "${songInfo.album} by ${songInfo.artist}",
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.secondary,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
     }
 }
 
@@ -77,6 +62,7 @@ fun SongWithImage(songInfo: SongInfo,
                   onLongPress: (List<SongInfo>) -> Unit = emptyFunction1()) {
     Row(verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
+            .background(color=MaterialTheme.colorScheme.background)
             .fillMaxWidth()
             .combinedClickable (
                 onClick = { onClick(songInfo) },
@@ -88,7 +74,7 @@ fun SongWithImage(songInfo: SongInfo,
         Image(
             painter = songInfo.albumArt.toImagePainter(),
             contentDescription = songInfo.title,
-            modifier = Modifier.size(50.dp)
+            modifier = Modifier.size(50.dp),
         )
         Spacer(modifier = Modifier.padding(all = 4.dp))
         Song(songInfo)

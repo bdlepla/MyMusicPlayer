@@ -114,7 +114,7 @@ fun PlaylistList(
             LazyColumn(state = listState) {
                 items(items = playlistList, key = { it.name }) { playlistInfo ->
                     Playlist(playlistInfo, onClick, onLongPress)
-                    Divider(color = MaterialTheme.colorScheme.primary)
+                    Divider(color = MaterialTheme.colorScheme.background, thickness = 10.dp)
                 }
             }
         }
@@ -128,6 +128,7 @@ fun Playlist(playlistInfo: PlaylistInfo,
              onLongPress: (PlaylistInfo)->Unit=emptyFunction1()) {
     Row(verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
+            .background(color=MaterialTheme.colorScheme.background)
             .fillMaxWidth()
             .combinedClickable(
                 onClick = { onClick(playlistInfo) },
@@ -147,17 +148,17 @@ fun Playlist(playlistInfo: PlaylistInfo,
         Column(modifier = Modifier.padding(all = 4.dp)) {
             Text(
                 text = playlistInfo.name,
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.primary,
             )
             Text(
                 text = "${playlistInfo.songs.count()} songs",
-                style = MaterialTheme.typography.bodySmall,
+                style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.secondary,
             )
             Text(
                 text = playlistInfo.songs.sumOf{it.duration}.toHourMinutesSeconds() + " Total time",
-                style = MaterialTheme.typography.bodySmall,
+                style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.secondary,
             )
         }

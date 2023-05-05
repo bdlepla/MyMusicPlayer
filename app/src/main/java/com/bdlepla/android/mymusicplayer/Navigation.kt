@@ -40,8 +40,7 @@ fun Navigation(
             ArtistList(artists, navController, onAddSongsToPlaylist)
         }
 
-        composable("artistsongs/{artistId}") {
-            val backStack = navController.currentBackStackEntry ?: return@composable
+        composable("artistsongs/{artistId}") { backStack ->
             val args = backStack.arguments ?: return@composable
             val artistId = args.getString("artistId")?.toLong()?: return@composable
             val theArtist = artists.firstOrNull{it.artistId == artistId} ?: return@composable
@@ -55,8 +54,7 @@ fun Navigation(
             AlbumList(albums, navController, onAddSongsToPlaylist)
         }
 
-        composable("albumsongs/{albumId}") {
-            val backStack = navController.currentBackStackEntry?: return@composable
+        composable("albumsongs/{albumId}") { backStack ->
             val args = backStack.arguments ?: return@composable
             val albumId = args.getString("albumId")?.toLong() ?: return@composable
             val theAlbum = albums.firstOrNull{it.albumId == albumId} ?: return@composable

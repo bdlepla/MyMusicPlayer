@@ -11,8 +11,8 @@ import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
 import androidx.media3.session.MediaBrowser
 import androidx.media3.session.SessionToken
-import com.bdlepla.android.mymusicplayer.extensions.forSorting
 import com.bdlepla.android.mymusicplayer.business.*
+import com.bdlepla.android.mymusicplayer.extensions.forSorting
 import com.bdlepla.android.mymusicplayer.repository.ALBUM_ID
 import com.bdlepla.android.mymusicplayer.repository.ARTIST_ID
 import com.bdlepla.android.mymusicplayer.repository.ITEM_ID
@@ -244,11 +244,13 @@ class MyMusicViewModel
     }
 
     private fun addArtists(artists:List<ArtistInfo>) {
-        artists.forEach{artist ->
+        artists.distinctBy { it.artistId }
+            .forEach{artist ->
             val songs = this.songCollection
                 .filter { it.artistId == artist.artistId}
                 .sortedBy { it.albumYear * 1_000 + it.trackNumber }
             artist.songs.addAll(songs)
+
         }
         _allArtists.value = artists.sortedBy { it.name.forSorting() }
     }

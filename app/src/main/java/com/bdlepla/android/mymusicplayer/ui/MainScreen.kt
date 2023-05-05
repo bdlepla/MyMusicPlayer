@@ -42,8 +42,7 @@ internal fun MainScreen(viewModel: MyMusicViewModel=viewModel()) {
         viewModel.setCurrentlyPlaying(itSong)
     }
     val onShuffleClick: ()->Unit = {
-        val shuffledSongs = songsByScreen.value.shuffled()
-        viewModel.setPlaylist(shuffledSongs)
+        viewModel.setPlaylist(songsByScreen.value.shuffled())
         viewModel.play()
     }
     val onRepeatClick: ()->Unit = { viewModel.toggleRepeat() }
@@ -53,9 +52,7 @@ internal fun MainScreen(viewModel: MyMusicViewModel=viewModel()) {
     val setSongListForScreen: (List<SongInfo>)->Unit = { songsByScreen.value = it }
 
     val onCreateNewPlaylist: (String)->Unit = { viewModel.addNewPlaylist(it) }
-    val onRemovePlaylist:(PlaylistInfo)->Unit = {
-        viewModel.removePlaylist(it)
-    }
+    val onRemovePlaylist:(PlaylistInfo)->Unit = { viewModel.removePlaylist(it) }
 
     val songsToAddToPlaylist = remember { mutableStateOf<List<SongInfo>>(emptyList())}
     val pickPlaylist = remember { mutableStateOf(false) }

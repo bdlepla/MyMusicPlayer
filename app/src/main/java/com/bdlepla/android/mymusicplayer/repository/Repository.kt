@@ -71,7 +71,7 @@ object Repository {
 
             while (cursor.moveToNext()) {
                 val data = cursor.getString(dataColumn)
-                if (!data.endsWith(".mp3")){
+                if (!data.endsWith(".mp3") && !data.endsWith(".wma")){
                     Log.i("Repository.getAllSongs", "ignoring $data")
                     continue
                 }
