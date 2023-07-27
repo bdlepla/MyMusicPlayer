@@ -95,7 +95,7 @@ fun PlaylistScreen(
                 color = MaterialTheme.colorScheme.primary,
             )
             Spacer(modifier = Modifier.padding(all = 4.dp))
-            Divider(color = MaterialTheme.colorScheme.primary)
+            HorizontalDivider(color = MaterialTheme.colorScheme.primary)
             PlaylistList(playlistList, onClick, onLongPress)
         }
     }
@@ -114,7 +114,10 @@ fun PlaylistList(
             LazyColumn(state = listState) {
                 items(items = playlistList, key = { it.name }) { playlistInfo ->
                     Playlist(playlistInfo, onClick, onLongPress)
-                    Divider(color = MaterialTheme.colorScheme.background, thickness = 10.dp)
+                    HorizontalDivider(
+                        thickness = 10.dp,
+                        color = MaterialTheme.colorScheme.background
+                    )
                 }
             }
         }

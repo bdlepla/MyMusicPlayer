@@ -6,7 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -30,7 +30,7 @@ fun SongList(songInfos: List<SongInfo>,
     LazyColumn(state = listState) {
         items(items = songInfos, key = { it.songId }) { songInfo ->
             SongWithImage(songInfo, onClick, onLongPress)
-            Divider(color = MaterialTheme.colorScheme.background, thickness=10.dp)
+            HorizontalDivider(thickness = 10.dp, color = MaterialTheme.colorScheme.background)
         }
     }
 }

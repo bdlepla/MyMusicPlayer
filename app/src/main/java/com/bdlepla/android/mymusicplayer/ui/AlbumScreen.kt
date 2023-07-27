@@ -9,7 +9,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -27,7 +27,7 @@ import com.bdlepla.android.mymusicplayer.ui.theme.MyMusicPlayerTheme
 
 @Composable
 fun AlbumList(
-    AlbumList:List<AlbumInfo>,
+    albumList:List<AlbumInfo>,
     navController: NavController? = null,
     onLongPress:(List<SongInfo>)->Unit = emptyFunction1()) {
     val listState = rememberLazyListState()
@@ -38,9 +38,9 @@ fun AlbumList(
     }
 
     LazyColumn(state = listState) {
-        items(items = AlbumList, key = { it.albumId }) { albumInfo ->
+        items(items = albumList, key = { it.albumId }) { albumInfo ->
             Album(albumInfo, onClick, onLongPress)
-            Divider(color = MaterialTheme.colorScheme.background, thickness = 10.dp)
+            HorizontalDivider(thickness = 10.dp, color = MaterialTheme.colorScheme.background)
         }
     }
 }

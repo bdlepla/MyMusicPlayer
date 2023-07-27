@@ -7,7 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 
 
-private val LightThemeColors = lightColorScheme(
+private val lightThemeColors = lightColorScheme(
 
     primary = md_theme_light_primary,
     onPrimary = md_theme_light_onPrimary,
@@ -36,7 +36,7 @@ private val LightThemeColors = lightColorScheme(
     inverseSurface = md_theme_light_inverseSurface,
     inversePrimary = md_theme_light_inversePrimary,
 )
-private val DarkThemeColors = darkColorScheme(
+private val darkThemeColors = darkColorScheme(
 
     primary = md_theme_dark_primary,
     onPrimary = md_theme_dark_onPrimary,
@@ -75,8 +75,8 @@ fun MyMusicPlayerTheme(
     val colors = when {
         dynamicColor && useDarkTheme -> dynamicDarkColorScheme(LocalContext.current)
         dynamicColor && !useDarkTheme -> dynamicLightColorScheme(LocalContext.current)
-        useDarkTheme -> DarkThemeColors
-        else -> LightThemeColors
+        useDarkTheme -> darkThemeColors
+        else -> lightThemeColors
     }
 
     MaterialTheme(

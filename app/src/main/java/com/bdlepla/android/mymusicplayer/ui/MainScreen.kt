@@ -2,13 +2,22 @@ package com.bdlepla.android.mymusicplayer.ui
 
 import android.content.res.Configuration
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.material.Text
-import androidx.compose.material3.Divider
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
-import androidx.compose.runtime.*
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -21,7 +30,11 @@ import com.bdlepla.android.mymusicplayer.MyMusicViewModel
 import com.bdlepla.android.mymusicplayer.Navigation
 import com.bdlepla.android.mymusicplayer.R
 import com.bdlepla.android.mymusicplayer.SampleData
-import com.bdlepla.android.mymusicplayer.business.*
+import com.bdlepla.android.mymusicplayer.business.AlbumInfo
+import com.bdlepla.android.mymusicplayer.business.ArtistInfo
+import com.bdlepla.android.mymusicplayer.business.CurrentPlayingStats
+import com.bdlepla.android.mymusicplayer.business.PlaylistInfo
+import com.bdlepla.android.mymusicplayer.business.SongInfo
 import com.bdlepla.android.mymusicplayer.ui.theme.MyMusicPlayerTheme
 
 // Main Screen uses the view model to set the variables and callbacks
@@ -82,7 +95,7 @@ internal fun MainScreen(viewModel: MyMusicViewModel=viewModel()) {
                             )
                         }
                         Spacer(modifier = Modifier.padding(all = 4.dp))
-                        Divider(color = MaterialTheme.colorScheme.primary)
+                        HorizontalDivider(color = MaterialTheme.colorScheme.primary)
                         PlaylistList(playlists, onCLick)
                     }
                 }

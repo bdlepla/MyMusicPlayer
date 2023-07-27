@@ -2,8 +2,8 @@ package com.bdlepla.android.mymusicplayer.ui
 
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.Column
-import androidx.compose.material.BottomNavigation
-import androidx.compose.material.BottomNavigationItem
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -55,9 +55,9 @@ fun BottomAppBar(
             )
         }
 
-        BottomNavigation(backgroundColor = MaterialTheme.colorScheme.primaryContainer) {
+        NavigationBar(containerColor = MaterialTheme.colorScheme.primaryContainer) {
             items.forEach { item ->
-                BottomNavigationItem(
+                NavigationBarItem(
                     icon = {Icon(painterResource(id = item.icon), contentDescription = item.title)},
                     label = { item.title },
                     selected = currentRoute == item.route,
