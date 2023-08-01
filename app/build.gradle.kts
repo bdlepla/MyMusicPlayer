@@ -46,8 +46,8 @@ android {
     }
     kotlinOptions {
         jvmTarget = "17"
-        //useIR = true
     }
+
     buildFeatures {
         compose = true
     }

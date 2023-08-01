@@ -14,7 +14,7 @@ dependencyResolutionManagement {
     }
 }
 rootProject.name = "MyMusicPlayer"
-include ':app'
+include(":app")
 
 //gradle.ext.androidxMediaModulePrefix = 'media-'
 //apply from: file("/home/bryan/dev/AndroidStudioProjects/media/core_settings.gradle")
