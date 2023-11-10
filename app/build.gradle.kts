@@ -90,7 +90,7 @@ dependencies {
     //implementation project(":media-lib-ui")
     //implementation project(":media-lib-exoplayer")
     //implementation project(":media-lib-session")
-    implementation("androidx.navigation:navigation-compose:2.7.4")
+    implementation("androidx.navigation:navigation-compose:2.7.5")
     implementation("com.google.android.material:material:1.11.0-beta01")
     implementation("com.google.dagger:hilt-android:2.48.1")
     implementation("io.coil-kt:coil:2.5.0")
