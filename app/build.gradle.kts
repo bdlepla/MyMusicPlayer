@@ -72,11 +72,11 @@ dependencies {
         }
     }
 
-    implementation("androidx.activity:activity-compose:1.8.1")
+    implementation("androidx.activity:activity-compose:1.8.2")
     implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("androidx.compose.material:material:1.5.4")
-    implementation("androidx.compose.material3:material3:1.2.0-alpha12")
-    implementation("androidx.compose.ui:ui:1.6.0-beta02")
+    implementation("androidx.compose.material3:material3:1.2.0-beta01")
+    implementation("androidx.compose.ui:ui:1.6.0-beta03")
     implementation("androidx.compose.ui:ui-tooling-preview:1.5.4")
     implementation("androidx.core:core-ktx:1.13.0-alpha02")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.2")
@@ -88,9 +88,9 @@ dependencies {
     //implementation project(":media-lib-ui")
     //implementation project(":media-lib-exoplayer")
     //implementation project(":media-lib-session")
-    implementation("androidx.navigation:navigation-compose:2.7.5")
-    implementation("com.google.android.material:material:1.11.0-rc01")
-    implementation("com.google.dagger:hilt-android:2.49")
+    implementation("androidx.navigation:navigation-compose:2.7.6")
+    implementation("com.google.android.material:material:1.11.0")
+    implementation("com.google.dagger:hilt-android:2.50")
     implementation("io.coil-kt:coil:2.5.0")
     implementation("io.coil-kt:coil-compose:2.5.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
@@ -100,7 +100,7 @@ dependencies {
     androidTestImplementation("androidx.compose.ui:ui-test-junit4:1.5.4")
 
     debugImplementation("androidx.compose.ui:ui-tooling:1.5.4")
-    debugImplementation("androidx.compose.ui:ui-test-manifest:1.6.0-beta02")
+    debugImplementation("androidx.compose.ui:ui-test-manifest:1.6.0-beta03")
 
     testImplementation("junit:junit:4.13.2")
 
