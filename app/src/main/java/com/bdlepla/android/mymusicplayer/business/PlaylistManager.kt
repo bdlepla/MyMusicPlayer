@@ -116,8 +116,6 @@ class PlaylistManager(private val application: Application) {
         }
     }
 
-    // add and remove playlists -- add done
-    // add and remove songs from a playlist -- add done; working on removing
     // support the current playlist; save it so that upon restart, can pick up where left off
 
 }

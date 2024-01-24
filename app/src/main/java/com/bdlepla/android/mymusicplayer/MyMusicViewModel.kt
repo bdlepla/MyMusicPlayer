@@ -11,7 +11,16 @@ import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
 import androidx.media3.session.MediaBrowser
 import androidx.media3.session.SessionToken
-import com.bdlepla.android.mymusicplayer.business.*
+import com.bdlepla.android.mymusicplayer.business.AlbumInfo
+import com.bdlepla.android.mymusicplayer.business.ArtistInfo
+import com.bdlepla.android.mymusicplayer.business.CurrentPlayingStats
+import com.bdlepla.android.mymusicplayer.business.PlaylistInfo
+import com.bdlepla.android.mymusicplayer.business.PlaylistManager
+import com.bdlepla.android.mymusicplayer.business.SongInfo
+import com.bdlepla.android.mymusicplayer.business.albumId
+import com.bdlepla.android.mymusicplayer.business.albumName
+import com.bdlepla.android.mymusicplayer.business.artistId
+import com.bdlepla.android.mymusicplayer.business.artistName
 import com.bdlepla.android.mymusicplayer.extensions.forSorting
 import com.bdlepla.android.mymusicplayer.repository.ALBUM_ID
 import com.bdlepla.android.mymusicplayer.repository.ARTIST_ID
@@ -131,9 +140,22 @@ class MyMusicViewModel
                     addArtists(artists)
                     doLoadArtists(browser, page+1, pageSize)
                 }
+                else {
+                    checkIfServiceIsPlayingAtAppStartup()
+                }
             }, ContextCompat.getMainExecutor(context))
         }
         doLoadArtists(browser, 0, Int.MAX_VALUE)
+    }
+
+    private fun checkIfServiceIsPlayingAtAppStartup() {
+        val b = browser ?: return
+        if (b.isPlaying) {
+            val mediaItem = b.currentMediaItem ?: return
+            val item = mediaItem.mediaMetadata.toSongInfo() ?: return
+            _currentlyPlaying = item
+            _isPaused.value = false
+        }
     }
 
     inner class PlayerListener: Player.Listener {
