@@ -1,14 +1,18 @@
 package com.bdlepla.android.mymusicplayer.business
 
-import android.app.Application
+import android.content.ContextWrapper
 import android.os.Environment
 import android.util.Log
 import java.io.File
 import java.io.FileWriter
 import java.nio.file.Path
-import kotlin.io.path.*
+import kotlin.io.path.ExperimentalPathApi
+import kotlin.io.path.Path
+import kotlin.io.path.PathWalkOption
+import kotlin.io.path.relativeToOrSelf
+import kotlin.io.path.walk
 
-class PlaylistManager(private val application: Application) {
+class PlaylistManager(private val context: ContextWrapper) {
     private var _currentPlaylist:List<SongInfo>? = null
     val currentPlaylist: List<SongInfo>?
         get() = _currentPlaylist
@@ -19,7 +23,7 @@ class PlaylistManager(private val application: Application) {
 
     private var playLists: MutableMap<String, MutableList<String>> = loadPlaylists()
     private val appStoragePath
-        get() = Path(application.getExternalFilesDir(null).toString())
+        get() = Path(context.getExternalFilesDir(null).toString())
     private val mediaPath: Path
         get() = Path(Environment.getExternalStorageDirectory().path+"/Music")
 

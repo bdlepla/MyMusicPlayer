@@ -16,7 +16,6 @@ import dagger.hilt.android.AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
     private val myMusicViewModel:MyMusicViewModel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
-
         super.onCreate(savedInstanceState)
         checkPermissions()
 

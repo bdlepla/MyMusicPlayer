@@ -21,6 +21,7 @@ import com.bdlepla.android.mymusicplayer.business.albumId
 import com.bdlepla.android.mymusicplayer.business.albumName
 import com.bdlepla.android.mymusicplayer.business.artistId
 import com.bdlepla.android.mymusicplayer.business.artistName
+import com.bdlepla.android.mymusicplayer.datastore.MyMusicPlayerSettingsDataStore
 import com.bdlepla.android.mymusicplayer.extensions.forSorting
 import com.bdlepla.android.mymusicplayer.repository.ALBUM_ID
 import com.bdlepla.android.mymusicplayer.repository.ARTIST_ID
@@ -43,6 +44,7 @@ class MyMusicViewModel
     val browser: MediaBrowser?
         get() = if (browserFuture.isDone) browserFuture.get() else null
     private val playlistManager:PlaylistManager = PlaylistManager(application)
+    private val musicDataStore:MyMusicPlayerSettingsDataStore = MyMusicPlayerSettingsDataStore((application))
     @Suppress("PrivatePropertyName")
     private val POSITION_UPDATE_INTERVAL_MILLIS = 100L
    init {
@@ -64,13 +66,18 @@ class MyMusicViewModel
     }
 
     private fun checkPlaybackPosition(browser: MediaBrowser): Boolean = handler.postDelayed({
-        val currPosition = browser.currentPosition.toInt() / 1000
+        val currPositionInMs = browser.currentPosition
+        val currPosition = currPositionInMs.toInt() / 1000
         val maxPosition = browser.duration.toInt() / 1000
         _currentlyPlayingStats.value =  CurrentPlayingStats(
             _currentlyPlaying,
             currPosition,
             maxPosition
         )
+        val currentlyPlaying = _currentlyPlaying
+        if (currentlyPlaying != null) {
+            musicDataStore.saveCurrentPlaying(currentlyPlaying.songId, currPositionInMs)
+        }
         checkPlaybackPosition(browser)
     }, POSITION_UPDATE_INTERVAL_MILLIS)
 
@@ -156,6 +163,20 @@ class MyMusicViewModel
             _currentlyPlaying = item
             _isPaused.value = false
         }
+        else {
+            val playingItemIds = musicDataStore.PlayingList
+            if (playingItemIds.any()) {
+                val songsList = playingItemIds.mapNotNull { id ->
+                    songCollection.firstOrNull { it.songId == id }
+                }
+
+                setPlaylist(songsList)
+                val playingSongId = musicDataStore.PlayingSongId
+                val playingSongIdx = songsList.indexOfFirst { it.songId == playingSongId }
+                val playingPosition = musicDataStore.PlayingPosition
+                setCurrentlyPlayingAt(playingSongIdx, playingPosition)
+            }
+        }
     }
 
     inner class PlayerListener: Player.Listener {
@@ -211,11 +232,15 @@ class MyMusicViewModel
 
 
     fun setCurrentlyPlaying(songInfo: SongInfo) {
-        val b = browser ?: return
         val c = playlistManager.currentPlaylist ?: return
         val idx = c.indexOf(songInfo)
         if (idx == -1) return
-        b.seekTo(idx, 0)
+        setCurrentlyPlayingAt(idx, 0L)
+    }
+
+    private fun setCurrentlyPlayingAt(idx: Int, positionInMilliSeconds:Long) {
+        val b = browser ?: return
+        b.seekTo(idx, positionInMilliSeconds)
         b.play()
     }
 
@@ -225,6 +250,8 @@ class MyMusicViewModel
         playlistManager.setPlaylist(songs)
         b.setMediaItems(mediaItems)
         b.prepare()
+        val songIds = songs.map{it.songId}
+        musicDataStore.saveCurrentList(songIds)
     }
 
     fun playNext() {
