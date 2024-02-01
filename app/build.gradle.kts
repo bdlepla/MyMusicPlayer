@@ -1,4 +1,4 @@
-import com.google.protobuf.gradle.protobuf
+//import com.google.protobuf.gradle.protobuf
 //import org.gradle.kotlin.dsl.resolver.buildSrcSourceRootsFilePath
 
 //import com.android.build.api.dsl.Packaging

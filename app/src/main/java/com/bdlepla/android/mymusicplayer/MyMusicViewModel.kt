@@ -173,8 +173,10 @@ class MyMusicViewModel
                 setPlaylist(songsList)
                 val playingSongId = musicDataStore.PlayingSongId
                 val playingSongIdx = songsList.indexOfFirst { it.songId == playingSongId }
-                val playingPosition = musicDataStore.PlayingPosition
-                setCurrentlyPlayingAt(playingSongIdx, playingPosition)
+                if (playingSongIdx != -1) {
+                    val playingPosition = musicDataStore.PlayingPosition
+                    setCurrentlyPlayingAt(playingSongIdx, playingPosition)
+                }
             }
         }
     }

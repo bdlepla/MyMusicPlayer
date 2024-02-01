@@ -1,5 +1,6 @@
 package com.bdlepla.android.mymusicplayer.business
 
+import android.content.Context
 import android.content.ContextWrapper
 import android.os.Environment
 import android.util.Log
@@ -12,25 +13,13 @@ import kotlin.io.path.PathWalkOption
 import kotlin.io.path.relativeToOrSelf
 import kotlin.io.path.walk
 
-class PlaylistManager(private val context: ContextWrapper) {
-    private var _currentPlaylist:List<SongInfo>? = null
-    val currentPlaylist: List<SongInfo>?
-        get() = _currentPlaylist
-
-    fun setPlaylist(songs:List<SongInfo>) {
-        _currentPlaylist = songs
-    }
-
-    private var playLists: MutableMap<String, MutableList<String>> = loadPlaylists()
-    private val appStoragePath
+open class PlaylistBase(private val context: Context) {
+    protected val appStoragePath
         get() = Path(context.getExternalFilesDir(null).toString())
-    private val mediaPath: Path
-        get() = Path(Environment.getExternalStorageDirectory().path+"/Music")
-
-    private fun getFullFilename(name:String) = "$appStoragePath/$name.m3u"
-
+}
+open class PlaylistReader(context:Context) :PlaylistBase(context){
     @OptIn(ExperimentalPathApi::class)
-    private fun loadPlaylists():MutableMap<String, MutableList<String>> =
+    fun loadPlaylists():MutableMap<String, MutableList<String>> =
         appStoragePath
             .walk(PathWalkOption.INCLUDE_DIRECTORIES)
             .map{it.toFile().nameWithoutExtension to it.toString()}
@@ -50,6 +39,25 @@ class PlaylistManager(private val context: ContextWrapper) {
             .onEach { Log.d("PlaylistManager", it) }
             .toList()
     }
+}
+
+class PlaylistManager(context: ContextWrapper) : PlaylistReader(context){
+    private var _currentPlaylist:List<SongInfo>? = null
+    val currentPlaylist: List<SongInfo>?
+        get() = _currentPlaylist
+
+    fun setPlaylist(songs:List<SongInfo>) {
+        _currentPlaylist = songs
+    }
+
+    private var playLists: MutableMap<String, MutableList<String>> = loadPlaylists()
+
+    private val mediaPath: Path
+        get() = Path(Environment.getExternalStorageDirectory().path+"/Music")
+
+    private fun getFullFilename(name:String) = "$appStoragePath/$name.m3u"
+
+
     private fun savePlaylistSongs(m3uname:String, songNames:List<String>) {
         if (File(m3uname).exists()){
             Log.d("PlaylistManager", "deleting $m3uname")

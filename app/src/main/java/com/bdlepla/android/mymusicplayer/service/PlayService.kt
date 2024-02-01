@@ -104,21 +104,21 @@ class PlayService: MediaLibraryService() {
         return mediaLibrarySession
     }
 
-//    private fun setMediaItemFromSearchQuery(query: String) {
-//        // Only accept query with pattern "play [Title]" or "[Title]"
-//        // Where [Title]: must be exactly matched
-//        // If no media with exact name found, play a random media instead
-//        val mediaTitle =
-//            if (query.startsWith("play ", ignoreCase = true)) {
-//                query.drop(5)
-//            } else {
-//                query
-//            }
-//
-//        val item = MediaItemTree.getItemFromTitle(mediaTitle) ?: MediaItemTree.getRandomItem()
-//        player.setMediaItem(item)
-//        player.prepare()
-//    }
+    private fun setMediaItemFromSearchQuery(query: String) {
+        // Only accept query with pattern "play [Title]" or "[Title]"
+        // Where [Title]: must be exactly matched
+        // If no media with exact name found, play a random media instead
+        val mediaTitle =
+            if (query.startsWith("play ", ignoreCase = true)) {
+                query.drop(5)
+            } else {
+                query
+            }
+
+        val item = MediaItemTree.getItemFromTitle(mediaTitle) ?: MediaItemTree.getRandomItem()
+        player.setMediaItem(item)
+        player.prepare()
+    }
 
     companion object {
         //private const val SEARCH_QUERY_PREFIX_COMPAT = "androidx://media3-session/playFromSearch"

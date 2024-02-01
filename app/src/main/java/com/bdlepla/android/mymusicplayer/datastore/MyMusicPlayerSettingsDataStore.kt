@@ -1,17 +1,13 @@
 package com.bdlepla.android.mymusicplayer.datastore
 
 import android.content.Context
-import android.os.Environment
-import javax.inject.Inject
-import androidx.datastore.core.DataStore
 import com.bdlepla.android.mymusicplayer.MyMusicPlayerSettings
 import kotlinx.coroutines.runBlocking
-import java.io.File
-import java.nio.file.Path
+import javax.inject.Inject
 import kotlin.io.path.Path
 import kotlin.io.path.exists
 
-class MyMusicPlayerSettingsDataStore @Inject constructor(val context: Context) {
+class MyMusicPlayerSettingsDataStore @Inject constructor(private val context: Context) {
     private var _settings:MyMusicPlayerSettings = MyMusicPlayerSettingsSerializer().defaultValue
     private var settings:MyMusicPlayerSettings
         get() = _settings
