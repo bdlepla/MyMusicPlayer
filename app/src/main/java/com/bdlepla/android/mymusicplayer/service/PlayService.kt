@@ -53,6 +53,8 @@ class PlayService: MediaLibraryService() {
         player.addListener(playerListener)
         mediaLibrarySession =
             MediaLibrarySession.Builder(this, player, librarySessionCallback).build()
+
+        setMediaNotificationProvider(CustomMediaNotificationProvider(this))
     }
 
 
@@ -162,6 +164,7 @@ class PlayService: MediaLibraryService() {
                 connectionResult.availablePlayerCommands
             )
         }
+
 
         override fun onPostConnect(session: MediaSession, controller: MediaSession.ControllerInfo) {
 //            if (!customLayout.isEmpty() && controller.controllerVersion != 0) {
