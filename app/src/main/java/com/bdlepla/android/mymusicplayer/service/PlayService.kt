@@ -39,11 +39,11 @@ class PlayService: MediaLibraryService() {
 
         val parentScreenIntent = Intent(this, MainActivity::class.java)
 
-        //val intent = Intent(this, PlayerActivity::class.java)
+        val intent = Intent(this, MainActivity::class.java)
 
         val pendingIntent = TaskStackBuilder.create(this).run {
             addNextIntent(parentScreenIntent)
-            //addNextIntent(intent)
+            addNextIntent(intent)
 
             val immutableFlag = if (Build.VERSION.SDK_INT >= 23) FLAG_IMMUTABLE else 0
             getPendingIntent(0, immutableFlag or FLAG_UPDATE_CURRENT)
