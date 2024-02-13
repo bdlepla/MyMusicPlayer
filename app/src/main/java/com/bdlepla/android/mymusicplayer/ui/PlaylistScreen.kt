@@ -24,6 +24,7 @@ import com.bdlepla.android.mymusicplayer.extensions.toHourMinutesSeconds
 import com.bdlepla.android.mymusicplayer.extensions.toImagePainter
 import com.bdlepla.android.mymusicplayer.ui.theme.MyMusicPlayerTheme
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlaylistScreen(
     playlistList: List<PlaylistInfo>,
@@ -67,7 +68,9 @@ fun PlaylistScreen(
                             )
                         }
                         Spacer(modifier = Modifier.padding(all = 4.dp))
-                        androidx.compose.material.TextField(value=savedPlaylistNameToAdd.value, onValueChange = onTextBoxUpdate)
+                        androidx.compose.material.TextField(
+                            value=savedPlaylistNameToAdd.value,
+                            onValueChange = onTextBoxUpdate)
                         Spacer(modifier = Modifier.padding(all = 4.dp))
                         androidx.compose.material.Button(onClick = onAddButtonClick) {
                             androidx.compose.material.Text("Add")
@@ -78,27 +81,29 @@ fun PlaylistScreen(
         }
     }
 
-    Box {
-        FloatingActionButton(
-            onClick = onAddNewPlaylist,
-            modifier = Modifier
-                .align(alignment = Alignment.BottomEnd)
-                .padding(40.dp)
-        ) {
-            Icon(Icons.Filled.Add, "")
+    Scaffold (
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = onAddNewPlaylist,
+                containerColor = MaterialTheme.colorScheme.secondaryContainer) {
+
+                Icon(Icons.Filled.Add, "")
+            }
+        },
+        content = {
+            Column(Modifier.padding(it)) {
+                Text(
+                    modifier = Modifier.align(alignment = Alignment.CenterHorizontally),
+                    text = "Playlists",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+                Spacer(modifier = Modifier.padding(all = 4.dp))
+                HorizontalDivider(color = MaterialTheme.colorScheme.primary)
+                PlaylistList(playlistList, onClick, onLongPress)
+            }
         }
-        Column {
-            Text(
-                modifier = Modifier.align(alignment = Alignment.CenterHorizontally),
-                text = "Playlists",
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.primary,
-            )
-            Spacer(modifier = Modifier.padding(all = 4.dp))
-            HorizontalDivider(color = MaterialTheme.colorScheme.primary)
-            PlaylistList(playlistList, onClick, onLongPress)
-        }
-    }
+    )
 }
 
 @Composable
@@ -131,7 +136,7 @@ fun Playlist(playlistInfo: PlaylistInfo,
              onLongPress: (PlaylistInfo)->Unit=emptyFunction1()) {
     Row(verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
-            .background(color=MaterialTheme.colorScheme.background)
+            .background(color = MaterialTheme.colorScheme.background)
             .fillMaxWidth()
             .combinedClickable(
                 onClick = { onClick(playlistInfo) },
