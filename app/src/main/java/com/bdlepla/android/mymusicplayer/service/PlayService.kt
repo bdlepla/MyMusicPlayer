@@ -1,5 +1,6 @@
 package com.bdlepla.android.mymusicplayer.service
 
+import android.app.PendingIntent
 import android.app.PendingIntent.FLAG_IMMUTABLE
 import android.app.PendingIntent.FLAG_UPDATE_CURRENT
 import android.content.Intent
@@ -37,22 +38,22 @@ class PlayService: MediaLibraryService() {
     private fun initializeSessionAndPlayer() {
         MediaItemTree.initialize(applicationContext)
 
-        val parentScreenIntent = Intent(this, MainActivity::class.java)
-
-        val intent = Intent(this, MainActivity::class.java)
-
-        val pendingIntent = TaskStackBuilder.create(this).run {
-            addNextIntent(parentScreenIntent)
-            addNextIntent(intent)
-
-            val immutableFlag = if (Build.VERSION.SDK_INT >= 23) FLAG_IMMUTABLE else 0
-            getPendingIntent(0, immutableFlag or FLAG_UPDATE_CURRENT)
-        }
-
         player = exoPlayer
         player.addListener(playerListener)
-        mediaLibrarySession =
-            MediaLibrarySession.Builder(this, player, librarySessionCallback).build()
+        mediaLibrarySession = with(MediaLibrarySession.Builder(this, player, librarySessionCallback)){
+            setId(packageName)
+            packageManager?.getLaunchIntentForPackage(packageName)?.let {sessionIntent ->
+                setSessionActivity(
+                    PendingIntent.getActivity(
+                        this@PlayService,
+                        0,
+                        sessionIntent,
+                        if (Build.VERSION.SDK_INT >= 23) FLAG_IMMUTABLE else FLAG_UPDATE_CURRENT
+                    )
+                )
+            }
+            build()
+        }
 
         setMediaNotificationProvider(CustomMediaNotificationProvider(this))
     }

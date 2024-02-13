@@ -16,7 +16,8 @@ class MyMusicPlayerSettingsSerializer @Inject constructor() : Serializer<MyMusic
             // readFrom is already called on the data store background thread
             MyMusicPlayerSettings.parseFrom(input)
         } catch (exception: InvalidProtocolBufferException) {
-            throw CorruptionException("Cannot read proto.", exception)
+            //throw CorruptionException("Cannot read proto.", exception)
+            MyMusicPlayerSettings.getDefaultInstance()
         }
 
     override suspend fun writeTo(t: MyMusicPlayerSettings, output: OutputStream) {
