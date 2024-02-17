@@ -20,10 +20,10 @@ fun Navigation(
     onRemovePlaylist: (PlaylistInfo) -> Unit = emptyFunction1(),
     pickPlaylistToAddSongs: (List<SongInfo>)->Unit = emptyFunction1(),
     onRemoveSongFromPlaylist:(PlaylistInfo, SongInfo)->Unit = emptyFunction2(),
-    setSongsForScreen: (List<SongInfo>) -> Unit = emptyFunction1(),
     onSongClick: (SongInfo, List<SongInfo>) -> Unit = emptyFunction2(),
     currentPlayingStats: CurrentPlayingStats? = null,
-    isPaused: Boolean = false
+    isPaused: Boolean = false,
+    setShuffledSongs: (List<SongInfo>) -> Unit = emptyFunction1()
 ) {
     val onAddSongsToPlaylist: (List<SongInfo>)->Unit = { pickPlaylistToAddSongs(it) }
 
@@ -31,12 +31,16 @@ fun Navigation(
         val isExpandedWindow = false
 
         composable(NavigationItem.Songs.route) {
-            setSongsForScreen(songs)
             val myOnClick:(SongInfo)->Unit = { onSongClick(it, songs) }
+            setShuffledSongs(songs.shuffled())
             SongList(songs, myOnClick, onAddSongsToPlaylist)
         }
 
         composable(NavigationItem.Artists.route) {
+            val shuffledArtists = artists.shuffled()
+            val shuffledArtistAlbums = shuffledArtists.flatMap{artist -> artist.albumsByYear.shuffled()}
+            val shuffledSongs = shuffledArtistAlbums.flatMap { album -> album.songs }
+            setShuffledSongs(shuffledSongs )
             ArtistList(artists, navController, onAddSongsToPlaylist)
         }
 
@@ -45,12 +49,13 @@ fun Navigation(
             val artistId = args.getString("artistId")?.toLong()?: return@composable
             val theArtist = artists.firstOrNull{it.artistId == artistId} ?: return@composable
             val songsForArtist = theArtist.songs
-            setSongsForScreen(songsForArtist)
+            setShuffledSongs(songsForArtist.shuffled())
             val myOnClick:(SongInfo)->Unit = { onSongClick(it, songsForArtist) }
             ArtistSongsScreen(theArtist, songsForArtist, myOnClick, onAddSongsToPlaylist)
         }
 
         composable(NavigationItem.Albums.route) {
+            setShuffledSongs(albums.shuffled().flatMap{album -> album.songs})
             AlbumList(albums, navController, onAddSongsToPlaylist)
         }
 
@@ -59,12 +64,13 @@ fun Navigation(
             val albumId = args.getString("albumId")?.toLong() ?: return@composable
             val theAlbum = albums.firstOrNull{it.albumId == albumId} ?: return@composable
             val songsInAlbum = theAlbum.songs
-            setSongsForScreen(songsInAlbum)
+            setShuffledSongs(songsInAlbum.shuffled())
             val myOnClick:(SongInfo)->Unit = { onSongClick(it, songsInAlbum) }
             AlbumSongsScreen(isExpandedWindow, theAlbum, songsInAlbum, myOnClick, onAddSongsToPlaylist)
         }
 
         composable(NavigationItem.Playing.route) {
+            setShuffledSongs(songs.shuffled())
             PlayScreen(currentPlayingStats, isPaused, mediaController)
         }
 
@@ -74,6 +80,7 @@ fun Navigation(
                 val route = "playlistsongs/${playlistName}"
                 navController.navigate(route)
             }
+            setShuffledSongs(playlists.shuffled().flatMap { playlist -> playlist.songs.shuffled() })
             PlaylistScreen(playlists, onClick, onCreateNewPlaylist, onRemovePlaylist)
         }
 
@@ -83,7 +90,7 @@ fun Navigation(
             val playlistName = args.getString("playlistId") ?: return@composable
             val playlist = playlists.firstOrNull{it.name == playlistName} ?: return@composable
             val songsInPlaylist = playlist.songs
-            setSongsForScreen(songsInPlaylist)
+            setShuffledSongs(songsInPlaylist.shuffled())
             val myOnClick:(SongInfo)->Unit = { onSongClick(it, songsInPlaylist) }
             PlaylistSongsScreen(playlist, songsInPlaylist, myOnClick, onRemoveSongFromPlaylist)
         }

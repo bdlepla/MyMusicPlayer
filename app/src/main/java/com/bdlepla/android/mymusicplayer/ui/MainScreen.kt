@@ -49,20 +49,14 @@ internal fun MainScreen(viewModel: MyMusicViewModel=viewModel()) {
     val currentlyPlayingStats by viewModel.currentlyPlayingStats.collectAsState()
     val isPaused by viewModel.isPaused.collectAsState()
 
-    val songsByScreen = remember { mutableStateOf(songs) }
+
     val onSongClick: (SongInfo, List<SongInfo>) -> Unit = { itSong, itSongs ->
         viewModel.setPlaylist(itSongs)
         viewModel.setCurrentlyPlaying(itSong)
     }
-    val onShuffleClick: ()->Unit = {
-        viewModel.setPlaylist(songsByScreen.value.shuffled())
-        viewModel.play()
-    }
     val onRepeatClick: ()->Unit = { viewModel.toggleRepeat() }
     val onPlayPauseClick: ()->Unit = { viewModel.togglePlayPause() }
     val onNextClick:()->Unit = { viewModel.playNext() }
-
-    val setSongListForScreen: (List<SongInfo>)->Unit = { songsByScreen.value = it }
 
     val onCreateNewPlaylist: (String)->Unit = { viewModel.addNewPlaylist(it) }
     val onRemovePlaylist:(PlaylistInfo)->Unit = { viewModel.removePlaylist(it) }
@@ -83,7 +77,9 @@ internal fun MainScreen(viewModel: MyMusicViewModel=viewModel()) {
                 }
 
                 Box(
-                    Modifier.background(MaterialTheme.colorScheme.background).size(500.dp, 300.dp)
+                    Modifier
+                        .background(MaterialTheme.colorScheme.background)
+                        .size(500.dp, 300.dp)
                 ) {
                     Column {
                         Row {
@@ -117,9 +113,7 @@ internal fun MainScreen(viewModel: MyMusicViewModel=viewModel()) {
         onRemovePlaylist,
         onAddSongsToPlaylist,
         onRemoveSongFromPlaylist,
-        setSongListForScreen,
         onSongClick,
-        onShuffleClick,
         onRepeatClick,
         onPlayPauseClick,
         onNextClick,
@@ -141,15 +135,21 @@ private fun MainContent(
     onRemovePlaylist: (PlaylistInfo) -> Unit = emptyFunction1(),
     onAddSongsToPlaylist: (List<SongInfo>)->Unit = emptyFunction1(),
     onRemoveSongFromPlaylist:(PlaylistInfo, SongInfo)->Unit = emptyFunction2(),
-    setSongsForScreen: (List<SongInfo>) -> Unit = emptyFunction1(),
     onSongClick: (SongInfo, List<SongInfo>) -> Unit = emptyFunction2(),
-    onShuffleClick: () -> Unit = emptyFunction(),
     onRepeatClick: () -> Unit = emptyFunction(),
     onPlayPauseClick: () -> Unit = emptyFunction(),
     onNextClick: () -> Unit = emptyFunction(),
     currentPlayingStats: CurrentPlayingStats? = null,
     isPaused: Boolean = false
 ) {
+    val shuffledSongs = remember{mutableStateOf(songs.shuffled())}
+    val setShuffledSongs: (List<SongInfo>) -> Unit = {
+        shuffledSongs.value = it
+    }
+    val onShuffleClick: () -> Unit = {
+        onSongClick(shuffledSongs.value[0], shuffledSongs.value)
+    }
+
     val navController = rememberNavController()
     MyMusicPlayerTheme {
         Surface {
@@ -169,8 +169,8 @@ private fun MainContent(
                 Column(modifier = Modifier.padding(paddingValues)) {
                     Navigation(navController, mediaController, songs, artists, albums,
                         playlists, onCreateNewPlaylist, onRemovePlaylist, onAddSongsToPlaylist,
-                        onRemoveSongFromPlaylist, setSongsForScreen, onSongClick,
-                        currentPlayingStats, isPaused)
+                        onRemoveSongFromPlaylist, onSongClick, currentPlayingStats, isPaused,
+                        setShuffledSongs)
                 }
             }
         }

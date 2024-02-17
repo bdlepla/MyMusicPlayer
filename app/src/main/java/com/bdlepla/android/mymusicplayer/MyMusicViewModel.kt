@@ -297,11 +297,8 @@ class MyMusicViewModel
     private fun addArtists(artists:List<ArtistInfo>) {
         artists.distinctBy { it.artistId }
             .forEach{artist ->
-            val songs = this.songCollection
-                .filter { it.artistId == artist.artistId}
-                .sortedBy { it.albumYear * 1_000 + it.trackNumber }
-            artist.songs.addAll(songs)
-
+                val artistAlbums = _allAlbums.value.filter { album -> album.artistId == artist.artistId }
+            artist.albums.addAll(artistAlbums)
         }
         _allArtists.value = artists.sortedBy { it.name.forSorting() }
     }
