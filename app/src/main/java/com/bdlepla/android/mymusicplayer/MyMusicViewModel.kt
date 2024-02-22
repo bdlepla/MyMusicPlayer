@@ -231,7 +231,9 @@ class MyMusicViewModel
 //    val isShuffling: StateFlow<Boolean>
 //        get() = _shuffling.asStateFlow()
 
-
+    private val  _currentSongList = MutableStateFlow<List<SongInfo>>(emptyList())
+    val currentSongList : StateFlow<List<SongInfo>>
+        get() = _currentSongList.asStateFlow()
 
     fun setCurrentlyPlaying(songInfo: SongInfo) {
         val c = playlistManager.currentPlaylist ?: return
@@ -254,6 +256,7 @@ class MyMusicViewModel
         b.prepare()
         val songIds = songs.map{it.songId}
         musicDataStore.saveCurrentList(songIds)
+        _currentSongList.value = songs
     }
 
     fun playNext() {

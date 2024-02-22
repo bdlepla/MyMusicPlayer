@@ -48,6 +48,7 @@ internal fun MainScreen(viewModel: MyMusicViewModel=viewModel()) {
     val playlists by viewModel.allPlaylists.collectAsState()
     val currentlyPlayingStats by viewModel.currentlyPlayingStats.collectAsState()
     val isPaused by viewModel.isPaused.collectAsState()
+    val currentSongList by viewModel.currentSongList.collectAsState()
 
 
     val onSongClick: (SongInfo, List<SongInfo>) -> Unit = { itSong, itSongs ->
@@ -106,6 +107,7 @@ internal fun MainScreen(viewModel: MyMusicViewModel=viewModel()) {
     MainContent(
         viewModel.browser,
         songs,
+        currentSongList,
         artists,
         albums,
         playlists,
@@ -128,6 +130,7 @@ internal fun MainScreen(viewModel: MyMusicViewModel=viewModel()) {
 private fun MainContent(
     mediaController: MediaController?,
     songs: List<SongInfo>,
+    currentSongList: List<SongInfo>,
     artists: List<ArtistInfo>,
     albums: List<AlbumInfo>,
     playlists: List<PlaylistInfo>,
@@ -147,7 +150,9 @@ private fun MainContent(
         shuffledSongs.value = it
     }
     val onShuffleClick: () -> Unit = {
-        onSongClick(shuffledSongs.value[0], shuffledSongs.value)
+        if (shuffledSongs.value.any()) {
+            onSongClick(shuffledSongs.value[0], shuffledSongs.value)
+        }
     }
 
     val navController = rememberNavController()
@@ -167,10 +172,10 @@ private fun MainContent(
             ) { paddingValues ->
                 // A surface container using the 'background' color from the theme
                 Column(modifier = Modifier.padding(paddingValues)) {
-                    Navigation(navController, mediaController, songs, artists, albums,
-                        playlists, onCreateNewPlaylist, onRemovePlaylist, onAddSongsToPlaylist,
-                        onRemoveSongFromPlaylist, onSongClick, currentPlayingStats, isPaused,
-                        setShuffledSongs)
+                    Navigation(navController, mediaController, songs, currentSongList, artists,
+                        albums, playlists, onCreateNewPlaylist, onRemovePlaylist,
+                        onAddSongsToPlaylist, onRemoveSongFromPlaylist, onSongClick,
+                        currentPlayingStats, isPaused, setShuffledSongs)
                 }
             }
         }
@@ -193,6 +198,7 @@ fun MainContentPreview() {
     MyMusicPlayerTheme {
         MainContent(
             null,
+            SampleData().songs,
             SampleData().songs,
             SampleData().artists,
             SampleData().albums,

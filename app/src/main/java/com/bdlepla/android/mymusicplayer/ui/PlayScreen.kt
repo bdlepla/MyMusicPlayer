@@ -23,14 +23,17 @@ import androidx.media3.session.MediaController
 import com.bdlepla.android.mymusicplayer.SampleData
 import com.bdlepla.android.mymusicplayer.business.Callbacks
 import com.bdlepla.android.mymusicplayer.business.CurrentPlayingStats
+import com.bdlepla.android.mymusicplayer.business.SongInfo
 import com.bdlepla.android.mymusicplayer.extensions.toImagePainter
 import com.bdlepla.android.mymusicplayer.ui.theme.MyMusicPlayerTheme
 
 @Composable
 fun PlayScreen(currentPlayingStats: CurrentPlayingStats?,
+               currentSongs:List<SongInfo>,
                isPaused: Boolean,
                controller: MediaController?=null) {
     val currentSong = currentPlayingStats?.currentPlaying ?: return
+    val currentSongIndex = currentSongs.indexOf(currentSong)
     val callbacks = Callbacks(
         onForward = {controller?.seekForward()},
         onNext = {controller?.seekToNext()},
@@ -56,6 +59,8 @@ fun PlayScreen(currentPlayingStats: CurrentPlayingStats?,
             PlayerControllerButtons(isPaused, callbacks)
             Song(currentSong)
         }
+        Spacer(modifier= Modifier.padding(all=4.dp))
+        SongList(currentSongs, currentSongIndex = currentSongIndex)
     }
 }
 
@@ -130,6 +135,7 @@ fun PlayerControllerButtons(isPaused: Boolean, callbacks: Callbacks) {
 @Composable
 fun PlayScreenPreview() {
     MyMusicPlayerTheme {
-        PlayScreen(CurrentPlayingStats(SampleData().songs[0], 0, 0), false)
+        val songs = SampleData().songs
+        PlayScreen(CurrentPlayingStats(songs[0], 0, 0), songs, false)
     }
 }

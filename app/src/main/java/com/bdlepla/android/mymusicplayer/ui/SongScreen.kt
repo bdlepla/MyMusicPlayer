@@ -1,8 +1,16 @@
 package com.bdlepla.android.mymusicplayer.ui
 
 import android.content.res.Configuration
-import androidx.compose.foundation.*
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -10,30 +18,41 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.bdlepla.android.mymusicplayer.*
+import com.bdlepla.android.mymusicplayer.SampleData
 import com.bdlepla.android.mymusicplayer.business.SongInfo
 import com.bdlepla.android.mymusicplayer.extensions.toImagePainter
 import com.bdlepla.android.mymusicplayer.ui.theme.MyMusicPlayerTheme
+import kotlinx.coroutines.delay
 
 @Composable
 fun SongList(songInfos: List<SongInfo>,
              onClick: (SongInfo) -> Unit = emptyFunction1(),
-             onLongPress:(List<SongInfo>)->Unit = emptyFunction1()) {
+             onLongPress:(List<SongInfo>)->Unit = emptyFunction1(),
+             currentSongIndex : Int = -1
+) {
     val listState = rememberLazyListState()
-
     LazyColumn(state = listState) {
         items(items = songInfos, key = { it.songId }) { songInfo ->
             SongWithImage(songInfo, onClick, onLongPress)
             HorizontalDivider(thickness = 10.dp, color = MaterialTheme.colorScheme.background)
         }
     }
+
+    if (currentSongIndex != -1) {
+        LaunchedEffect(currentSongIndex) {
+            delay(250)
+            listState.animateScrollToItem(currentSongIndex)
+        }
+    }
 }
+
 
 @Composable
 fun Song(songInfo: SongInfo) {
@@ -62,14 +81,14 @@ fun SongWithImage(songInfo: SongInfo,
                   onLongPress: (List<SongInfo>) -> Unit = emptyFunction1()) {
     Row(verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
-            .background(color=MaterialTheme.colorScheme.background)
+            .background(color = MaterialTheme.colorScheme.background)
             .fillMaxWidth()
-            .combinedClickable (
+            .combinedClickable(
                 onClick = { onClick(songInfo) },
-                onLongClick = { onLongPress(listOf(songInfo))}
+                onLongClick = { onLongPress(listOf(songInfo)) }
             )
             .padding(all = 4.dp)
-            .semantics(mergeDescendants = true){}) {
+            .semantics(mergeDescendants = true) {}) {
         Spacer(modifier = Modifier.padding(vertical = 4.dp))
         Image(
             painter = songInfo.albumArt.toImagePainter(),

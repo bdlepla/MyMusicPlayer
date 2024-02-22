@@ -13,6 +13,7 @@ fun Navigation(
     navController: NavHostController,
     mediaController: MediaController?,
     songs: List<SongInfo>,
+    currentSongList: List<SongInfo>,
     artists: List<ArtistInfo>,
     albums: List<AlbumInfo>,
     playlists: List<PlaylistInfo>,
@@ -70,8 +71,8 @@ fun Navigation(
         }
 
         composable(NavigationItem.Playing.route) {
-            setShuffledSongs(songs.shuffled())
-            PlayScreen(currentPlayingStats, isPaused, mediaController)
+            setShuffledSongs(emptyList())
+            PlayScreen(currentPlayingStats, currentSongList, isPaused, mediaController)
         }
 
         composable(NavigationItem.Playlist.route) {
