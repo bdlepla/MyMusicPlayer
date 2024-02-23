@@ -7,7 +7,9 @@ import com.bdlepla.android.mymusicplayer.business.AlbumInfo
 import com.bdlepla.android.mymusicplayer.business.ArtistInfo
 import com.bdlepla.android.mymusicplayer.business.PlaylistInfo
 import com.bdlepla.android.mymusicplayer.business.SongInfo
-import com.bdlepla.android.mymusicplayer.repository.*
+import com.bdlepla.android.mymusicplayer.repository.ALBUM_ID
+import com.bdlepla.android.mymusicplayer.repository.ARTIST_ID
+import com.bdlepla.android.mymusicplayer.repository.MEDIA_URI
 import com.bdlepla.android.mymusicplayer.service.MediaItemTree.ITEM_PREFIX
 
 class SampleData {
@@ -34,7 +36,7 @@ private fun List<String>.toSongInfo(songId: Int): SongInfo {
     val bundle = Bundle().apply {
         putLong(ALBUM_ID, songId.toLong())
         putLong(ARTIST_ID, songId.toLong())
-        putLong(GENRE_ID, songId.toLong())
+        //putLong(GENRE_ID, songId.toLong())
         putString(MEDIA_URI, "")
     }
 

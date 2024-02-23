@@ -5,12 +5,26 @@ import android.net.Uri
 import android.os.Bundle
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
-import androidx.media3.common.MediaMetadata.*
+import androidx.media3.common.MediaMetadata.MEDIA_TYPE_ALBUM
+import androidx.media3.common.MediaMetadata.MEDIA_TYPE_ARTIST
+import androidx.media3.common.MediaMetadata.MEDIA_TYPE_FOLDER_ALBUMS
+import androidx.media3.common.MediaMetadata.MEDIA_TYPE_FOLDER_ARTISTS
+import androidx.media3.common.MediaMetadata.MEDIA_TYPE_FOLDER_MIXED
+import androidx.media3.common.MediaMetadata.MEDIA_TYPE_FOLDER_PLAYLISTS
+import androidx.media3.common.MediaMetadata.MEDIA_TYPE_MUSIC
+import androidx.media3.common.MediaMetadata.MEDIA_TYPE_PLAYLIST
 import com.bdlepla.android.mymusicplayer.business.PlaylistReader
-import com.bdlepla.android.mymusicplayer.extensions.forSorting
 import com.bdlepla.android.mymusicplayer.business.albumId
 import com.bdlepla.android.mymusicplayer.business.artistId
-import com.bdlepla.android.mymusicplayer.repository.*
+import com.bdlepla.android.mymusicplayer.extensions.forSorting
+import com.bdlepla.android.mymusicplayer.repository.ALBUM
+import com.bdlepla.android.mymusicplayer.repository.ALBUM_ID
+import com.bdlepla.android.mymusicplayer.repository.ARTIST
+import com.bdlepla.android.mymusicplayer.repository.ARTIST_ID
+import com.bdlepla.android.mymusicplayer.repository.ITEM_ID
+import com.bdlepla.android.mymusicplayer.repository.PLAYLIST_ID
+import com.bdlepla.android.mymusicplayer.repository.ROOT_ID
+import com.bdlepla.android.mymusicplayer.repository.Repository
 import com.google.common.collect.ImmutableList
 
 object MediaItemTree {
@@ -18,7 +32,7 @@ object MediaItemTree {
     private var titleMap: MutableMap<String, MediaItem> = mutableMapOf()
     private var isInitialized = false
     private const val ALBUM_PREFIX = "[album]"
-    private const val GENRE_PREFIX = "[genre]"
+    //private const val GENRE_PREFIX = "[genre]"
     private const val ARTIST_PREFIX = "[artist]"
     private const val PLAYLIST_PREFIX = "[playlist]"
     const val ITEM_PREFIX = "[item]"
@@ -43,8 +57,6 @@ object MediaItemTree {
         albumId: Long = 0L,
         artist: String? = null,
         artistId: Long = 0L,
-        genre: String? = null,
-        sourceUri: Uri? = null,
         imageUri: Uri? = null,
     ): MediaItem {
         val bundle =  Bundle().apply {
@@ -52,16 +64,15 @@ object MediaItemTree {
             putLong(ALBUM_ID, albumId)
             putString(ARTIST, artist)
             putLong(ARTIST_ID, artistId)
-            putString(GENRE, genre)
+            //putString(GENRE, genre)
             //putLong(GENRE_ID, genreId)
         }
-        @Suppress("RemoveRedundantQualifierName")
+        //@Suppress("RemoveRedundantQualifierName")
         val metadata =
             MediaMetadata.Builder()
                 .setAlbumTitle(album)
                 .setTitle(title)
                 .setArtist(artist)
-                .setGenre(genre)
                 .setMediaType(mediaType)
                 .setIsBrowsable(true)
                 .setIsPlayable(isPlayable)
@@ -71,7 +82,6 @@ object MediaItemTree {
         return MediaItem.Builder()
             .setMediaId(mediaId)
             .setMediaMetadata(metadata)
-            .setUri(sourceUri)
             .build()
     }
 
@@ -117,15 +127,15 @@ object MediaItemTree {
                     mediaType = MEDIA_TYPE_FOLDER_ARTISTS
                 )
             )
-        treeNodes[GENRE_ID] =
-            MediaItemNode(
-                buildMediaItem(
-                    title = "Genre Folder",
-                    mediaId = GENRE_ID,
-                    isPlayable = false,
-                    mediaType = MEDIA_TYPE_FOLDER_GENRES
-                )
-            )
+//        treeNodes[GENRE_ID] =
+//            MediaItemNode(
+//                buildMediaItem(
+//                    title = "Genre Folder",
+//                    mediaId = GENRE_ID,
+//                    isPlayable = false,
+//                    mediaType = MEDIA_TYPE_FOLDER_GENRES
+//                )
+//            )
         treeNodes[PLAYLIST_ID] =
             MediaItemNode(
                 buildMediaItem(
@@ -138,7 +148,7 @@ object MediaItemTree {
 
         treeNodes[ROOT_ID]!!.addChild(ALBUM_ID)
         treeNodes[ROOT_ID]!!.addChild(ARTIST_ID)
-        treeNodes[ROOT_ID]!!.addChild(GENRE_ID)
+        //treeNodes[ROOT_ID]!!.addChild(GENRE_ID)
         treeNodes[ROOT_ID]!!.addChild(PLAYLIST_ID)
         treeNodes[ROOT_ID]!!.addChild(ITEM_ID)
         val songs = Repository.getAllSongs(context)
@@ -215,25 +225,25 @@ object MediaItemTree {
             albums.map { it.mediaId }.forEach { thisArtist.addChild(it) }
         }
 
-        val songsByGenre = sortedSongs
-            .groupBy { it.mediaMetadata.genre.toString() }
-            .toSortedMap(compareBy { it.forSorting() })
-        val genresInTree = treeNodes[GENRE_ID]!!
-        songsByGenre.forEach { (genre, songs) ->
-            val genreFolderIdInTree = GENRE_PREFIX + genre
-            treeNodes[genreFolderIdInTree] =
-                MediaItemNode(
-                    buildMediaItem(
-                        title = genre,
-                        mediaId = genreFolderIdInTree,
-                        isPlayable = true,
-                        mediaType = MEDIA_TYPE_GENRE
-                    )
-                )
-            genresInTree.addChild(genreFolderIdInTree)
-            val thisGenre = treeNodes[genreFolderIdInTree]!!
-            songs.map { it.mediaId }.forEach { thisGenre.addChild(it) }
-        }
+//        val songsByGenre = sortedSongs
+//            .groupBy { it.mediaMetadata.genre.toString() }
+//            .toSortedMap(compareBy { it.forSorting() })
+//        val genresInTree = treeNodes[GENRE_ID]!!
+//        songsByGenre.forEach { (genre, songs) ->
+//            val genreFolderIdInTree = GENRE_PREFIX + genre
+//            treeNodes[genreFolderIdInTree] =
+//                MediaItemNode(
+//                    buildMediaItem(
+//                        title = genre,
+//                        mediaId = genreFolderIdInTree,
+//                        isPlayable = true,
+//                        mediaType = MEDIA_TYPE_GENRE
+//                    )
+//                )
+//            genresInTree.addChild(genreFolderIdInTree)
+//            val thisGenre = treeNodes[genreFolderIdInTree]!!
+//            songs.map { it.mediaId }.forEach { thisGenre.addChild(it) }
+//        }
 
         val playlistsInTree = treeNodes[PLAYLIST_ID]!!
         PlaylistReader(context).loadPlaylists().forEach {(playlistName,songNames) ->

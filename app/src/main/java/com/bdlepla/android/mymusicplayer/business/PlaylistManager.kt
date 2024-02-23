@@ -3,7 +3,6 @@ package com.bdlepla.android.mymusicplayer.business
 import android.content.Context
 import android.content.ContextWrapper
 import android.os.Environment
-import android.util.Log
 import java.io.File
 import java.io.FileWriter
 import java.nio.file.Path
@@ -28,7 +27,6 @@ open class PlaylistReader(context:Context) :PlaylistBase(context){
             .associate{it.first.first to it.second.toMutableList()}.toMutableMap()
 
     private fun loadPlaylistSongs(m3uName:String):List<String> {
-        Log.d("PlaylistManager","Loading $m3uName")
         return File(m3uName)
             .readLines()
             .asSequence()
@@ -36,7 +34,6 @@ open class PlaylistReader(context:Context) :PlaylistBase(context){
             .filter { it.isNotEmpty() }
             .filter { it[0] != '#' }
             .filter {!it.contains("/Music/")}
-            .onEach { Log.d("PlaylistManager", it) }
             .toList()
     }
 }
@@ -60,14 +57,11 @@ class PlaylistManager(context: ContextWrapper) : PlaylistReader(context){
 
     private fun savePlaylistSongs(m3uname:String, songNames:List<String>) {
         if (File(m3uname).exists()){
-            Log.d("PlaylistManager", "deleting $m3uname")
             File(m3uname).delete()
         }
-        Log.d("PlaylistManager", "creating $m3uname")
         FileWriter(m3uname).use { fw ->
             songNames.forEach { songName ->
                 fw.write(songName+"\n")
-                Log.d("PlaylistManager", "writing $songName")
             }
         }
     }
@@ -123,7 +117,6 @@ class PlaylistManager(context: ContextWrapper) : PlaylistReader(context){
         playLists.remove(playListInfo.name)
         val fileName = getFullFilename(playListInfo.name)
         if (File(fileName).exists()){
-            Log.d("PlaylistManager", "deleting $fileName")
             File(fileName).delete()
         }
     }

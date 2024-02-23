@@ -40,8 +40,8 @@ object Repository {
             MediaStore.Audio.AudioColumns.TRACK,
             MediaStore.Audio.AudioColumns.ALBUM_ID,
             MediaStore.Audio.AudioColumns.ARTIST_ID,
-            MediaStore.Audio.AudioColumns.GENRE,
-            MediaStore.Audio.AudioColumns.GENRE_ID,
+            //MediaStore.Audio.AudioColumns.GENRE,
+            //MediaStore.Audio.AudioColumns.GENRE_ID,
             MediaStore.Audio.AudioColumns.DURATION
         )
         val selection = MediaStore.Audio.Media.IS_MUSIC + " != 0"
@@ -65,8 +65,8 @@ object Repository {
             val trackColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.TRACK)
             val albumIdColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM_ID)
             val artistIdColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST_ID)
-            val genreColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.GENRE)
-            val genreIdColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.GENRE_ID)
+            //val genreColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.GENRE)
+            //val genreIdColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.GENRE_ID)
             val durationColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DURATION)
 
             while (cursor.moveToNext()) {
@@ -87,8 +87,8 @@ object Repository {
                 val track = cursor.getInt(trackColumn)
                 val albumId = cursor.getLong(albumIdColumn)
                 val albumArt = getAlbumArt(context, albumId)
-                val genre = cursor.getString(genreColumn)
-                val genreId = cursor.getLong(genreIdColumn)
+                //val genre = cursor.getString(genreColumn)
+                //val genreId = cursor.getLong(genreIdColumn)
                 val durationInSeconds = cursor.getInt(durationColumn) / 1000
 
                 val bundle =  Bundle().apply {
@@ -96,8 +96,8 @@ object Repository {
                     putLong(ALBUM_ID, albumId)
                     putString(ARTIST, artist)
                     putLong(ARTIST_ID, artistId)
-                    putString(GENRE, genre)
-                    putLong(GENRE_ID, genreId)
+                    ///putString(GENRE, genre)
+                    //putLong(GENRE_ID, genreId)
                     putString(MEDIA_URI, data)
                     putInt(TRACK_NUMBER, track)
                     putInt(DURATION, durationInSeconds)
@@ -118,7 +118,7 @@ object Repository {
                         .setAlbumTitle(album)
                         .setAlbumArtist(artist)
                         .setArtworkUri(albumArt?.toUri())
-                        .setGenre(genre)
+                        //.setGenre(genre)
                         .setIsBrowsable(false)
                         .setMediaType(MediaMetadata.MEDIA_TYPE_MUSIC)
                         .setIsPlayable(true)
@@ -164,12 +164,12 @@ object Repository {
 
 const val ALBUM = "album"
 const val ARTIST = "artist"
-const val GENRE = "genre"
+//const val GENRE = "genre"
 const val MEDIA_URI = "mediaUri"
 const val TRACK_NUMBER = "trackNumber"
 const val ROOT_ID = "[rootID]"
 const val ALBUM_ID = "[albumID]"
-const val GENRE_ID = "[genreID]"
+//const val GENRE_ID = "[genreID]"
 const val ITEM_ID = "[itemID]"
 const val ARTIST_ID = "[artistID]"
 const val PLAYLIST_ID = "[playlistID]"
