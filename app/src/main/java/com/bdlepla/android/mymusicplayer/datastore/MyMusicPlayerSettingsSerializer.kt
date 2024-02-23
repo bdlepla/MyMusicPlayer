@@ -1,6 +1,5 @@
 package com.bdlepla.android.mymusicplayer.datastore
 
-import androidx.datastore.core.CorruptionException
 import androidx.datastore.core.Serializer
 import com.bdlepla.android.mymusicplayer.MyMusicPlayerSettings
 import com.google.protobuf.InvalidProtocolBufferException

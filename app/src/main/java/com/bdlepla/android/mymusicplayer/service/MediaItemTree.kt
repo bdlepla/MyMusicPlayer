@@ -39,7 +39,6 @@ object MediaItemTree {
         mediaId: String,
         isPlayable: Boolean,
         mediaType: Int,
-        isBrowsable: Boolean,
         album: String? = null,
         albumId: Long = 0L,
         artist: String? = null,
@@ -64,7 +63,7 @@ object MediaItemTree {
                 .setArtist(artist)
                 .setGenre(genre)
                 .setMediaType(mediaType)
-                .setIsBrowsable(isBrowsable)
+                .setIsBrowsable(true)
                 .setIsPlayable(isPlayable)
                 .setArtworkUri(imageUri)
                 .setExtras(bundle)
@@ -86,7 +85,6 @@ object MediaItemTree {
                     title = "Root Folder",
                     mediaId = ROOT_ID,
                     isPlayable = false,
-                    isBrowsable = true,
                     mediaType = MEDIA_TYPE_FOLDER_MIXED
                 )
             )
@@ -97,7 +95,6 @@ object MediaItemTree {
                     title = "Item Folder",
                     mediaId = ITEM_ID,
                     isPlayable = false,
-                    isBrowsable = true,
                     mediaType = MEDIA_TYPE_MUSIC
                 )
             )
@@ -108,7 +105,6 @@ object MediaItemTree {
                     title = "Album Folder",
                     mediaId = ALBUM_ID,
                     isPlayable = false,
-                    isBrowsable = true,
                     mediaType = MEDIA_TYPE_FOLDER_ALBUMS
                 )
             )
@@ -118,7 +114,6 @@ object MediaItemTree {
                     title = "Artist Folder",
                     mediaId = ARTIST_ID,
                     isPlayable = false,
-                    isBrowsable = true,
                     mediaType = MEDIA_TYPE_FOLDER_ARTISTS
                 )
             )
@@ -128,7 +123,6 @@ object MediaItemTree {
                     title = "Genre Folder",
                     mediaId = GENRE_ID,
                     isPlayable = false,
-                    isBrowsable = true,
                     mediaType = MEDIA_TYPE_FOLDER_GENRES
                 )
             )
@@ -138,7 +132,6 @@ object MediaItemTree {
                     title = "Playlist Folder",
                     mediaId = PLAYLIST_ID,
                     isPlayable = false,
-                    isBrowsable = true,
                     mediaType = MEDIA_TYPE_FOLDER_PLAYLISTS
                 )
             )
@@ -177,15 +170,14 @@ object MediaItemTree {
                 MediaItemNode(
                     buildMediaItem(
                         title = album,
-                        album = album,
-                        albumId = albumId,
-                        imageUri = imageUri,
-                        artist= artist,
-                        artistId = artistId,
                         mediaId = albumFolderIdInTree,
                         isPlayable = true,
-                        isBrowsable = true,
-                        mediaType = MEDIA_TYPE_ALBUM
+                        mediaType = MEDIA_TYPE_ALBUM,
+                        album = album,
+                        albumId = albumId,
+                        artist= artist,
+                        artistId = artistId,
+                        imageUri = imageUri
                     )
                 )
             albumsInTree.addChild(albumFolderIdInTree)
@@ -210,13 +202,12 @@ object MediaItemTree {
                 MediaItemNode(
                     buildMediaItem(
                         title = artist,
-                        artist = artist,
-                        artistId = artistId,
-                        imageUri = imageUri,
                         mediaId = artistFolderIdInTree,
                         isPlayable = true,
-                        isBrowsable = true,
-                        mediaType = MEDIA_TYPE_ARTIST
+                        mediaType = MEDIA_TYPE_ARTIST,
+                        artist = artist,
+                        artistId = artistId,
+                        imageUri = imageUri
                     )
                 )
             artistsInTree.addChild(artistFolderIdInTree)
@@ -236,7 +227,6 @@ object MediaItemTree {
                         title = genre,
                         mediaId = genreFolderIdInTree,
                         isPlayable = true,
-                        isBrowsable = true,
                         mediaType = MEDIA_TYPE_GENRE
                     )
                 )
@@ -254,7 +244,6 @@ object MediaItemTree {
                         title = playlistName,
                         mediaId = playlistFolderIdInTree,
                         isPlayable = true,
-                        isBrowsable = true,
                         mediaType = MEDIA_TYPE_PLAYLIST
                     )
                 )

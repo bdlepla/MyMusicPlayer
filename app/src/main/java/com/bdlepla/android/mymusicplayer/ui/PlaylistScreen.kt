@@ -24,7 +24,6 @@ import com.bdlepla.android.mymusicplayer.extensions.toHourMinutesSeconds
 import com.bdlepla.android.mymusicplayer.extensions.toImagePainter
 import com.bdlepla.android.mymusicplayer.ui.theme.MyMusicPlayerTheme
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlaylistScreen(
     playlistList: List<PlaylistInfo>,

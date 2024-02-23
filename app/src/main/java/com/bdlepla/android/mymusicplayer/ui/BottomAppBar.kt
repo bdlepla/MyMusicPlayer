@@ -2,10 +2,10 @@ package com.bdlepla.android.mymusicplayer.ui
 
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.Column
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.res.painterResource
@@ -19,11 +19,11 @@ import com.bdlepla.android.mymusicplayer.business.SongInfo
 import com.bdlepla.android.mymusicplayer.ui.theme.MyMusicPlayerTheme
 
 sealed class NavigationItem(var route: String, var icon: Int, var title: String) {
-    object Songs : NavigationItem("songs", R.drawable.ic_library_music, "Songs")
-    object Artists : NavigationItem("artists", R.drawable.ic_people_alt, "Artists")
-    object Albums : NavigationItem("albums", R.drawable.ic_album, "Albums")
-    object Playing : NavigationItem("playing", R.drawable.ic_airplay, "Playing")
-    object Playlist: NavigationItem("playlists", R.drawable.ic_library_music, "Playlist")
+    data object Songs : NavigationItem("songs", R.drawable.ic_library_music, "Songs")
+    data object Artists : NavigationItem("artists", R.drawable.ic_people_alt, "Artists")
+    data object Albums : NavigationItem("albums", R.drawable.ic_album, "Albums")
+    data object Playing : NavigationItem("playing", R.drawable.ic_airplay, "Playing")
+    data object Playlist: NavigationItem("playlists", R.drawable.ic_library_music, "Playlist")
 }
 
 @Composable
@@ -72,9 +72,9 @@ fun BottomAppBar(
                                 }
                             }
                             // Avoid multiple copies of the same destination when
-                            // reselecting the same item
+                            // selecting the same item
                             launchSingleTop = true
-                            // Restore state when reselecting a previously selected item
+                            // Restore state when selecting a previously selected item
                             restoreState = true
                         }
                     }

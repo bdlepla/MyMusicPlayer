@@ -164,17 +164,17 @@ class MyMusicViewModel
             _isPaused.value = false
         }
         else {
-            val playingItemIds = musicDataStore.PlayingList
+            val playingItemIds = musicDataStore.playingList
             if (playingItemIds.any()) {
                 val songsList = playingItemIds.mapNotNull { id ->
                     songCollection.firstOrNull { it.songId == id }
                 }
 
                 setPlaylist(songsList)
-                val playingSongId = musicDataStore.PlayingSongId
+                val playingSongId = musicDataStore.playingSongId
                 val playingSongIdx = songsList.indexOfFirst { it.songId == playingSongId }
                 if (playingSongIdx != -1) {
-                    val playingPosition = musicDataStore.PlayingPosition
+                    val playingPosition = musicDataStore.playingPosition
                     setCurrentlyPlayingAt(playingSongIdx, playingPosition)
                 }
             }
@@ -278,11 +278,11 @@ class MyMusicViewModel
         else {b.play()}
     }
 
-    fun play() {
-        val b = browser ?: return
-        _isPaused.value = false
-        b.play()
-    }
+//    fun play() {
+//        val b = browser ?: return
+//        _isPaused.value = false
+//        b.play()
+//    }
 
     fun toggleRepeat() {
         val b = browser ?: return

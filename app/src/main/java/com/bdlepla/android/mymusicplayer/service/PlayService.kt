@@ -3,14 +3,18 @@ package com.bdlepla.android.mymusicplayer.service
 import android.app.PendingIntent
 import android.app.PendingIntent.FLAG_IMMUTABLE
 import android.app.PendingIntent.FLAG_UPDATE_CURRENT
-import android.content.Intent
 import android.os.Build
 import android.os.Bundle
-import androidx.core.app.TaskStackBuilder
-import androidx.media3.common.*
+import androidx.media3.common.AudioAttributes
+import androidx.media3.common.C
+import androidx.media3.common.MediaItem
+import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
-import androidx.media3.session.*
-import com.bdlepla.android.mymusicplayer.MainActivity
+import androidx.media3.session.LibraryResult
+import androidx.media3.session.MediaLibraryService
+import androidx.media3.session.MediaSession
+import androidx.media3.session.SessionCommand
+import androidx.media3.session.SessionResult
 import com.google.common.collect.ImmutableList
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
@@ -107,21 +111,21 @@ class PlayService: MediaLibraryService() {
         return mediaLibrarySession
     }
 
-    private fun setMediaItemFromSearchQuery(query: String) {
-        // Only accept query with pattern "play [Title]" or "[Title]"
-        // Where [Title]: must be exactly matched
-        // If no media with exact name found, play a random media instead
-        val mediaTitle =
-            if (query.startsWith("play ", ignoreCase = true)) {
-                query.drop(5)
-            } else {
-                query
-            }
-
-        val item = MediaItemTree.getItemFromTitle(mediaTitle) ?: MediaItemTree.getRandomItem()
-        player.setMediaItem(item)
-        player.prepare()
-    }
+//    private fun setMediaItemFromSearchQuery(query: String) {
+//        // Only accept query with pattern "play [Title]" or "[Title]"
+//        // Where [Title]: must be exactly matched
+//        // If no media with exact name found, play a random media instead
+//        val mediaTitle =
+//            if (query.startsWith("play ", ignoreCase = true)) {
+//                query.drop(5)
+//            } else {
+//                query
+//            }
+//
+//        val item = MediaItemTree.getItemFromTitle(mediaTitle) ?: MediaItemTree.getRandomItem()
+//        player.setMediaItem(item)
+//        player.prepare()
+//    }
 
     companion object {
         //private const val SEARCH_QUERY_PREFIX_COMPAT = "androidx://media3-session/playFromSearch"

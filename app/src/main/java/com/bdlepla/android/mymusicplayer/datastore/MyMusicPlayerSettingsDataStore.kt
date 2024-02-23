@@ -17,9 +17,9 @@ class MyMusicPlayerSettingsDataStore @Inject constructor(private val context: Co
         if (exists) { settings = runBlocking { readFile() } }
     }
 
-    val PlayingPosition: Long = settings.playingPosition
-    val PlayingSongId: Long = settings.playingSongId
-    val PlayingList: List<Long> = settings.currentListIdsList
+    val playingPosition: Long = settings.playingPosition
+    val playingSongId: Long = settings.playingSongId
+    val playingList: List<Long> = settings.currentListIdsList
     private val appStoragePath
         get() = Path(context.getExternalFilesDir(null).toString())
 
