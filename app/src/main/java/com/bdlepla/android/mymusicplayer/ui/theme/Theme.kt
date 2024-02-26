@@ -2,9 +2,10 @@ package com.bdlepla.android.mymusicplayer.ui.theme
 
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.material3.*
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
 
 
 private val lightThemeColors = lightColorScheme(
@@ -73,8 +74,8 @@ fun MyMusicPlayerTheme(
     // Dynamic color is available on Android 12+
     val dynamicColor = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
     val colors = when {
-        dynamicColor && useDarkTheme -> dynamicDarkColorScheme(LocalContext.current)
-        dynamicColor && !useDarkTheme -> dynamicLightColorScheme(LocalContext.current)
+        dynamicColor && useDarkTheme -> darkColorScheme() //dynamicDarkColorScheme(LocalContext.current)
+        dynamicColor && !useDarkTheme -> lightColorScheme() //dynamicLightColorScheme(LocalContext.current)
         useDarkTheme -> darkThemeColors
         else -> lightThemeColors
     }
