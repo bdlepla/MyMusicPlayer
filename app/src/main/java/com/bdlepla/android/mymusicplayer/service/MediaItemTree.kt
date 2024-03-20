@@ -167,14 +167,14 @@ object MediaItemTree {
         }
 
         val songsByAlbum = sortedSongs
-            .groupBy { it.mediaMetadata.albumTitle.toString() }
-            .toSortedMap(compareBy { it.forSorting() })
+            .groupBy { it.mediaMetadata.albumId }
         val albumsInTree = treeNodes[ALBUM_ID]!!
-         songsByAlbum.forEach { (album,items) ->
-            val albumFolderIdInTree = ALBUM_PREFIX + album
+         songsByAlbum.forEach { (albumId,items) ->
+            val albumFolderIdInTree = ALBUM_PREFIX + albumId.toString()
             val artist = items[0].mediaMetadata.artist.toString()
             val artistId = items[0].mediaMetadata.artistId
-            val albumId = items[0].mediaMetadata.albumId
+            //val albumId = items[0].mediaMetadata.albumId
+             val album = items[0].mediaMetadata.albumTitle.toString()
             val imageUri = items[0].mediaMetadata.artworkUri
             treeNodes[albumFolderIdInTree] =
                 MediaItemNode(
