@@ -2,7 +2,9 @@ package com.bdlepla.android.mymusicplayer.datastore
 
 import android.content.Context
 import com.bdlepla.android.mymusicplayer.MyMusicPlayerSettings
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import kotlin.io.path.Path
 import kotlin.io.path.exists
@@ -38,14 +40,13 @@ class MyMusicPlayerSettingsDataStore @Inject constructor(private val context: Co
         }
     }
 
-
-
-    fun  saveCurrentList(ids:List<Long>) {
+    suspend fun saveCurrentList(ids:List<Long>) {
         settings = settings.toBuilder().clearCurrentListIds().addAllCurrentListIds(ids).build()
-        runBlocking{writeFile(settings)}
+        withContext(Dispatchers.IO) { writeFile(settings) }
     }
-    fun saveCurrentPlaying(songId:Long, position:Long) {
+
+    suspend fun saveCurrentPlaying(songId:Long, position:Long) {
         settings = settings.toBuilder().setPlayingSongId(songId).setPlayingPosition(position).build()
-        runBlocking { writeFile(settings) }
+        withContext(Dispatchers.IO) { writeFile(settings) }
     }
 }

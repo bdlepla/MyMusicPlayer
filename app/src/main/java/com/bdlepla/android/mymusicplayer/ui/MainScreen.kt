@@ -1,5 +1,6 @@
 package com.bdlepla.android.mymusicplayer.ui
 
+import android.content.Context
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -41,7 +42,7 @@ import com.bdlepla.android.mymusicplayer.ui.theme.MyMusicPlayerTheme
 // to view model. This is so I can see previews for everything in
 // the MainContents and its components.
 @Composable
-internal fun MainScreen(viewModel: MyMusicViewModel=viewModel()) {
+internal fun MainScreen(viewModel: MyMusicViewModel=viewModel(), activity: Context) {
     val songs by viewModel.allSongs.collectAsState()
     val artists by viewModel.allArtists.collectAsState()
     val albums by viewModel.allAlbums.collectAsState()
@@ -49,6 +50,7 @@ internal fun MainScreen(viewModel: MyMusicViewModel=viewModel()) {
     val currentlyPlayingStats by viewModel.currentlyPlayingStats.collectAsState()
     val isPaused by viewModel.isPaused.collectAsState()
     val currentSongList by viewModel.currentSongList.collectAsState()
+    val castState by viewModel.castState.collectAsState()
 
 
     val onSongClick: (SongInfo, List<SongInfo>) -> Unit = { itSong, itSongs ->
@@ -120,7 +122,9 @@ internal fun MainScreen(viewModel: MyMusicViewModel=viewModel()) {
         onPlayPauseClick,
         onNextClick,
         currentlyPlayingStats,
-        isPaused
+        isPaused,
+        activity,
+        castState
     )
 }
 
@@ -143,7 +147,9 @@ private fun MainContent(
     onPlayPauseClick: () -> Unit = emptyFunction(),
     onNextClick: () -> Unit = emptyFunction(),
     currentPlayingStats: CurrentPlayingStats? = null,
-    isPaused: Boolean = false
+    isPaused: Boolean = false,
+    activity: Context? = null,
+    castState: Int = 0
 ) {
     val shuffledSongs = remember{mutableStateOf(songs.shuffled())}
     val setShuffledSongs: (List<SongInfo>) -> Unit = {
@@ -159,7 +165,7 @@ private fun MainContent(
     MyMusicPlayerTheme {
         Surface {
             Scaffold(
-                topBar = { TopAppBar(onShuffleClick, onRepeatClick) },
+                topBar = { TopAppBar(castState, activity, onShuffleClick, onRepeatClick) },
                 bottomBar = {
                     BottomAppBar(
                         onPlayPauseClick,

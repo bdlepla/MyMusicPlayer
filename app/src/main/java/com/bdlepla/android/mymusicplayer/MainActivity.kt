@@ -15,12 +15,14 @@ import dagger.hilt.android.AndroidEntryPoint
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
     private val myMusicViewModel:MyMusicViewModel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         checkPermissions()
 
         setContent {
-            MainScreen(myMusicViewModel)
+            MainScreen(myMusicViewModel,activity=this)
         }
     }
 

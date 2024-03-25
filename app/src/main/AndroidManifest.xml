@@ -4,6 +4,7 @@
         android:maxSdkVersion="29" />
     <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
 
@@ -16,6 +17,11 @@
         android:requestLegacyExternalStorage="true"
         android:enableOnBackInvokedCallback="true"
         android:theme="@style/Theme.MyMusicPlayer">
+
+        <!-- Declare that MyMusicPlayer supports Cast. -->
+        <meta-data android:name="com.google.android.gms.cast.framework.OPTIONS_PROVIDER_CLASS_NAME"
+            android:value="com.bdlepla.android.mymusicplayer.cast.CastOptionsProvider"/>
+
         <activity
             android:name=".MainActivity"
             android:exported="true"

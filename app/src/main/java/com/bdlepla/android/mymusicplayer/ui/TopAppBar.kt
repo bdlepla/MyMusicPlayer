@@ -1,11 +1,17 @@
 package com.bdlepla.android.mymusicplayer.ui
 
+import android.content.Context
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material3.*
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -16,9 +22,12 @@ import com.bdlepla.android.mymusicplayer.ui.theme.MyMusicPlayerTheme
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopAppBar(
+    castState: Int,
+    activity: Context? = null,
     onShuffleClick: ()->Unit = emptyFunction(),
     onRepeatClick: ()->Unit = emptyFunction(),
 ) {
+    fun onCastButtonClick(state:Int) {}
     Column {
         TopAppBar(
             modifier = Modifier.background(MaterialTheme.colorScheme.primaryContainer),
@@ -29,6 +38,7 @@ fun TopAppBar(
                 )
             },
             actions = {
+                CastIconButton(castState, activity)
                 IconButton(onClick = { onShuffleClick() }) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_shuffle),
@@ -62,6 +72,6 @@ fun TopAppBar(
 @Composable
 fun TopAppBarPreview() {
     MyMusicPlayerTheme {
-        TopAppBar()
+        TopAppBar(0)
     }
 }

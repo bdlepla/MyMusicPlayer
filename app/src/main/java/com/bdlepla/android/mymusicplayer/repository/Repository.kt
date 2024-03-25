@@ -71,7 +71,7 @@ object Repository {
 
             while (cursor.moveToNext()) {
                 val data = cursor.getString(dataColumn)
-                if (!data.endsWith(".mp3") && !data.endsWith(".wma")){
+                if (!data.endsWith(".mp3")){
                     Log.i("Repository.getAllSongs", "ignoring $data")
                     continue
                 }
@@ -131,6 +131,7 @@ object Repository {
                     .setMediaId(ITEM_PREFIX+songId.toString())
                     .setMediaMetadata(metadata)
                     .setUri(data)
+                    .setMimeType("audio/mpeg")
                     .build()
 
                 ret.add(item)

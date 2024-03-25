@@ -5,61 +5,87 @@ import android.app.PendingIntent.FLAG_IMMUTABLE
 import android.app.PendingIntent.FLAG_UPDATE_CURRENT
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
+import androidx.media3.cast.CastPlayer
+import androidx.media3.cast.SessionAvailabilityListener
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.util.EventLogger
 import androidx.media3.session.LibraryResult
 import androidx.media3.session.MediaLibraryService
 import androidx.media3.session.MediaSession
 import androidx.media3.session.SessionCommand
 import androidx.media3.session.SessionResult
+import com.google.android.gms.cast.framework.CastContext
 import com.google.common.collect.ImmutableList
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
 
 
 class PlayService: MediaLibraryService() {
-    private lateinit var player: Player
     private lateinit var mediaLibrarySession: MediaLibrarySession
 
     private val librarySessionCallback = CustomMediaLibrarySessionCallback()
     private val playerListener = PlayerListener()
 
-    private val uAmpAudioAttributes = AudioAttributes.Builder()
+    private val myPlayerAudioAttributesBuilder = AudioAttributes.Builder()
         .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
         .setUsage(C.USAGE_MEDIA)
-        .build()
 
     private val exoPlayer: ExoPlayer by lazy {
-        ExoPlayer.Builder(this).build().apply {
-            setAudioAttributes(uAmpAudioAttributes, true)
+        val ret = ExoPlayer.Builder(this).build().apply {
+            setAudioAttributes(myPlayerAudioAttributesBuilder.build(), true)
             setHandleAudioBecomingNoisy(true)
+            addListener(playerListener)
+        }
+        ret.addAnalyticsListener(EventLogger("MyMusicPlayer"))
+        ret
+    }
+
+    private val castPlayer: CastPlayer? by lazy {
+        try {
+            val castContext = CastContext.getSharedInstance(this)
+            CastPlayer(castContext).apply {
+                setSessionAvailabilityListener(CastSessionAvailabilityListener())
+                addListener(playerListener)
+            }
+        } catch (e: Exception) {
+            // We wouldn't normally catch the generic `Exception` however
+            // calling `CastContext.getSharedInstance` can throw various exceptions, all of which
+            // indicate that Cast is unavailable.
+            // Related internal bug b/68009560.
+            Log.i(
+                TAG, "Cast is not available on this device. " +
+                        "Exception thrown when attempting to obtain CastContext. " + e.message
+            )
+            null
         }
     }
 
+    private val currentPlayer: ReplaceableForwardingPlayer by lazy {
+        ReplaceableForwardingPlayer(exoPlayer)
+    }
+
     private fun initializeSessionAndPlayer() {
-        MediaItemTree.initialize(applicationContext)
-
-        player = exoPlayer
-        player.addListener(playerListener)
-        mediaLibrarySession = with(MediaLibrarySession.Builder(this, player, librarySessionCallback)){
-            setId(packageName)
-            packageManager?.getLaunchIntentForPackage(packageName)?.let {sessionIntent ->
-                setSessionActivity(
-                    PendingIntent.getActivity(
-                        this@PlayService,
-                        0,
-                        sessionIntent,
-                        if (Build.VERSION.SDK_INT >= 23) FLAG_IMMUTABLE else FLAG_UPDATE_CURRENT
+        mediaLibrarySession =
+            with(MediaLibrarySession.Builder(this@PlayService, currentPlayer, librarySessionCallback)) {
+                setId(packageName)
+                packageManager?.getLaunchIntentForPackage(packageName)?.let { sessionIntent ->
+                    setSessionActivity(
+                        PendingIntent.getActivity(
+                            this@PlayService,
+                            0,
+                            sessionIntent,
+                            if (Build.VERSION.SDK_INT >= 23) FLAG_IMMUTABLE else FLAG_UPDATE_CURRENT
+                        )
                     )
-                )
+                }
+                build()
             }
-            build()
-        }
-
-        setMediaNotificationProvider(CustomMediaNotificationProvider(this))
+        setMediaNotificationProvider(CustomMediaNotificationProvider(this@PlayService))
     }
 
 
@@ -97,14 +123,29 @@ class PlayService: MediaLibraryService() {
 
     override fun onCreate() {
         super.onCreate()
+        MediaItemTree.initialize(this)
+        if (castPlayer?.isCastSessionAvailable == true) {
+            currentPlayer.setPlayer(castPlayer!!)
+        }
         //setupCustomCommands()
         initializeSessionAndPlayer()
     }
 
     override fun onDestroy() {
-        mediaLibrarySession.release()
-        player.release()
+        releaseMediaSession()
         super.onDestroy()
+    }
+
+    private fun releaseMediaSession() {
+        this.mediaLibrarySession.run {
+            release()
+            if (player.playbackState != Player.STATE_IDLE) {
+                player.removeListener(playerListener)
+                player.release()
+            }
+        }
+        // Cancel coroutines when the service is going away.
+        //serviceJob.cancel()
     }
 
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaLibrarySession {
@@ -137,6 +178,24 @@ class PlayService: MediaLibraryService() {
             "android.media3.session.demo.SHUFFLE_OFF"
     }
 
+    private inner class CastSessionAvailabilityListener : SessionAvailabilityListener {
+
+        /**
+         * Called when a Cast session has started and the user wishes to control playback on a
+         * remote Cast receiver rather than play audio locally.
+         */
+        override fun onCastSessionAvailable() {
+            currentPlayer.setPlayer(castPlayer!!)
+        }
+
+        /**
+         * Called when a Cast session has ended and the user wishes to control playback locally.
+         */
+        override fun onCastSessionUnavailable() {
+            currentPlayer.setPlayer(exoPlayer)
+        }
+    }
+
    private inner class PlayerListener: Player.Listener {
 //        override fun onMediaMetadataChanged(mediaMetadata: MediaMetadata) {
 //            super.onMediaMetadataChanged(mediaMetadata)
@@ -160,7 +219,7 @@ class PlayService: MediaLibraryService() {
             val connectionResult = super.onConnect(session, controller)
             val availableSessionCommands = connectionResult.availableSessionCommands.buildUpon()
 //            customCommands.forEach { commandButton ->
-//                // Add custom command to available session commands.
+//                // Add custom command to available session commaMediaLibrarySessionnds.
 //                // these are cached to be used as a lookup when the user presses it
 //                commandButton.sessionCommand?.let { availableSessionCommands.add(it) }
 //            }
@@ -187,14 +246,14 @@ class PlayService: MediaLibraryService() {
         ): ListenableFuture<SessionResult> {
             if (CUSTOM_COMMAND_TOGGLE_SHUFFLE_MODE_ON == customCommand.customAction) {
                 // Enable shuffling.
-                player.shuffleModeEnabled = true
+                currentPlayer.shuffleModeEnabled = true
                 // Change the custom layout to contain the `Disable shuffling` command.
                 //customLayout = ImmutableList.of(customCommands[1])
                 // Send the updated custom layout to controllers.
                 //session.setCustomLayout(customLayout)
             } else if (CUSTOM_COMMAND_TOGGLE_SHUFFLE_MODE_OFF == customCommand.customAction) {
                 // Disable shuffling.
-                player.shuffleModeEnabled = false
+                currentPlayer.shuffleModeEnabled = false
                 // Change the custom layout to contain the `Enable shuffling` command.
                 //customLayout = ImmutableList.of(customCommands[0])
                 // Send the updated custom layout to controllers.
@@ -292,3 +351,4 @@ class PlayService: MediaLibraryService() {
 //}
 
 
+private const val TAG = "PlayService"
