@@ -4,12 +4,10 @@
 //import com.android.build.api.dsl.Packaging
 
 plugins {
-    id("com.android.application")
-    id("kotlin-android")
-    id("org.jetbrains.kotlin.android")
-    id("com.google.protobuf")
-    //id("kotlin-kapt") apply false
-    //id("dagger.hilt.android.plugin") apply false
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.google.protobuf)
+    //alias(libs.plugins.compose.compiler)
 }
 
 android {
@@ -91,41 +89,36 @@ dependencies {
         }
     }
 
-    implementation("androidx.activity:activity-compose:1.9.0")
-    implementation("androidx.appcompat:appcompat:1.6.1")
-    implementation("androidx.compose.material:material:1.6.7")
-    implementation("androidx.compose.material3:material3:1.2.1")
-    implementation("androidx.compose.ui:ui:1.6.7")
-    implementation("androidx.compose.ui:ui-tooling-preview:1.6.7")
-    implementation("androidx.core:core-ktx:1.13.1")
-    implementation("androidx.datastore:datastore-core:1.1.1")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
-    implementation("androidx.media:media:1.7.0")
-    implementation("androidx.media3:media3-ui:1.3.1")
-    implementation("androidx.media3:media3-exoplayer:1.3.1")
-    implementation("androidx.media3:media3-session:1.3.1")
-    implementation("androidx.media3:media3-cast:1.3.1")
-    //implementation project(":media-lib-ui")
-    //implementation project(":media-lib-exoplayer")
-    //implementation project(":media-lib-session")
-    implementation("androidx.navigation:navigation-compose:2.7.7")
-    implementation("com.google.android.material:material:1.11.0")
-    implementation("com.google.dagger:hilt-android:2.51.1")
-    implementation("io.coil-kt:coil:2.6.0")
-    implementation("io.coil-kt:coil-compose:2.6.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.0")
-    implementation("com.google.protobuf:protobuf-javalite:4.26.1")
-    implementation("com.google.android.gms:play-services-cast-framework:21.4.0")
-    androidTestImplementation("androidx.test.ext:junit:1.1.5")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
-    androidTestImplementation("androidx.compose.ui:ui-test-junit4:1.6.7")
+    implementation(libs.activity.compose)
+    implementation(libs.android.material)
+    implementation(libs.appcompat)
+    implementation(libs.cast.framework)
+    implementation(libs.coil)
+    implementation(libs.coil.compose)
+    implementation(libs.coroutines.core)
+    implementation(libs.coroutines.android)
+    implementation(libs.datastore.core)
+    implementation(libs.hilt.android)
+    implementation(libs.lifecycle.ktx)
+    implementation(libs.lifecycle.viewmodel)
+    implementation(libs.material)
+    implementation(libs.material3)
+    implementation(libs.media)
+    implementation(libs.media3.ui)
+    implementation(libs.media3.exoplayer)
+    implementation(libs.media3.session)
+    implementation(libs.media3.cast)
+    implementation(libs.navigation.compose)
+    implementation(libs.protobuf.javalite)
+    implementation(libs.ui)
+    implementation(libs.ui.tooling.preview)
 
-    debugImplementation("androidx.compose.ui:ui-tooling:1.6.7")
-    debugImplementation("androidx.compose.ui:ui-test-manifest:1.6.7")
+    androidTestImplementation(libs.test.junit)
+    androidTestImplementation(libs.test.espresso)
+    androidTestImplementation(libs.test.compose)
 
-    testImplementation("junit:junit:4.13.2")
+    debugImplementation(libs.ui.test.manifest)
+    debugImplementation(libs.ui.tooling)
 
-    //kapt "com.google.dagger:hilt-compiler:2.42"
+    testImplementation(libs.junit)
 }
