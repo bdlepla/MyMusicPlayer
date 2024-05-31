@@ -1,13 +1,9 @@
-//import com.google.protobuf.gradle.protobuf
-//import org.gradle.kotlin.dsl.resolver.buildSrcSourceRootsFilePath
-
-//import com.android.build.api.dsl.Packaging
 
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.google.protobuf)
-    //alias(libs.plugins.compose.compiler)
+    alias(libs.plugins.compose.compiler)
 }
 
 android {
