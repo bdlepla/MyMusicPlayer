@@ -46,7 +46,6 @@ class MyMusicViewModel
 @Inject constructor(application: Application): AndroidViewModel(application) {
     private val playerListener = PlayerListener()
     private val castStateListener = PlayerCastStateListener()
-    private val handler = Handler(Looper.getMainLooper())
     private lateinit var browserFuture: ListenableFuture<MediaBrowser>
     val browser: MediaBrowser?
         get() = if (browserFuture.isDone) browserFuture.get() else null
