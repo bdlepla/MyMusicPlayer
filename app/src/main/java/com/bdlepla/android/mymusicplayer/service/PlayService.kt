@@ -2,8 +2,6 @@ package com.bdlepla.android.mymusicplayer.service
 
 import android.app.PendingIntent
 import android.app.PendingIntent.FLAG_IMMUTABLE
-import android.app.PendingIntent.FLAG_UPDATE_CURRENT
-import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import androidx.media3.cast.CastPlayer
@@ -18,6 +16,7 @@ import androidx.media3.session.LibraryResult
 import androidx.media3.session.MediaLibraryService
 import androidx.media3.session.MediaSession
 import androidx.media3.session.SessionCommand
+import androidx.media3.session.SessionError
 import androidx.media3.session.SessionResult
 import com.google.android.gms.cast.framework.CastContext
 import com.google.common.collect.ImmutableList
@@ -79,7 +78,7 @@ class PlayService: MediaLibraryService() {
                             this@PlayService,
                             0,
                             sessionIntent,
-                            if (Build.VERSION.SDK_INT >= 23) FLAG_IMMUTABLE else FLAG_UPDATE_CURRENT
+                            FLAG_IMMUTABLE
                         )
                     )
                 }
@@ -278,7 +277,7 @@ class PlayService: MediaLibraryService() {
         ): ListenableFuture<LibraryResult<MediaItem>> {
             val item = MediaItemTree.getItem(mediaId)
                     ?: return Futures.immediateFuture(
-                        LibraryResult.ofError(LibraryResult.RESULT_ERROR_BAD_VALUE)
+                        LibraryResult.ofError(SessionError.ERROR_BAD_VALUE)
                     )
             return Futures.immediateFuture(LibraryResult.ofItem(item, null))
         }
@@ -292,7 +291,7 @@ class PlayService: MediaLibraryService() {
             val children =
                 MediaItemTree.getChildren(parentId)
                     ?: return Futures.immediateFuture(
-                        LibraryResult.ofError(LibraryResult.RESULT_ERROR_BAD_VALUE)
+                        LibraryResult.ofError(SessionError.ERROR_BAD_VALUE)
                     )
             session.notifyChildrenChanged(browser, parentId, children.size, params)
             return Futures.immediateFuture(LibraryResult.ofVoid())
@@ -309,7 +308,7 @@ class PlayService: MediaLibraryService() {
             val children =
                 MediaItemTree.getChildren(parentId)
                     ?: return Futures.immediateFuture(
-                        LibraryResult.ofError(LibraryResult.RESULT_ERROR_BAD_VALUE)
+                        LibraryResult.ofError(SessionError.ERROR_BAD_VALUE)
                     )
             val childrenSubset = children.drop(page * pageSize).take(pageSize)
             return Futures.immediateFuture(LibraryResult.ofItemList(childrenSubset, params))
