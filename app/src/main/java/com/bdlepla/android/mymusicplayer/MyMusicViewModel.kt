@@ -80,13 +80,13 @@ class MyMusicViewModel
     private fun setBrowser(context: Context) {
         val b = browser ?: return
         b.addListener(playerListener)
-        checkPlaybackPosition(b)
+        checkPlaybackPositionAsync(b)
         viewModelScope.launch{
             loadSongs(b, context)
         }
     }
 
-    private fun checkPlaybackPositionAsync(browser:MediaBrowser) {
+    private fun checkPlaybackPositionAsync(browser:MediaBrowser) =
         viewModelScope.launch {
             while (isActive) {
                 val currPositionInMs = browser.currentPosition
@@ -104,23 +104,6 @@ class MyMusicViewModel
                 delay(POSITION_UPDATE_INTERVAL_MILLIS)
             }
         }
-    }
-
-    private fun checkPlaybackPosition(browser: MediaBrowser): Boolean = handler.postDelayed({
-        val currPositionInMs = browser.currentPosition
-        val currPosition = currPositionInMs.toInt() / 1000
-        val maxPosition = browser.duration.toInt() / 1000
-        _currentlyPlayingStats.value =  CurrentPlayingStats(
-            _currentlyPlaying,
-            currPosition,
-            maxPosition
-        )
-        val currentlyPlaying = _currentlyPlaying
-        if (currentlyPlaying != null) {
-            viewModelScope.launch{musicDataStore.saveCurrentPlaying(currentlyPlaying.songId, currPositionInMs)}
-        }
-        checkPlaybackPosition(browser)
-    }, POSITION_UPDATE_INTERVAL_MILLIS)
 
     private fun loadSongs(browser: MediaBrowser, context: Context) {
         fun doLoadSongs(browser: MediaBrowser, page:Int, pageSize:Int) {
