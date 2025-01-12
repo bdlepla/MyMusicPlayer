@@ -54,10 +54,9 @@ class MyMusicViewModel
     // created in the AppBar
     private val castContext:CastContext = CastContext.getSharedInstance(application)
         .also { it.addCastStateListener(castStateListener)}
-    @Suppress("PrivatePropertyName")
-    private val POSITION_UPDATE_INTERVAL_MILLIS = 100L
+    private val positionUpdateIntervalMillis = 100L
    init {
-        initializeBrowser(application.applicationContext)
+       initializeBrowser(application.applicationContext)
    }
     override fun onCleared() {
         super.onCleared()
@@ -94,11 +93,7 @@ class MyMusicViewModel
                     currPosition,
                     maxPosition
                 )
-                val currentlyPlaying = _currentlyPlaying
-                if (currentlyPlaying != null) {
-                    musicDataStore.saveCurrentPlaying(currentlyPlaying.songId, currPositionInMs)
-                }
-                delay(POSITION_UPDATE_INTERVAL_MILLIS)
+                delay(positionUpdateIntervalMillis)
             }
         }
 
@@ -201,6 +196,7 @@ class MyMusicViewModel
             }
         }
     }
+
     inner class PlayerCastStateListener: CastStateListener
     {
         override fun onCastStateChanged(castState: Int) {

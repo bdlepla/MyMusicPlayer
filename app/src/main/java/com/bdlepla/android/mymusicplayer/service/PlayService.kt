@@ -3,6 +3,7 @@ package com.bdlepla.android.mymusicplayer.service
 import android.app.PendingIntent
 import android.app.PendingIntent.FLAG_IMMUTABLE
 import android.os.Bundle
+import android.os.Handler
 import android.util.Log
 import androidx.media3.cast.CastPlayer
 import androidx.media3.cast.SessionAvailabilityListener
@@ -18,10 +19,15 @@ import androidx.media3.session.MediaSession
 import androidx.media3.session.SessionCommand
 import androidx.media3.session.SessionError
 import androidx.media3.session.SessionResult
+import com.bdlepla.android.mymusicplayer.datastore.MyMusicPlayerSettingsDataStore
 import com.google.android.gms.cast.framework.CastContext
 import com.google.common.collect.ImmutableList
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 
 
 class PlayService: MediaLibraryService() {
@@ -29,7 +35,10 @@ class PlayService: MediaLibraryService() {
 
     private val librarySessionCallback = CustomMediaLibrarySessionCallback()
     private val playerListener = PlayerListener()
-
+    private val positionUpdateIntervalMillis = 500L
+    private val musicDataStore: MyMusicPlayerSettingsDataStore by lazy { MyMusicPlayerSettingsDataStore(this) }
+    private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
+    private val handler:Handler by lazy { Handler(currentPlayer.applicationLooper) }
     private val myPlayerAudioAttributesBuilder = AudioAttributes.Builder()
         .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
         .setUsage(C.USAGE_MEDIA)
@@ -68,7 +77,7 @@ class PlayService: MediaLibraryService() {
         ReplaceableForwardingPlayer(exoPlayer)
     }
 
-    private fun initializeSessionAndPlayer() {
+    private fun initializeMediaSession() {
         mediaLibrarySession =
             with(MediaLibrarySession.Builder(this@PlayService, currentPlayer, librarySessionCallback)) {
                 setId(packageName)
@@ -127,7 +136,7 @@ class PlayService: MediaLibraryService() {
             currentPlayer.setPlayer(castPlayer!!)
         }
         //setupCustomCommands()
-        initializeSessionAndPlayer()
+        initializeMediaSession()
     }
 
     override fun onDestroy() {
@@ -150,6 +159,19 @@ class PlayService: MediaLibraryService() {
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaLibrarySession {
         return mediaLibrarySession
     }
+
+    private fun checkPlaybackPosition(player: Player): Boolean = handler.postDelayed({
+        if (player.isPlaying) {
+            val currPositionInMs = player.currentPosition
+            val currentlyPlaying = player.currentMediaItem
+            if (currentlyPlaying != null) {
+                scope.launch {
+                    musicDataStore.saveCurrentPlaying(currentlyPlaying.mediaId.substring(6).toLong(), currPositionInMs)
+                }
+            }
+        }
+        checkPlaybackPosition(player)
+    }, positionUpdateIntervalMillis)
 
 //    private fun setMediaItemFromSearchQuery(query: String) {
 //        // Only accept query with pattern "play [Title]" or "[Title]"
@@ -216,16 +238,21 @@ class PlayService: MediaLibraryService() {
             controller: MediaSession.ControllerInfo
         ): MediaSession.ConnectionResult {
             val connectionResult = super.onConnect(session, controller)
+
             val availableSessionCommands = connectionResult.availableSessionCommands.buildUpon()
 //            customCommands.forEach { commandButton ->
 //                // Add custom command to available session commaMediaLibrarySessionnds.
 //                // these are cached to be used as a lookup when the user presses it
 //                commandButton.sessionCommand?.let { availableSessionCommands.add(it) }
 //            }
-            return MediaSession.ConnectionResult.accept(
+
+            val ret = MediaSession.ConnectionResult.accept(
                 availableSessionCommands.build(),
                 connectionResult.availablePlayerCommands
             )
+
+            checkPlaybackPosition(currentPlayer)
+            return ret
         }
 
 

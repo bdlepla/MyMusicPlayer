@@ -3,7 +3,6 @@ package com.bdlepla.android.mymusicplayer.repository
 import android.content.ContentUris
 import android.content.Context
 import android.graphics.Bitmap
-import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
 import android.support.v4.media.MediaDescriptionCompat
@@ -24,11 +23,7 @@ object Repository {
     fun getAllSongs(context: Context):List<MediaItem> {
         val ret = mutableListOf<MediaItem>()
 
-        val collection = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL)
-        } else {
-            MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
-        }
+        val collection = MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL)
         val projection = arrayOf(
             MediaStore.Audio.AudioColumns._ID,
             MediaStore.Audio.AudioColumns.TITLE,
