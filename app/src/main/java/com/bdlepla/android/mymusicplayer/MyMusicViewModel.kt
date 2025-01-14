@@ -8,6 +8,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
+import androidx.media3.common.Timeline
 import androidx.media3.session.MediaBrowser
 import androidx.media3.session.SessionToken
 import com.bdlepla.android.mymusicplayer.business.AlbumInfo
@@ -53,11 +54,15 @@ class MyMusicViewModel
     // Initialize the Cast context. This is required so that the media route button can be
     // created in the AppBar
     private val castContext:CastContext = CastContext.getSharedInstance(application)
-        .also { it.addCastStateListener(castStateListener)}
-    private val positionUpdateIntervalMillis = 100L
+        .also { it.addCastStateListener(castStateListener) }
    init {
        initializeBrowser(application.applicationContext)
    }
+
+    companion object {
+        private const val POSITION_UPDATE_INTERVAL_MILLIS = 100L
+    }
+
     override fun onCleared() {
         super.onCleared()
         castContext.removeCastStateListener(castStateListener)
@@ -69,7 +74,6 @@ class MyMusicViewModel
         val componentName = ComponentName(context, PlayService::class.java)
         val sessionToken = SessionToken(context, componentName)
         browserFuture = MediaBrowser.Builder(context, sessionToken).buildAsync()
-
         browserFuture.addListener({ setBrowser(context) }, MoreExecutors.directExecutor())
     }
 
@@ -77,9 +81,7 @@ class MyMusicViewModel
         val b = browser ?: return
         b.addListener(playerListener)
         checkPlaybackPositionAsync(b)
-        viewModelScope.launch{
-            loadSongs(b, context)
-        }
+        viewModelScope.launch { loadSongs(b, context) }
     }
 
     private fun checkPlaybackPositionAsync(browser:MediaBrowser) =
@@ -93,7 +95,7 @@ class MyMusicViewModel
                     currPosition,
                     maxPosition
                 )
-                delay(positionUpdateIntervalMillis)
+                delay(POSITION_UPDATE_INTERVAL_MILLIS)
             }
         }
 
@@ -109,9 +111,7 @@ class MyMusicViewModel
                         addSongs(songs)
                         doLoadSongs(browser, page+1, pageSize)
                     }
-                else {
-                        loadAlbums(browser, context)
-                    }
+                    else { loadAlbums(browser, context) }
                 }, ContextCompat.getMainExecutor(context))
         }
         doLoadSongs(browser, 0, 300)
@@ -183,8 +183,7 @@ class MyMusicViewModel
             val playingItemIds = musicDataStore.playingList
             if (playingItemIds.any()) {
                 val songsList = playingItemIds.mapNotNull { id ->
-                    songCollection.firstOrNull { it.songId == id }
-                }
+                    songCollection.firstOrNull { it.songId == id } }
 
                 setPlaylist(songsList)
                 val playingSongId = musicDataStore.playingSongId
@@ -202,7 +201,6 @@ class MyMusicViewModel
         override fun onCastStateChanged(castState: Int) {
             _castState.value = castState
         }
-
     }
 
     inner class PlayerListener: Player.Listener {
@@ -220,14 +218,22 @@ class MyMusicViewModel
             super.onMediaMetadataChanged(mediaMetadata)
             val item = mediaMetadata.toSongInfo() ?: return
             _currentlyPlaying = item
-            //val b = browser ?: return
         }
 
+        private val window = Timeline.Window()
+        // for changes in playlist
+        override fun onTimelineChanged(timeline: Timeline, reason: Int) {
+            super.onTimelineChanged(timeline, reason)
+
+            _currentSongList.value = (0..<timeline.windowCount).mapNotNull {
+                timeline.getWindow(it, window)
+                window.mediaItem.mediaMetadata.toSongInfo()
+            }
+        }
     }
 
     private fun MediaMetadata.toSongInfo(): SongInfo? =
-        songCollection.firstOrNull { si ->
-            si.artist == this.artist && si.title == this.title }
+        songCollection.firstOrNull { si -> si.artist == artist && si.title == title }
 
     private val _castState = MutableStateFlow(0)
     val castState: StateFlow<Int>
@@ -279,13 +285,12 @@ class MyMusicViewModel
 
     fun setPlaylist(songs: List<SongInfo>) {
         val b = browser ?: return
-        val mediaItems = songs.map{ it.toMediaItem() }
+        val mediaItems = songs.map { it.toMediaItem() }
         playlistManager.setPlaylist(songs)
         b.setMediaItems(mediaItems)
         b.prepare()
-        val songIds = songs.map{it.songId}
-        viewModelScope.launch {musicDataStore.saveCurrentList(songIds)}
-        _currentSongList.value = songs
+        val songIds = songs.map{ it.songId }
+        viewModelScope.launch { musicDataStore.saveCurrentList(songIds) }
     }
 
     fun playNext() {
@@ -303,15 +308,9 @@ class MyMusicViewModel
         val b = browser ?: return
         _isPaused.value = !_isPaused.value
         if (_currentlyPlaying == null) return
-        if (_isPaused.value) {b.pause()}
-        else {b.play()}
+        if (_isPaused.value) { b.pause() }
+        else { b.play() }
     }
-
-//    fun play() {
-//        val b = browser ?: return
-//        _isPaused.value = false
-//        b.play()
-//    }
 
     fun toggleRepeat() {
         val b = browser ?: return
@@ -328,10 +327,10 @@ class MyMusicViewModel
 
     private fun addArtists(artists:List<ArtistInfo>) {
         artists.distinctBy { it.artistId }
-            .forEach{artist ->
+            .forEach { artist ->
                 val artistAlbums = _allAlbums.value.filter { album -> album.artistId == artist.artistId }
-            artist.albums.addAll(artistAlbums)
-        }
+                artist.albums.addAll(artistAlbums)
+            }
         _allArtists.value = artists.sortedBy { it.name.forSorting() }
     }
 

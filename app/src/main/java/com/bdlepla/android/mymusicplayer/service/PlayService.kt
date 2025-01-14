@@ -35,7 +35,6 @@ class PlayService: MediaLibraryService() {
 
     private val librarySessionCallback = CustomMediaLibrarySessionCallback()
     private val playerListener = PlayerListener()
-    private val positionUpdateIntervalMillis = 500L
     private val musicDataStore: MyMusicPlayerSettingsDataStore by lazy { MyMusicPlayerSettingsDataStore(this) }
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     private val handler:Handler by lazy { Handler(currentPlayer.applicationLooper) }
@@ -152,13 +151,10 @@ class PlayService: MediaLibraryService() {
                 player.release()
             }
         }
-        // Cancel coroutines when the service is going away.
-        //serviceJob.cancel()
     }
 
-    override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaLibrarySession {
-        return mediaLibrarySession
-    }
+    override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaLibrarySession = mediaLibrarySession
+
 
     private fun checkPlaybackPosition(player: Player): Boolean = handler.postDelayed({
         if (player.isPlaying) {
@@ -171,7 +167,7 @@ class PlayService: MediaLibraryService() {
             }
         }
         checkPlaybackPosition(player)
-    }, positionUpdateIntervalMillis)
+    }, POSITION_UPDATE_INTERVAL_MILLIS)
 
 //    private fun setMediaItemFromSearchQuery(query: String) {
 //        // Only accept query with pattern "play [Title]" or "[Title]"
@@ -193,10 +189,9 @@ class PlayService: MediaLibraryService() {
         //private const val SEARCH_QUERY_PREFIX_COMPAT = "androidx://media3-session/playFromSearch"
         //private const val SEARCH_QUERY_PREFIX = "androidx://media3-session/setMediaUri"
         //private const val TAG = "MusicService"
-        private const val CUSTOM_COMMAND_TOGGLE_SHUFFLE_MODE_ON =
-            "android.media3.session.demo.SHUFFLE_ON"
-        private const val CUSTOM_COMMAND_TOGGLE_SHUFFLE_MODE_OFF =
-            "android.media3.session.demo.SHUFFLE_OFF"
+        private const val CUSTOM_COMMAND_TOGGLE_SHUFFLE_MODE_ON = "android.media3.session.demo.SHUFFLE_ON"
+        private const val CUSTOM_COMMAND_TOGGLE_SHUFFLE_MODE_OFF = "android.media3.session.demo.SHUFFLE_OFF"
+        private const val POSITION_UPDATE_INTERVAL_MILLIS = 500L
     }
 
     private inner class CastSessionAvailabilityListener : SessionAvailabilityListener {

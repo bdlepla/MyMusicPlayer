@@ -16,24 +16,23 @@ open class PlaylistBase(private val context: Context) {
     protected val appStoragePath
         get() = Path(context.getExternalFilesDir(null).toString())
 }
-open class PlaylistReader(context:Context) :PlaylistBase(context){
+open class PlaylistReader(context:Context) :PlaylistBase(context) {
     @OptIn(ExperimentalPathApi::class)
     fun loadPlaylists():MutableMap<String, MutableList<String>> =
         appStoragePath
             .walk(PathWalkOption.INCLUDE_DIRECTORIES)
-            .map{it.toFile().nameWithoutExtension to it.toString()}
-            .filter{it.second.endsWith(".m3u")}
-            .map{it to loadPlaylistSongs(it.second)}
-            .associate{it.first.first to it.second.toMutableList()}.toMutableMap()
+            .map { it.toFile().nameWithoutExtension to it.toString() }
+            .filter { it.second.endsWith(".m3u") }
+            .map { it to loadPlaylistSongs(it.second) }
+            .associate { it.first.first to it.second.toMutableList() }
+            .toMutableMap()
 
     private fun loadPlaylistSongs(m3uName:String):List<String> {
         return File(m3uName)
             .readLines()
             .asSequence()
             .map { it.trim() }
-            .filter { it.isNotEmpty() }
-            .filter { it[0] != '#' }
-            .filter {!it.contains("/Music/")}
+            .filter { it.isNotEmpty() && it[0] != '#' && !it.contains("/Music/") }
             .toList()
     }
 }
@@ -83,9 +82,9 @@ class PlaylistManager(context: ContextWrapper) : PlaylistReader(context){
         }
 
     fun addSongsToPlaylist(playListInfo: PlaylistInfo, songInfos: List<SongInfo>) {
-        val songs = songInfos.map{ Path(it.mediaUri).relativeToOrSelf(mediaPath).toString()}
+        val songs = songInfos.map { Path(it.mediaUri).relativeToOrSelf(mediaPath).toString() }
         val name = playListInfo.name
-        if (playLists.containsKey(name)){
+        if (playLists.containsKey(name)) {
             val playlistSongNames = playLists[name]
             playlistSongNames!!.addAll(songs)
             playLists[name] = playlistSongNames
@@ -97,7 +96,7 @@ class PlaylistManager(context: ContextWrapper) : PlaylistReader(context){
     fun removeSongFromPlaylist(playListInfo: PlaylistInfo, songInfo: SongInfo) {
         val song = Path(songInfo.mediaUri).relativeToOrSelf(mediaPath).toString()
         val name = playListInfo.name
-        if (playLists.containsKey(name)){
+        if (playLists.containsKey(name)) {
             val playlistSongNames = playLists[name]
             playlistSongNames!!.remove(song)
             playLists[name] = playlistSongNames
@@ -108,7 +107,7 @@ class PlaylistManager(context: ContextWrapper) : PlaylistReader(context){
 
     fun addNewPlaylist(name: String) {
         val songs = mutableListOf<String>()
-        playLists[name]= songs
+        playLists[name] = songs
         val m3uname = getFullFilename(name)
         savePlaylistSongs(m3uname, songs)
     }
@@ -116,7 +115,7 @@ class PlaylistManager(context: ContextWrapper) : PlaylistReader(context){
     fun removePlaylist(playListInfo: PlaylistInfo){
         playLists.remove(playListInfo.name)
         val fileName = getFullFilename(playListInfo.name)
-        if (File(fileName).exists()){
+        if (File(fileName).exists()) {
             File(fileName).delete()
         }
     }
