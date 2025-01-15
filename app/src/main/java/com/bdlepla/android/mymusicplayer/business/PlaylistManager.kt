@@ -37,15 +37,7 @@ open class PlaylistReader(context:Context) :PlaylistBase(context) {
     }
 }
 
-class PlaylistManager(context: ContextWrapper) : PlaylistReader(context){
-    private var _currentPlaylist:List<SongInfo>? = null
-    val currentPlaylist: List<SongInfo>?
-        get() = _currentPlaylist
-
-    fun setPlaylist(songs:List<SongInfo>) {
-        _currentPlaylist = songs
-    }
-
+class PlaylistManager(context: ContextWrapper) : PlaylistReader(context) {
     private var playLists: MutableMap<String, MutableList<String>> = loadPlaylists()
 
     private val mediaPath: Path

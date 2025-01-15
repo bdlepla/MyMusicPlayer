@@ -20,6 +20,7 @@ import androidx.media3.session.SessionCommand
 import androidx.media3.session.SessionError
 import androidx.media3.session.SessionResult
 import com.bdlepla.android.mymusicplayer.datastore.MyMusicPlayerSettingsDataStore
+import com.bdlepla.android.mymusicplayer.service.MediaItemTree.ITEM_PREFIX
 import com.google.android.gms.cast.framework.CastContext
 import com.google.common.collect.ImmutableList
 import com.google.common.util.concurrent.Futures
@@ -155,7 +156,6 @@ class PlayService: MediaLibraryService() {
 
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaLibrarySession = mediaLibrarySession
 
-
     private fun checkPlaybackPosition(player: Player): Boolean = handler.postDelayed({
         if (player.isPlaying) {
             val currPositionInMs = player.currentPosition
@@ -168,6 +168,25 @@ class PlayService: MediaLibraryService() {
         }
         checkPlaybackPosition(player)
     }, POSITION_UPDATE_INTERVAL_MILLIS)
+
+    fun populateMediaOnConnectIfNotPlaying(player:Player) {
+        if (player.isPlaying) return
+        val playingItemIds = musicDataStore.playingList
+        if (playingItemIds.any()) {
+            val songsList = playingItemIds.mapNotNull { id ->
+                 MediaItemTree.getItem(ITEM_PREFIX+id.toString()) }
+
+            player.setMediaItems(songsList)
+            player.prepare()
+            val playingSongId = ITEM_PREFIX+musicDataStore.playingSongId.toString()
+            val playingSongIdx = songsList.indexOfFirst { it.mediaId == playingSongId }
+            if (playingSongIdx != -1) {
+                val playingPosition = musicDataStore.playingPosition
+                player.seekTo(playingSongIdx, playingPosition)
+                player.play()
+            }
+        }
+    }
 
 //    private fun setMediaItemFromSearchQuery(query: String) {
 //        // Only accept query with pattern "play [Title]" or "[Title]"
@@ -246,6 +265,7 @@ class PlayService: MediaLibraryService() {
                 connectionResult.availablePlayerCommands
             )
 
+            populateMediaOnConnectIfNotPlaying(currentPlayer)
             checkPlaybackPosition(currentPlayer)
             return ret
         }

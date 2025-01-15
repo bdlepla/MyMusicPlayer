@@ -90,11 +90,8 @@ class MyMusicViewModel
                 val currPositionInMs = browser.currentPosition
                 val currPosition = currPositionInMs.toInt() / 1000
                 val maxPosition = browser.duration.toInt() / 1000
-                _currentlyPlayingStats.value = CurrentPlayingStats(
-                    _currentlyPlaying,
-                    currPosition,
-                    maxPosition
-                )
+                _currentlyPlayingStats.value = CurrentPlayingStats(_currentlyPlaying,
+                    currPosition, maxPosition)
                 delay(POSITION_UPDATE_INTERVAL_MILLIS)
             }
         }
@@ -175,24 +172,8 @@ class MyMusicViewModel
         val b = browser ?: return
         if (b.isPlaying) {
             val mediaItem = b.currentMediaItem ?: return
-            val item = mediaItem.mediaMetadata.toSongInfo() ?: return
-            _currentlyPlaying = item
+            _currentlyPlaying = mediaItem.mediaMetadata.toSongInfo() ?: return
             _isPaused.value = false
-        }
-        else {
-            val playingItemIds = musicDataStore.playingList
-            if (playingItemIds.any()) {
-                val songsList = playingItemIds.mapNotNull { id ->
-                    songCollection.firstOrNull { it.songId == id } }
-
-                setPlaylist(songsList)
-                val playingSongId = musicDataStore.playingSongId
-                val playingSongIdx = songsList.indexOfFirst { it.songId == playingSongId }
-                if (playingSongIdx != -1) {
-                    val playingPosition = musicDataStore.playingPosition
-                    setCurrentlyPlayingAt(playingSongIdx, playingPosition)
-                }
-            }
         }
     }
 
@@ -220,15 +201,16 @@ class MyMusicViewModel
             _currentlyPlaying = item
         }
 
-        private val window = Timeline.Window()
         // for changes in playlist
+        private val window = Timeline.Window()
         override fun onTimelineChanged(timeline: Timeline, reason: Int) {
             super.onTimelineChanged(timeline, reason)
 
-            _currentSongList.value = (0..<timeline.windowCount).mapNotNull {
+            val songInfos = (0..<timeline.windowCount).mapNotNull {
                 timeline.getWindow(it, window)
                 window.mediaItem.mediaMetadata.toSongInfo()
-            }
+            }.distinctBy { it.songId }
+            _currentSongList.value = songInfos
         }
     }
 
@@ -271,26 +253,19 @@ class MyMusicViewModel
         get() = _currentSongList.asStateFlow()
 
     fun setCurrentlyPlaying(songInfo: SongInfo) {
-        val c = playlistManager.currentPlaylist ?: return
+        val c = _currentSongList.value
         val idx = c.indexOf(songInfo)
         if (idx == -1) return
-        setCurrentlyPlayingAt(idx, 0L)
-    }
-
-    private fun setCurrentlyPlayingAt(idx: Int, positionInMilliSeconds:Long) {
         val b = browser ?: return
-        b.seekTo(idx, positionInMilliSeconds)
+        b.seekTo(idx, 0)
         b.play()
     }
 
     fun setPlaylist(songs: List<SongInfo>) {
         val b = browser ?: return
-        val mediaItems = songs.map { it.toMediaItem() }
-        playlistManager.setPlaylist(songs)
-        b.setMediaItems(mediaItems)
+        b.setMediaItems(songs.map { it.toMediaItem() })
         b.prepare()
-        val songIds = songs.map{ it.songId }
-        viewModelScope.launch { musicDataStore.saveCurrentList(songIds) }
+        viewModelScope.launch { musicDataStore.saveCurrentList( songs.map { it.songId }) }
     }
 
     fun playNext() {
@@ -336,7 +311,7 @@ class MyMusicViewModel
 
     private fun addAlbums(albums:List<AlbumInfo>) {
         albums.forEach{album ->
-            val songs = this.songCollection
+            val songs = songCollection
                 .filter { it.albumId == album.albumId }
                 .sortedBy { it.trackNumber }
             album.songs.addAll(songs)
