@@ -20,7 +20,7 @@ protobuf = "4.29.2"
 protobufPlugin = "0.9.4"
 test-junit = "1.2.1"
 test-espresso = "3.6.1"
-test-compose = "1.7.5"
+test-compose = "1.7.6"
 ui = "1.6.8"
 
 [libraries]
