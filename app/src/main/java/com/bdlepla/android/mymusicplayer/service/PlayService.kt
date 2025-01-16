@@ -11,6 +11,7 @@ import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
+import androidx.media3.common.Timeline
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.util.EventLogger
 import androidx.media3.session.LibraryResult
@@ -244,6 +245,19 @@ class PlayService: MediaLibraryService() {
 //            //sessionCompat.setMetadata(newMetadata)
 //
 //        }
+
+       // for changes in playlist
+       private val window = Timeline.Window()
+       override fun onTimelineChanged(timeline: Timeline, reason: Int) {
+           super.onTimelineChanged(timeline, reason)
+
+           val songIds =
+           (0..<timeline.windowCount).map { windowIdx ->
+               timeline.getWindow(windowIdx, window)
+               window.mediaItem.mediaId.substring(6).toLong()
+           }
+           scope.launch { musicDataStore.saveCurrentList(songIds) }
+       }
     }
 
     private inner class CustomMediaLibrarySessionCallback : MediaLibrarySession.Callback {

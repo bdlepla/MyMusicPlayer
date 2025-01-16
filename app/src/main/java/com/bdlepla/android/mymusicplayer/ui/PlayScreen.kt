@@ -4,6 +4,7 @@ import android.content.res.Configuration
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -20,6 +21,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.media3.session.MediaController
+import com.bdlepla.android.mymusicplayer.R
 import com.bdlepla.android.mymusicplayer.SampleData
 import com.bdlepla.android.mymusicplayer.business.Callbacks
 import com.bdlepla.android.mymusicplayer.business.CurrentPlayingStats
@@ -66,12 +68,25 @@ fun PlayScreen(currentPlayingStats: CurrentPlayingStats?,
 
 @Composable
 fun PlayerControllerButtons(isPaused: Boolean, callbacks: Callbacks) {
-    val prevIcon = painterResource(id = androidx.media3.session.R.drawable.media3_icon_previous)
-    val reverseIcon = painterResource(id = androidx.media3.session.R.drawable.media3_icon_skip_back)
-    val playIcon = painterResource(id = androidx.media3.session.R.drawable.media3_icon_play)
-    val pauseIcon = painterResource(id = androidx.media3.session.R.drawable.media3_icon_pause)
-    val forwardIcon = painterResource(id = androidx.media3.session.R.drawable.media3_icon_skip_forward)
-    val nextIcon = painterResource(id = androidx.media3.session.R.drawable.media3_icon_next)
+    val isDark = isSystemInDarkTheme()
+    val prevIcon = painterResource(id =
+        if (isDark) R.drawable.baseline_skip_prev_white_24
+        else R.drawable.baseline_skip_prev_black_24)
+    val reverseIcon = painterResource(id =
+        if (isDark) R.drawable.baseline_fast_rewind_white_24
+        else R.drawable.baseline_fast_rewind_black_24)
+    val playIcon = painterResource(id =
+        if (isDark) R.drawable.baseline_play_white_24
+        else R.drawable.baseline_play_black_24)
+    val pauseIcon = painterResource(id =
+        if (isDark) R.drawable.baseline_pause_white_24
+        else R.drawable.baseline_pause_black_24)
+    val forwardIcon = painterResource(id =
+        if (isDark) R.drawable.baseline_fast_forward_white_24
+        else R.drawable.baseline_fast_forward_black_24)
+    val nextIcon = painterResource(id =
+        if (isDark) R.drawable.baseline_skip_next_white_24
+        else R.drawable.baseline_skip_next_black_24)
 
     Row {
         Image(painter = prevIcon,
@@ -80,7 +95,7 @@ fun PlayerControllerButtons(isPaused: Boolean, callbacks: Callbacks) {
                 .size(50.dp)
                 .requiredWidth(50.dp)
                 .weight(1f)
-                .background(Color.Black)
+                .background(Color.Transparent)
                 .clickable { callbacks.onPrevious() })
         Spacer(modifier = Modifier.requiredWidth(4.dp))
         Image(painter = reverseIcon,
@@ -89,7 +104,7 @@ fun PlayerControllerButtons(isPaused: Boolean, callbacks: Callbacks) {
                 .size(50.dp)
                 .requiredWidth(50.dp)
                 .weight(1f)
-                .background(Color.Black)
+                .background(Color.Transparent)
                 .clickable { callbacks.onReverse() })
         Spacer(modifier = Modifier.requiredWidth(4.dp))
         Image(painter = if (isPaused) playIcon else pauseIcon,
@@ -98,7 +113,7 @@ fun PlayerControllerButtons(isPaused: Boolean, callbacks: Callbacks) {
                 .size(50.dp)
                 .requiredWidth(50.dp)
                 .weight(1f)
-                .background(Color.Black)
+                .background(Color.Transparent)
                 .clickable { if (isPaused) callbacks.onPlay()
                     else callbacks.onPause() })
         Spacer(modifier = Modifier.requiredWidth(4.dp))
@@ -108,7 +123,7 @@ fun PlayerControllerButtons(isPaused: Boolean, callbacks: Callbacks) {
                 .size(50.dp)
                 .requiredWidth(50.dp)
                 .weight(1f)
-                .background(Color.Black)
+                .background(Color.Transparent)
                 .clickable { callbacks.onForward() })
         Spacer(modifier = Modifier.requiredWidth(4.dp))
         Image(painter = nextIcon,
@@ -117,7 +132,7 @@ fun PlayerControllerButtons(isPaused: Boolean, callbacks: Callbacks) {
                 .size(50.dp)
                 .requiredWidth(50.dp)
                 .weight(1f)
-                .background(Color.Black)
+                .background(Color.Transparent)
                 .clickable { callbacks.onNext() })
     }
 }

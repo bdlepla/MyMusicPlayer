@@ -21,7 +21,6 @@ import com.bdlepla.android.mymusicplayer.business.albumId
 import com.bdlepla.android.mymusicplayer.business.albumName
 import com.bdlepla.android.mymusicplayer.business.artistId
 import com.bdlepla.android.mymusicplayer.business.artistName
-import com.bdlepla.android.mymusicplayer.datastore.MyMusicPlayerSettingsDataStore
 import com.bdlepla.android.mymusicplayer.extensions.forSorting
 import com.bdlepla.android.mymusicplayer.repository.ALBUM_ID
 import com.bdlepla.android.mymusicplayer.repository.ARTIST_ID
@@ -49,7 +48,6 @@ class MyMusicViewModel
     val browser: MediaBrowser?
         get() = if (browserFuture.isDone) browserFuture.get() else null
     private val playlistManager:PlaylistManager = PlaylistManager(application)
-    private val musicDataStore:MyMusicPlayerSettingsDataStore = MyMusicPlayerSettingsDataStore((application))
 
     // Initialize the Cast context. This is required so that the media route button can be
     // created in the AppBar
@@ -265,7 +263,6 @@ class MyMusicViewModel
         val b = browser ?: return
         b.setMediaItems(songs.map { it.toMediaItem() })
         b.prepare()
-        viewModelScope.launch { musicDataStore.saveCurrentList( songs.map { it.songId }) }
     }
 
     fun playNext() {

@@ -4,6 +4,7 @@ import android.content.res.Configuration
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -20,6 +21,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.bdlepla.android.mymusicplayer.R
 import com.bdlepla.android.mymusicplayer.SampleData
 import com.bdlepla.android.mymusicplayer.business.SongInfo
 import com.bdlepla.android.mymusicplayer.ui.theme.MyMusicPlayerTheme
@@ -32,12 +34,21 @@ fun CurrentlyPlayingSmallScreen(
     onNextClick:() -> Unit = emptyFunction(),
     onClick:(SongInfo) -> Unit = emptyFunction1()
 ) {
-    val playPauseIcon = painterResource(
-        id =
-        if (isPaused) androidx.media3.session.R.drawable.media3_icon_play
-        else androidx.media3.session.R.drawable.media3_icon_pause
+    val isDark = isSystemInDarkTheme()
+    val playPauseIcon = painterResource( id =
+        if (isPaused) {
+            if (isDark) R.drawable.baseline_play_white_24
+            else R.drawable.baseline_play_black_24
+        }
+        else {
+            if (isDark) R.drawable.baseline_pause_white_24
+            else R.drawable.baseline_pause_black_24
+        }
     )
-    val nextIcon = painterResource(id = androidx.media3.session.R.drawable.media3_icon_next)
+    val nextIcon = painterResource(id =
+        if (isDark) R.drawable.baseline_skip_next_white_24
+        else R.drawable.baseline_skip_next_black_24
+    )
 
     Column {
         HorizontalDivider(
@@ -56,7 +67,7 @@ fun CurrentlyPlayingSmallScreen(
                     .size(50.dp)
                     .requiredWidth(50.dp)
                     .weight(1f)
-                    .background(Color.Black)
+                    .background(Color.Transparent)
                     .clickable { onPlayPauseClick.invoke() })
             Spacer(modifier = Modifier.requiredWidth(4.dp))
             Image(painter = nextIcon, contentDescription = "Next",
@@ -64,7 +75,7 @@ fun CurrentlyPlayingSmallScreen(
                     .size(50.dp)
                     .weight(1f)
                     .requiredWidth(50.dp)
-                    .background(Color.Black)
+                    .background(Color.Transparent)
                     .clickable { onNextClick.invoke() })
         }
     }
