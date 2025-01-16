@@ -53,6 +53,7 @@ class MyMusicViewModel
     // created in the AppBar
     private val castContext:CastContext = CastContext.getSharedInstance(application)
         .also { it.addCastStateListener(castStateListener) }
+
    init {
        initializeBrowser(application.applicationContext)
    }
@@ -131,9 +132,7 @@ class MyMusicViewModel
                     addAlbums(albums)
                     doLoadAlbums(browser, page+1, pageSize)
                 }
-                else {
-                    loadArtists(browser, context)
-                }
+                else { loadArtists(browser, context) }
             }, ContextCompat.getMainExecutor(context))
         }
         doLoadAlbums(browser, 0, Int.MAX_VALUE)
@@ -158,9 +157,7 @@ class MyMusicViewModel
                     addArtists(artists)
                     doLoadArtists(browser, page+1, pageSize)
                 }
-                else {
-                    checkIfServiceIsPlayingAtAppStartup()
-                }
+                else { checkIfServiceIsPlayingAtAppStartup() }
             }, ContextCompat.getMainExecutor(context))
         }
         doLoadArtists(browser, 0, Int.MAX_VALUE)
@@ -173,6 +170,7 @@ class MyMusicViewModel
             _currentlyPlaying = mediaItem.mediaMetadata.toSongInfo() ?: return
             _isPaused.value = false
         }
+        // might need to figure out how to get current playlist at startup from serice
     }
 
     inner class PlayerCastStateListener: CastStateListener
@@ -267,8 +265,7 @@ class MyMusicViewModel
 
     fun playNext() {
         val b = browser ?: return
-        if (!b.hasNextMediaItem()) return
-        b.seekToNextMediaItem()
+        if (b.hasNextMediaItem()) { b.seekToNextMediaItem() }
     }
 
     //region Is Paused - true if not playing; false if playing
