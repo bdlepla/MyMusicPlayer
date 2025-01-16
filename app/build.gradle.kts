@@ -7,7 +7,7 @@ plugins {
 }
 
 android {
-    compileSdk = 34
+    compileSdk = 35
 
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.3"
@@ -19,7 +19,6 @@ android {
         versionCode = 1
         versionName = "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        compileSdkPreview = "UpsideDownCake"
         vectorDrawables {
             useSupportLibrary = true
         }
