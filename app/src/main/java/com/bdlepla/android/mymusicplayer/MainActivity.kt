@@ -3,7 +3,6 @@ package com.bdlepla.android.mymusicplayer
 import android.Manifest
 import android.content.pm.PackageManager
 import android.media.AudioManager
-import android.os.Build
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
@@ -21,18 +20,13 @@ class MainActivity : AppCompatActivity() {
 
         checkPermissions()
 
-        setContent {
-            MainScreen(myMusicViewModel,activity=this)
-        }
+        setContent { MainScreen(myMusicViewModel,this) }
     }
 
     private fun checkPermissions() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE)
-                != PackageManager.PERMISSION_GRANTED
-            ) {
-                requestPermissions(arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE), 1)
-            }
+        val readAudioPermission = Manifest.permission.READ_MEDIA_AUDIO
+        if (checkSelfPermission(readAudioPermission) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(arrayOf(readAudioPermission), 1)
         }
     }
 
