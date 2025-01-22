@@ -2,29 +2,35 @@ package com.bdlepla.android.mymusicplayer.ui
 
 import android.content.res.Configuration
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.bdlepla.android.mymusicplayer.extensions.toImagePainter
 import com.bdlepla.android.mymusicplayer.SampleData
 import com.bdlepla.android.mymusicplayer.business.ArtistInfo
 import com.bdlepla.android.mymusicplayer.business.SongInfo
+import com.bdlepla.android.mymusicplayer.extensions.toImagePainter
 import com.bdlepla.android.mymusicplayer.ui.theme.MyMusicPlayerTheme
+import com.danrusu.pods4k.immutableArrays.ImmutableArray
 
 @Composable
 fun ArtistSongsScreen(
     artistInfo: ArtistInfo,
-    songsInArtist: List<SongInfo>,
+    songsInArtist: ImmutableArray<SongInfo>,
     onSongClick:(SongInfo)->Unit = emptyFunction1(),
-    onLongPress:(List<SongInfo>)->Unit = emptyFunction1()
+    onLongPress: (ImmutableArray<SongInfo>) -> Unit = emptyFunction1()
 ) {
     Column {
         Box (modifier = Modifier.fillMaxWidth()) {
             Image(
-                painter = artistInfo.anAlbum?.albumArt.toImagePainter(),
+                painter = artistInfo.albumArt.toImagePainter(),
                 contentDescription = artistInfo.name,
                 modifier = Modifier
                     .size(256.dp)

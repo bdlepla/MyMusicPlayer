@@ -1,14 +1,29 @@
 package com.bdlepla.android.mymusicplayer.ui
 
 import android.content.res.Configuration
-import androidx.compose.foundation.*
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.*
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -20,13 +35,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.bdlepla.android.mymusicplayer.SampleData
 import com.bdlepla.android.mymusicplayer.business.PlaylistInfo
+import com.bdlepla.android.mymusicplayer.extensions.count
 import com.bdlepla.android.mymusicplayer.extensions.toHourMinutesSeconds
 import com.bdlepla.android.mymusicplayer.extensions.toImagePainter
 import com.bdlepla.android.mymusicplayer.ui.theme.MyMusicPlayerTheme
+import com.danrusu.pods4k.immutableArrays.ImmutableArray
+import com.danrusu.pods4k.immutableArrays.asList
 
 @Composable
 fun PlaylistScreen(
-    playlistList: List<PlaylistInfo>,
+    playlistList: ImmutableArray<PlaylistInfo>,
     onClick: (PlaylistInfo) -> Unit = emptyFunction1(),
     onCreateNewPlaylist: (String) -> Unit = emptyFunction1(),
     onRemovePlaylist: (PlaylistInfo) -> Unit = emptyFunction1()){
@@ -107,7 +125,7 @@ fun PlaylistScreen(
 
 @Composable
 fun PlaylistList(
-    playlistList: List<PlaylistInfo>,
+    playlistList: ImmutableArray<PlaylistInfo>,
     onClick: (PlaylistInfo) -> Unit = emptyFunction1(),
     onLongPress: (PlaylistInfo)->Unit=emptyFunction1()) {
     val listState = rememberLazyListState()
@@ -116,7 +134,7 @@ fun PlaylistList(
             .fillMaxWidth()
             .fillMaxHeight()) {
             LazyColumn(state = listState) {
-                items(items = playlistList, key = { it.name }) { playlistInfo ->
+                items(items = playlistList.asList(), key = { it.name }) { playlistInfo ->
                     Playlist(playlistInfo, onClick, onLongPress)
                     HorizontalDivider(
                         thickness = 10.dp,

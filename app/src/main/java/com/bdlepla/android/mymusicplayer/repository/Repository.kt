@@ -15,13 +15,14 @@ import androidx.media.utils.MediaConstants
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import com.bdlepla.android.mymusicplayer.service.MediaItemTree.ITEM_PREFIX
+import com.danrusu.pods4k.immutableArrays.ImmutableArray
 import java.io.File
 import java.io.FileOutputStream
 
 object Repository {
 
-    fun getAllSongs(context: Context):List<MediaItem> {
-        val ret = mutableListOf<MediaItem>()
+    fun getAllSongs(context: Context):ImmutableArray<MediaItem> {
+        val ret = ImmutableArray.Builder<MediaItem>()
 
         val collection = MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL)
         val projection = arrayOf(
@@ -132,7 +133,7 @@ object Repository {
                 ret.add(item)
             }
         }
-        return ret
+        return ret.build()
     }
 
     private fun getAlbumArt(context: Context, albumId:Long): String? {

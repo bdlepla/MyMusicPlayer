@@ -17,6 +17,8 @@ import com.bdlepla.android.mymusicplayer.business.PlaylistReader
 import com.bdlepla.android.mymusicplayer.business.albumId
 import com.bdlepla.android.mymusicplayer.business.artistId
 import com.bdlepla.android.mymusicplayer.extensions.forSorting
+import com.bdlepla.android.mymusicplayer.extensions.isFalseOrNull
+import com.bdlepla.android.mymusicplayer.extensions.random
 import com.bdlepla.android.mymusicplayer.repository.ALBUM
 import com.bdlepla.android.mymusicplayer.repository.ALBUM_ID
 import com.bdlepla.android.mymusicplayer.repository.ARTIST
@@ -25,7 +27,9 @@ import com.bdlepla.android.mymusicplayer.repository.ITEM_ID
 import com.bdlepla.android.mymusicplayer.repository.PLAYLIST_ID
 import com.bdlepla.android.mymusicplayer.repository.ROOT_ID
 import com.bdlepla.android.mymusicplayer.repository.Repository
-import com.google.common.collect.ImmutableList
+import com.danrusu.pods4k.immutableArrays.ImmutableArray
+import com.danrusu.pods4k.immutableArrays.asList
+import com.danrusu.pods4k.immutableArrays.buildImmutableArray
 
 object MediaItemTree {
     private var treeNodes: MutableMap<String, MediaItemNode> = mutableMapOf()
@@ -44,8 +48,8 @@ object MediaItemTree {
             this.children.add(childID)
         }
 
-        fun getChildren(): List<MediaItem> =
-            ImmutableList.copyOf(children.mapNotNull{treeNodes[it]?.item})
+        fun getChildren(): ImmutableArray<MediaItem> =
+            buildImmutableArray { addAll(children.mapNotNull{treeNodes[it]?.item}) }
     }
 
     private fun buildMediaItem(
@@ -155,7 +159,7 @@ object MediaItemTree {
         buildTree(songs, context)
     }
 
-    private fun buildTree(songList: List<MediaItem>, context:Context) {
+    private fun buildTree(songList: ImmutableArray<MediaItem>, context:Context) {
         val sortedSongs = songList.sortedBy { it.mediaMetadata.title.toString().forSorting() }
         val itemListInTree = treeNodes[ITEM_ID]!!
         sortedSongs.forEach {
@@ -166,7 +170,7 @@ object MediaItemTree {
             titleMap[title] = it
         }
 
-        val songsByAlbum = sortedSongs
+        val songsByAlbum = sortedSongs.asList()
             .groupBy { it.mediaMetadata.albumId }
         val albumsInTree = treeNodes[ALBUM_ID]!!
          songsByAlbum.forEach { (albumId,items) ->
@@ -195,7 +199,7 @@ object MediaItemTree {
             items.map { it.mediaId }.forEach { thisAlbum.addChild(it) }
         }
 
-        val albumsByArtist = sortedSongs
+        val albumsByArtist = sortedSongs.asList()
             .groupBy { k -> k.mediaMetadata.artist.toString() }
             .mapValues { kv -> kv.value.distinct().sortedBy { it.mediaMetadata.releaseYear } }
             .toSortedMap(compareBy { it.forSorting() })
@@ -269,13 +273,13 @@ object MediaItemTree {
 
     fun getRootItem(): MediaItem = treeNodes[ROOT_ID]!!.item
 
-    fun getChildren(id: String): List<MediaItem>? {
+    fun getChildren(id: String): ImmutableArray<MediaItem>? {
         return treeNodes[id]?.getChildren()
     }
 
     fun getRandomItem(): MediaItem {
         var curRoot = getRootItem()
-        while (curRoot.mediaMetadata.isPlayable == null || !curRoot.mediaMetadata.isPlayable!!) {
+        while (curRoot.mediaMetadata.isPlayable.isFalseOrNull()) {
             val children = getChildren(curRoot.mediaId)!!
             curRoot = children.random()
         }

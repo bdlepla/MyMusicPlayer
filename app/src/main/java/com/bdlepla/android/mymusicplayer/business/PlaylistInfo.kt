@@ -1,3 +1,5 @@
 package com.bdlepla.android.mymusicplayer.business
 
-data class PlaylistInfo(val name:String, val songs:List<SongInfo>, val artwork:String?=null)
+import com.danrusu.pods4k.immutableArrays.ImmutableArray
+
+data class PlaylistInfo(val name:String, val songs:ImmutableArray<SongInfo>, val artwork:String?=null)

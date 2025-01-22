@@ -43,6 +43,9 @@ import com.bdlepla.android.mymusicplayer.SampleData
 import com.bdlepla.android.mymusicplayer.business.SongInfo
 import com.bdlepla.android.mymusicplayer.extensions.toImagePainter
 import com.bdlepla.android.mymusicplayer.ui.theme.MyMusicPlayerTheme
+import com.danrusu.pods4k.immutableArrays.ImmutableArray
+import com.danrusu.pods4k.immutableArrays.asList
+import com.danrusu.pods4k.immutableArrays.immutableArrayOf
 import kotlinx.coroutines.delay
 import kotlin.math.roundToInt
 
@@ -53,14 +56,15 @@ enum class DragAnchors {
 }
 
 @Composable
-fun SongList(songInfos: List<SongInfo>,
-             onClick: (SongInfo) -> Unit = emptyFunction1(),
-             onAddSongToPlaylist:(List<SongInfo>)->Unit = emptyFunction1(),
-             currentSongIndex : Int = -1
+fun SongList(
+    songInfos: ImmutableArray<SongInfo>,
+    onClick: (SongInfo) -> Unit = emptyFunction1(),
+    onAddSongToPlaylist: (ImmutableArray<SongInfo>) -> Unit = emptyFunction1(),
+    currentSongIndex: Int = -1
 ) {
     val listState = rememberLazyListState()
     LazyColumn(state = listState) {
-        items(items = songInfos, key = { it.songId }) { songInfo ->
+        items(items = songInfos.asList(), key = { it.songId }) { songInfo ->
             SongWithImage(songInfo, onClick, onAddSongToPlaylist, true)
             HorizontalDivider(thickness = 10.dp, color = MaterialTheme.colorScheme.background)
         }
@@ -97,10 +101,11 @@ fun Song(songInfo: SongInfo) {
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun SongWithImage(songInfo: SongInfo,
-                  onClick: (SongInfo) -> Unit = emptyFunction1(),
-                  onAddSongToPlaylist: (List<SongInfo>) -> Unit = emptyFunction1(),
-                  swipeEnabled: Boolean = false) {
+fun SongWithImage(
+    songInfo: SongInfo,
+    onClick: (SongInfo) -> Unit = emptyFunction1(),
+    onAddSongToPlaylist: (ImmutableArray<SongInfo>) -> Unit = emptyFunction1(),
+    swipeEnabled: Boolean = false) {
 
     val density = LocalDensity.current
     val defaultActionSize = 80.dp
@@ -139,7 +144,7 @@ fun SongWithImage(songInfo: SongInfo,
                     modifier = Modifier
                         .width(defaultActionSize)
                         .combinedClickable(onClick = {
-                            onAddSongToPlaylist(listOf(songInfo))
+                            onAddSongToPlaylist(immutableArrayOf(songInfo))
                         }),
                     "",
                     Color.Blue,
@@ -205,7 +210,7 @@ fun SongWithImagePreview() {
 @Composable
 fun SongListPreview() {
     MyMusicPlayerTheme {
-         SongList(SampleData().songs )
+         SongList(SampleData().songs)
     }
 }
 

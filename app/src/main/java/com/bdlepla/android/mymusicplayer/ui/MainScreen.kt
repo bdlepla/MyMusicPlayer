@@ -36,7 +36,11 @@ import com.bdlepla.android.mymusicplayer.business.ArtistInfo
 import com.bdlepla.android.mymusicplayer.business.CurrentPlayingStats
 import com.bdlepla.android.mymusicplayer.business.PlaylistInfo
 import com.bdlepla.android.mymusicplayer.business.SongInfo
+import com.bdlepla.android.mymusicplayer.extensions.any
+import com.bdlepla.android.mymusicplayer.extensions.shuffled
 import com.bdlepla.android.mymusicplayer.ui.theme.MyMusicPlayerTheme
+import com.danrusu.pods4k.immutableArrays.ImmutableArray
+import com.danrusu.pods4k.immutableArrays.emptyImmutableArray
 
 // Main Screen uses the view model to set the variables and callbacks
 // to view model. This is so I can see previews for everything in
@@ -53,7 +57,7 @@ internal fun MainScreen(viewModel: MyMusicViewModel=viewModel(), activity: Conte
     val castState by viewModel.castState.collectAsState()
 
 
-    val onSongClick: (SongInfo, List<SongInfo>) -> Unit = { itSong, itSongs ->
+    val onSongClick: (SongInfo, ImmutableArray<SongInfo>) -> Unit = { itSong, itSongs ->
         viewModel.setPlaylist(itSongs)
         viewModel.setCurrentlyPlaying(itSong)
     }
@@ -64,9 +68,11 @@ internal fun MainScreen(viewModel: MyMusicViewModel=viewModel(), activity: Conte
     val onCreateNewPlaylist: (String)->Unit = { viewModel.addNewPlaylist(it) }
     val onRemovePlaylist:(PlaylistInfo)->Unit = { viewModel.removePlaylist(it) }
 
-    val songsToAddToPlaylist = remember { mutableStateOf<List<SongInfo>>(emptyList())}
+    val songsToAddToPlaylist = remember { mutableStateOf<ImmutableArray<SongInfo>>(
+        emptyImmutableArray()
+    )}
     val pickPlaylist = remember { mutableStateOf(false) }
-    val onAddSongsToPlaylist: (List<SongInfo>)->Unit = {
+    val onAddSongsToPlaylist: (ImmutableArray<SongInfo>)->Unit = {
         songsToAddToPlaylist.value = it
         pickPlaylist.value = true
     }
@@ -133,16 +139,16 @@ internal fun MainScreen(viewModel: MyMusicViewModel=viewModel(), activity: Conte
 @Composable
 private fun MainContent(
     mediaController: MediaController?,
-    songs: List<SongInfo>,
-    currentSongList: List<SongInfo>,
-    artists: List<ArtistInfo>,
-    albums: List<AlbumInfo>,
-    playlists: List<PlaylistInfo>,
+    songs: ImmutableArray<SongInfo>,
+    currentSongList: ImmutableArray<SongInfo>,
+    artists: ImmutableArray<ArtistInfo>,
+    albums: ImmutableArray<AlbumInfo>,
+    playlists: ImmutableArray<PlaylistInfo>,
     onCreateNewPlaylist: (String) -> Unit = emptyFunction1(),
     onRemovePlaylist: (PlaylistInfo) -> Unit = emptyFunction1(),
-    onAddSongsToPlaylist: (List<SongInfo>)->Unit = emptyFunction1(),
+    onAddSongsToPlaylist: (ImmutableArray<SongInfo>)->Unit = emptyFunction1(),
     onRemoveSongFromPlaylist:(PlaylistInfo, SongInfo)->Unit = emptyFunction2(),
-    onSongClick: (SongInfo, List<SongInfo>) -> Unit = emptyFunction2(),
+    onSongClick: (SongInfo, ImmutableArray<SongInfo>) -> Unit = emptyFunction2(),
     onRepeatClick: () -> Unit = emptyFunction(),
     onPlayPauseClick: () -> Unit = emptyFunction(),
     onNextClick: () -> Unit = emptyFunction(),
@@ -152,7 +158,7 @@ private fun MainContent(
     castState: Int = 0
 ) {
     val shuffledSongs = remember{mutableStateOf(songs.shuffled())}
-    val setShuffledSongs: (List<SongInfo>) -> Unit = {
+    val setShuffledSongs: (ImmutableArray<SongInfo>) -> Unit = {
         shuffledSongs.value = it
     }
     val onShuffleClick: () -> Unit = {

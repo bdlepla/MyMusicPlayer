@@ -5,28 +5,46 @@ import androidx.media3.session.MediaController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.bdlepla.android.mymusicplayer.business.*
-import com.bdlepla.android.mymusicplayer.ui.*
+import com.bdlepla.android.mymusicplayer.business.AlbumInfo
+import com.bdlepla.android.mymusicplayer.business.ArtistInfo
+import com.bdlepla.android.mymusicplayer.business.CurrentPlayingStats
+import com.bdlepla.android.mymusicplayer.business.PlaylistInfo
+import com.bdlepla.android.mymusicplayer.business.SongInfo
+import com.bdlepla.android.mymusicplayer.extensions.shuffled
+import com.bdlepla.android.mymusicplayer.ui.AlbumList
+import com.bdlepla.android.mymusicplayer.ui.AlbumSongsScreen
+import com.bdlepla.android.mymusicplayer.ui.ArtistList
+import com.bdlepla.android.mymusicplayer.ui.ArtistSongsScreen
+import com.bdlepla.android.mymusicplayer.ui.NavigationItem
+import com.bdlepla.android.mymusicplayer.ui.PlayScreen
+import com.bdlepla.android.mymusicplayer.ui.PlaylistScreen
+import com.bdlepla.android.mymusicplayer.ui.PlaylistSongsScreen
+import com.bdlepla.android.mymusicplayer.ui.SongList
+import com.bdlepla.android.mymusicplayer.ui.emptyFunction1
+import com.bdlepla.android.mymusicplayer.ui.emptyFunction2
+import com.danrusu.pods4k.immutableArrays.ImmutableArray
+import com.danrusu.pods4k.immutableArrays.emptyImmutableArray
+import com.danrusu.pods4k.immutableArrays.multiplicativeSpecializations.flatMap
 
 @Composable
 fun Navigation(
     navController: NavHostController,
     mediaController: MediaController?,
-    songs: List<SongInfo>,
-    currentSongList: List<SongInfo>,
-    artists: List<ArtistInfo>,
-    albums: List<AlbumInfo>,
-    playlists: List<PlaylistInfo>,
+    songs: ImmutableArray<SongInfo>,
+    currentSongList: ImmutableArray<SongInfo>,
+    artists: ImmutableArray<ArtistInfo>,
+    albums: ImmutableArray<AlbumInfo>,
+    playlists: ImmutableArray<PlaylistInfo>,
     onCreateNewPlaylist: (String) -> Unit = emptyFunction1(),
     onRemovePlaylist: (PlaylistInfo) -> Unit = emptyFunction1(),
-    pickPlaylistToAddSongs: (List<SongInfo>)->Unit = emptyFunction1(),
+    pickPlaylistToAddSongs: (ImmutableArray<SongInfo>)->Unit = emptyFunction1(),
     onRemoveSongFromPlaylist:(PlaylistInfo, SongInfo)->Unit = emptyFunction2(),
-    onSongClick: (SongInfo, List<SongInfo>) -> Unit = emptyFunction2(),
+    onSongClick: (SongInfo, ImmutableArray<SongInfo>) -> Unit = emptyFunction2(),
     currentPlayingStats: CurrentPlayingStats? = null,
     isPaused: Boolean = false,
-    setShuffledSongs: (List<SongInfo>) -> Unit = emptyFunction1()
+    setShuffledSongs: (ImmutableArray<SongInfo>) -> Unit = emptyFunction1()
 ) {
-    val onAddSongsToPlaylist: (List<SongInfo>)->Unit = { pickPlaylistToAddSongs(it) }
+    val onAddSongsToPlaylist: (ImmutableArray<SongInfo>)->Unit = { pickPlaylistToAddSongs(it) }
 
     NavHost(navController, startDestination = NavigationItem.Songs.route) {
         val isExpandedWindow = false
@@ -71,7 +89,7 @@ fun Navigation(
         }
 
         composable(NavigationItem.Playing.route) {
-            setShuffledSongs(emptyList())
+            setShuffledSongs(emptyImmutableArray())
             PlayScreen(currentPlayingStats, currentSongList, isPaused, mediaController)
         }
 

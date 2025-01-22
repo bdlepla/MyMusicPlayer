@@ -5,7 +5,11 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -24,12 +28,14 @@ import com.bdlepla.android.mymusicplayer.business.AlbumInfo
 import com.bdlepla.android.mymusicplayer.business.SongInfo
 import com.bdlepla.android.mymusicplayer.extensions.toImagePainter
 import com.bdlepla.android.mymusicplayer.ui.theme.MyMusicPlayerTheme
+import com.danrusu.pods4k.immutableArrays.ImmutableArray
+import com.danrusu.pods4k.immutableArrays.asList
 
 @Composable
 fun AlbumList(
-    albumList:List<AlbumInfo>,
+    albumList: ImmutableArray<AlbumInfo>,
     navController: NavController? = null,
-    onLongPress:(List<SongInfo>)->Unit = emptyFunction1()) {
+    onLongPress: (ImmutableArray<SongInfo>) -> Unit = emptyFunction1()) {
     val listState = rememberLazyListState()
     val onClick: (AlbumInfo)->Unit = {
         val albumId = it.albumId
@@ -38,7 +44,7 @@ fun AlbumList(
     }
 
     LazyColumn(state = listState) {
-        items(items = albumList, key = { it.albumId }) { albumInfo ->
+        items(items = albumList.asList(), key = { it.albumId }) { albumInfo ->
             Album(albumInfo, onClick, onLongPress)
             HorizontalDivider(thickness = 10.dp, color = MaterialTheme.colorScheme.background)
         }
@@ -47,9 +53,10 @@ fun AlbumList(
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun Album(albumInfo:AlbumInfo,
-          onClick: (AlbumInfo) -> Unit = emptyFunction1(),
-          onLongPress:(List<SongInfo>)->Unit = emptyFunction1()) {
+fun Album(
+    albumInfo:AlbumInfo,
+    onClick: (AlbumInfo) -> Unit = emptyFunction1(),
+    onLongPress: (ImmutableArray<SongInfo>) -> Unit = emptyFunction1()) {
     Row(verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .background(color=MaterialTheme.colorScheme.background)

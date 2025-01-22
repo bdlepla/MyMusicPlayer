@@ -28,12 +28,15 @@ import com.bdlepla.android.mymusicplayer.business.CurrentPlayingStats
 import com.bdlepla.android.mymusicplayer.business.SongInfo
 import com.bdlepla.android.mymusicplayer.extensions.toImagePainter
 import com.bdlepla.android.mymusicplayer.ui.theme.MyMusicPlayerTheme
+import com.danrusu.pods4k.immutableArrays.ImmutableArray
+import com.danrusu.pods4k.immutableArrays.indexOf
 
 @Composable
-fun PlayScreen(currentPlayingStats: CurrentPlayingStats?,
-               currentSongs:List<SongInfo>,
-               isPaused: Boolean,
-               controller: MediaController?=null) {
+fun PlayScreen(
+    currentPlayingStats: CurrentPlayingStats?,
+    currentSongs: ImmutableArray<SongInfo>,
+    isPaused: Boolean,
+    controller: MediaController?=null) {
     val currentSong = currentPlayingStats?.currentPlaying ?: return
     val currentSongIndex = currentSongs.indexOf(currentSong)
     val callbacks = Callbacks(

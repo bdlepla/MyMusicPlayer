@@ -21,7 +21,11 @@ import androidx.media3.session.SessionCommand
 import androidx.media3.session.SessionError
 import androidx.media3.session.SessionResult
 import com.bdlepla.android.mymusicplayer.datastore.MyMusicPlayerSettingsDataStore
+import com.bdlepla.android.mymusicplayer.extensions.any
 import com.bdlepla.android.mymusicplayer.service.MediaItemTree.ITEM_PREFIX
+import com.danrusu.pods4k.immutableArrays.asList
+import com.danrusu.pods4k.immutableArrays.buildImmutableLongArray
+import com.danrusu.pods4k.immutableArrays.multiplicativeSpecializations.mapNotNull
 import com.google.android.gms.cast.framework.CastContext
 import com.google.common.collect.ImmutableList
 import com.google.common.util.concurrent.Futures
@@ -177,7 +181,7 @@ class PlayService: MediaLibraryService() {
             val songsList = playingItemIds.mapNotNull { id ->
                  MediaItemTree.getItem(ITEM_PREFIX+id.toString()) }
 
-            player.setMediaItems(songsList)
+            player.setMediaItems(songsList.asList())
             player.prepare()
             val playingSongId = ITEM_PREFIX+musicDataStore.playingSongId.toString()
             val playingSongIdx = songsList.indexOfFirst { it.mediaId == playingSongId }
@@ -251,10 +255,11 @@ class PlayService: MediaLibraryService() {
        override fun onTimelineChanged(timeline: Timeline, reason: Int) {
            super.onTimelineChanged(timeline, reason)
 
-           val songIds =
-           (0..<timeline.windowCount).map { windowIdx ->
-               timeline.getWindow(windowIdx, window)
-               window.mediaItem.mediaId.substring(6).toLong()
+           val songIds = buildImmutableLongArray {
+               (0..<timeline.windowCount).map { windowIdx ->
+                   timeline.getWindow(windowIdx, window)
+                   add(window.mediaItem.mediaId.substring(6).toLong())
+               }
            }
            scope.launch { musicDataStore.saveCurrentList(songIds) }
        }
@@ -366,7 +371,7 @@ class PlayService: MediaLibraryService() {
                     ?: return Futures.immediateFuture(
                         LibraryResult.ofError(SessionError.ERROR_BAD_VALUE)
                     )
-            val childrenSubset = children.drop(page * pageSize).take(pageSize)
+            val childrenSubset = children.drop(page * pageSize).take(pageSize).asList()
             return Futures.immediateFuture(LibraryResult.ofItemList(childrenSubset, params))
         }
 

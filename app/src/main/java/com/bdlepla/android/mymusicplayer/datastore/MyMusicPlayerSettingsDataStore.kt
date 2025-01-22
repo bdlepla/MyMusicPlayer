@@ -2,6 +2,8 @@ package com.bdlepla.android.mymusicplayer.datastore
 
 import android.content.Context
 import com.bdlepla.android.mymusicplayer.MyMusicPlayerSettings
+import com.danrusu.pods4k.immutableArrays.ImmutableLongArray
+import com.danrusu.pods4k.immutableArrays.toImmutableArray
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
@@ -21,7 +23,7 @@ class MyMusicPlayerSettingsDataStore @Inject constructor(private val context: Co
 
     val playingPosition: Long = settings.playingPosition
     val playingSongId: Long = settings.playingSongId
-    val playingList: List<Long> = settings.currentListIdsList
+    val playingList: ImmutableLongArray = settings.currentListIdsList.toImmutableArray()
     private val appStoragePath
         get() = Path(context.getExternalFilesDir(null).toString())
 
@@ -40,8 +42,8 @@ class MyMusicPlayerSettingsDataStore @Inject constructor(private val context: Co
         }
     }
 
-    suspend fun saveCurrentList(ids:List<Long>) {
-        settings = settings.toBuilder().clearCurrentListIds().addAllCurrentListIds(ids).build()
+    suspend fun saveCurrentList(ids:ImmutableLongArray) {
+        settings = settings.toBuilder().clearCurrentListIds().addAllCurrentListIds(ids.asIterable()).build()
         withContext(Dispatchers.IO) { writeFile(settings) }
     }
 

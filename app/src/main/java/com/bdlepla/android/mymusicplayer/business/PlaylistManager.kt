@@ -3,6 +3,13 @@ package com.bdlepla.android.mymusicplayer.business
 import android.content.Context
 import android.content.ContextWrapper
 import android.os.Environment
+import com.bdlepla.android.mymusicplayer.extensions.any
+import com.bdlepla.android.mymusicplayer.extensions.random
+import com.danrusu.pods4k.immutableArrays.ImmutableArray
+import com.danrusu.pods4k.immutableArrays.emptyImmutableArray
+import com.danrusu.pods4k.immutableArrays.multiplicativeSpecializations.map
+import com.danrusu.pods4k.immutableArrays.toImmutableArray
+import com.danrusu.pods4k.immutableArrays.toMutableList
 import java.io.File
 import java.io.FileWriter
 import java.nio.file.Path
@@ -27,13 +34,12 @@ open class PlaylistReader(context:Context) :PlaylistBase(context) {
             .associate { it.first.first to it.second.toMutableList() }
             .toMutableMap()
 
-    private fun loadPlaylistSongs(m3uName:String):List<String> {
+    private fun loadPlaylistSongs(m3uName:String):ImmutableArray<String> {
         return File(m3uName)
             .readLines()
-            .asSequence()
+            .toImmutableArray() // OK; Do not change
             .map { it.trim() }
             .filter { it.isNotEmpty() && it[0] != '#' && !it.contains("/Music/") }
-            .toList()
     }
 }
 
@@ -46,7 +52,7 @@ class PlaylistManager(context: ContextWrapper) : PlaylistReader(context) {
     private fun getFullFilename(name:String) = "$appStoragePath/$name.m3u"
 
 
-    private fun savePlaylistSongs(m3uname:String, songNames:List<String>) {
+    private fun savePlaylistSongs(m3uname:String, songNames:ImmutableArray<String>) {
         if (File(m3uname).exists()){
             File(m3uname).delete()
         }
@@ -57,13 +63,13 @@ class PlaylistManager(context: ContextWrapper) : PlaylistReader(context) {
         }
     }
 
-    fun updatePlaylistInfo(songs:List<SongInfo>):List<PlaylistInfo> =
+    fun updatePlaylistInfo(songs:ImmutableArray<SongInfo>):ImmutableArray<PlaylistInfo> =
         playLists.map {
             val playListSongs = it.value.mapNotNull { playListSong ->
                 songs.firstOrNull { songInCollection ->
                     songInCollection.mediaUri.endsWith(playListSong)
                 }
-            }
+            }.toImmutableArray() // OK, Do not change
             var artworkString:String? = null
             if (playListSongs.any()){
                 val songsForArtwork = playListSongs.random()
@@ -71,17 +77,17 @@ class PlaylistManager(context: ContextWrapper) : PlaylistReader(context) {
             }
 
             PlaylistInfo(it.key, playListSongs, artworkString)
-        }
+        }.toImmutableArray() // OK; Do not change
 
-    fun addSongsToPlaylist(playListInfo: PlaylistInfo, songInfos: List<SongInfo>) {
+    fun addSongsToPlaylist(playListInfo: PlaylistInfo, songInfos: ImmutableArray<SongInfo>) {
         val songs = songInfos.map { Path(it.mediaUri).relativeToOrSelf(mediaPath).toString() }
         val name = playListInfo.name
         if (playLists.containsKey(name)) {
             val playlistSongNames = playLists[name]
-            playlistSongNames!!.addAll(songs)
+            playlistSongNames!!.addAll(songs.asIterable())
             playLists[name] = playlistSongNames
             val fileName = getFullFilename(name)
-            savePlaylistSongs(fileName, playlistSongNames)
+            savePlaylistSongs(fileName, playlistSongNames.toImmutableArray()) // OK; Do not change
         }
     }
 
@@ -93,15 +99,14 @@ class PlaylistManager(context: ContextWrapper) : PlaylistReader(context) {
             playlistSongNames!!.remove(song)
             playLists[name] = playlistSongNames
             val fileName = getFullFilename(name)
-            savePlaylistSongs(fileName, playlistSongNames)
+            savePlaylistSongs(fileName, playlistSongNames.toImmutableArray()) // OK; Do not change
         }
     }
 
     fun addNewPlaylist(name: String) {
-        val songs = mutableListOf<String>()
-        playLists[name] = songs
+        playLists[name] = mutableListOf()
         val m3uname = getFullFilename(name)
-        savePlaylistSongs(m3uname, songs)
+        savePlaylistSongs(m3uname, emptyImmutableArray())
     }
 
     fun removePlaylist(playListInfo: PlaylistInfo){

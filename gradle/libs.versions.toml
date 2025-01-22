@@ -8,6 +8,7 @@ compose = "1.10.0"
 coroutines = "1.10.1"
 datastore = "1.1.2"
 hilt-android = "2.54"
+immutable-array = "0.6.0"
 junit = "4.13.2"
 kotlin = "2.1.0"
 lifecycle = "2.8.7"
@@ -34,16 +35,18 @@ coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutin
 coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "coroutines" }
 datastore-core = { group = "androidx.datastore", name = "datastore-core", version.ref = "datastore" }
 hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "hilt-android" }
+immutable-array = { group = "com.danrusu.pods4k", name = "pods4k", version.ref = "immutable-array"}
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 lifecycle-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycle" }
 lifecycle-viewmodel = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-compose", version.ref = "lifecycle" }
 material = { group = "androidx.compose.material", name = "material", version.ref = "material" }
 material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "material3" }
 media = { group = "androidx.media", name = "media", version.ref = "media" }
-media3-ui = { group = "androidx.media3", name = "media3-ui", version.ref = "media3" }
+media3-cast = { group = "androidx.media3", name = "media3-cast", version.ref = "media3" }
+media3-common-ktx = {group = "androidx.media3", name = "media3-common-ktx", version.ref = "media3"}
 media3-exoplayer  = { group = "androidx.media3", name = "media3-exoplayer", version.ref = "media3" }
 media3-session = { group = "androidx.media3", name = "media3-session", version.ref = "media3" }
-media3-cast = { group = "androidx.media3", name = "media3-cast", version.ref = "media3" }
+media3-ui = { group = "androidx.media3", name = "media3-ui", version.ref = "media3" }
 navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigation" }
 protobuf-javalite = { group = "com.google.protobuf", name = "protobuf-javalite", version.ref = "protobuf" }
 test-junit = { group = "androidx.test.ext", name = "junit", version.ref = "test-junit" }

@@ -21,11 +21,19 @@ import com.bdlepla.android.mymusicplayer.business.albumId
 import com.bdlepla.android.mymusicplayer.business.albumName
 import com.bdlepla.android.mymusicplayer.business.artistId
 import com.bdlepla.android.mymusicplayer.business.artistName
+import com.bdlepla.android.mymusicplayer.extensions.any
 import com.bdlepla.android.mymusicplayer.extensions.forSorting
+import com.bdlepla.android.mymusicplayer.extensions.random
 import com.bdlepla.android.mymusicplayer.repository.ALBUM_ID
 import com.bdlepla.android.mymusicplayer.repository.ARTIST_ID
 import com.bdlepla.android.mymusicplayer.repository.ITEM_ID
 import com.bdlepla.android.mymusicplayer.service.PlayService
+import com.danrusu.pods4k.immutableArrays.ImmutableArray
+import com.danrusu.pods4k.immutableArrays.asList
+import com.danrusu.pods4k.immutableArrays.emptyImmutableArray
+import com.danrusu.pods4k.immutableArrays.indexOf
+import com.danrusu.pods4k.immutableArrays.multiplicativeSpecializations.map
+import com.danrusu.pods4k.immutableArrays.toImmutableArray
 import com.google.android.gms.cast.framework.CastContext
 import com.google.android.gms.cast.framework.CastStateListener
 import com.google.common.util.concurrent.ListenableFuture
@@ -119,8 +127,8 @@ class MyMusicViewModel
 
             childrenFuture.addListener( {
                 val childrenResult = childrenFuture.get()
-                val children = childrenResult.value!!
-                if (children.size > 0) {
+                val children = childrenResult.value!!.toImmutableArray() // OK; Do not change
+                if (children.any()) {
                     val albums = children.map {
                         val albumName = it.mediaMetadata.albumName
                         val albumYear = it.mediaMetadata.releaseYear ?: 0
@@ -144,15 +152,14 @@ class MyMusicViewModel
 
             childrenFuture.addListener( {
                 val childrenResult = childrenFuture.get()
-                val children = childrenResult.value!!
-                if (children.size > 0) {
+                val children = childrenResult.value!!.toImmutableArray(); // OK, do not change
+                if (children.any()) {
                     val artists = children.map {
                         val artistName = it.mediaMetadata.artistName
                         val artistId = it.mediaMetadata.artistId
-                        val songsForArtist = songCollection.filter{si -> si.artistId == artistId}
+                        val songsForArtist = immutableSongCollection.filter{si -> si.artistId == artistId}
                         val randomSong = songsForArtist.random()
-                        val albumForRandomSong = allAlbums.value.find{ai->ai.albumId == randomSong.albumId}
-                        ArtistInfo(artistName, artistId, albumForRandomSong)
+                        ArtistInfo(artistName, artistId, randomSong.albumArt)
                     }
                     addArtists(artists)
                     doLoadArtists(browser, page+1, pageSize)
@@ -202,11 +209,12 @@ class MyMusicViewModel
         override fun onTimelineChanged(timeline: Timeline, reason: Int) {
             super.onTimelineChanged(timeline, reason)
 
-            val songInfos = (0..<timeline.windowCount).mapNotNull {
-                timeline.getWindow(it, window)
-                window.mediaItem.mediaMetadata.toSongInfo()
-            }.distinctBy { it.songId }
-            _currentSongList.value = songInfos
+            val songInfos =
+                (0..<timeline.windowCount).mapNotNull {
+                    timeline.getWindow(it, window)
+                    window.mediaItem.mediaMetadata.toSongInfo()
+                }.distinctBy { it.songId }
+            _currentSongList.value = songInfos.toImmutableArray() // OK, do not change
         }
     }
 
@@ -217,20 +225,20 @@ class MyMusicViewModel
     val castState: StateFlow<Int>
         get() = _castState.asStateFlow()
 
-    private val _allSongs = MutableStateFlow<List<SongInfo>>(emptyList())
-    val allSongs : StateFlow<List<SongInfo>>
+    private val _allSongs = MutableStateFlow<ImmutableArray<SongInfo>>(emptyImmutableArray())
+    val allSongs : StateFlow<ImmutableArray<SongInfo>>
         get() = _allSongs.asStateFlow()
 
-    private val _allArtists = MutableStateFlow<List<ArtistInfo>>(emptyList())
-    val allArtists : StateFlow<List<ArtistInfo>>
+    private val _allArtists = MutableStateFlow<ImmutableArray<ArtistInfo>>(emptyImmutableArray())
+    val allArtists : StateFlow<ImmutableArray<ArtistInfo>>
         get() = _allArtists.asStateFlow()
 
-    private val _allAlbums = MutableStateFlow<List<AlbumInfo>>(emptyList())
-    val allAlbums : StateFlow<List<AlbumInfo>>
+    private val _allAlbums = MutableStateFlow<ImmutableArray<AlbumInfo>>(emptyImmutableArray())
+    val allAlbums : StateFlow<ImmutableArray<AlbumInfo>>
         get() = _allAlbums.asStateFlow()
 
-    private val _allPlaylists = MutableStateFlow<List<PlaylistInfo>>(emptyList())
-    val allPlaylists : StateFlow<List<PlaylistInfo>>
+    private val _allPlaylists = MutableStateFlow<ImmutableArray<PlaylistInfo>>(emptyImmutableArray())
+    val allPlaylists : StateFlow<ImmutableArray<PlaylistInfo>>
         get() = _allPlaylists.asStateFlow()
 
     //region Currently Playing - the song currently playing
@@ -244,8 +252,8 @@ class MyMusicViewModel
 //    val isShuffling: StateFlow<Boolean>
 //        get() = _shuffling.asStateFlow()
 
-    private val  _currentSongList = MutableStateFlow<List<SongInfo>>(emptyList())
-    val currentSongList : StateFlow<List<SongInfo>>
+    private val  _currentSongList = MutableStateFlow<ImmutableArray<SongInfo>>(emptyImmutableArray())
+    val currentSongList : StateFlow<ImmutableArray<SongInfo>>
         get() = _currentSongList.asStateFlow()
 
     fun setCurrentlyPlaying(songInfo: SongInfo) {
@@ -257,9 +265,9 @@ class MyMusicViewModel
         b.play()
     }
 
-    fun setPlaylist(songs: List<SongInfo>) {
+    fun setPlaylist(songs: ImmutableArray<SongInfo>) {
         val b = browser ?: return
-        b.setMediaItems(songs.map { it.toMediaItem() })
+        b.setMediaItems(songs.map { it.toMediaItem() }.asList())
         b.prepare()
     }
 
@@ -288,48 +296,51 @@ class MyMusicViewModel
 
     private val songCollection = mutableListOf<SongInfo>()
 
-    private fun addSongs(songs:List<SongInfo>) {
+    private val immutableSongCollection
+        get() = songCollection.toImmutableArray() // OK; Do not change
+
+    private fun addSongs(songs:Iterable<SongInfo>) {
         songCollection.addAll(songs)
-        _allPlaylists.value = playlistManager.updatePlaylistInfo(songCollection)
-        _allSongs.value =  songCollection.sortedBy { it.title.forSorting() }
+        _allPlaylists.value = playlistManager.updatePlaylistInfo(immutableSongCollection)
+        _allSongs.value =  immutableSongCollection.sortedBy { it.title.forSorting() }
     }
 
-    private fun addArtists(artists:List<ArtistInfo>) {
+    private fun addArtists(artists:ImmutableArray<ArtistInfo>) {
         artists.distinctBy { it.artistId }
             .forEach { artist ->
                 val artistAlbums = _allAlbums.value.filter { album -> album.artistId == artist.artistId }
-                artist.albums.addAll(artistAlbums)
+                artist.addAlbums(artistAlbums)
             }
         _allArtists.value = artists.sortedBy { it.name.forSorting() }
     }
 
-    private fun addAlbums(albums:List<AlbumInfo>) {
+    private fun addAlbums(albums:ImmutableArray<AlbumInfo>) {
         albums.forEach{album ->
-            val songs = songCollection
+            val songs = immutableSongCollection
                 .filter { it.albumId == album.albumId }
                 .sortedBy { it.trackNumber }
-            album.songs.addAll(songs)
+            album.addSongs(songs)
         }
         _allAlbums.value = albums.sortedBy { it.name.forSorting() }
     }
 
-    fun addSongsToPlaylist(playListInfo: PlaylistInfo, songs: List<SongInfo>) {
+    fun addSongsToPlaylist(playListInfo: PlaylistInfo, songs: ImmutableArray<SongInfo>) {
         playlistManager.addSongsToPlaylist(playListInfo, songs)
-        _allPlaylists.value = playlistManager.updatePlaylistInfo(songCollection)
+        _allPlaylists.value = playlistManager.updatePlaylistInfo(immutableSongCollection)
     }
 
     fun removePlaylist(playListInfo: PlaylistInfo) {
         playlistManager.removePlaylist(playListInfo)
-        _allPlaylists.value = playlistManager.updatePlaylistInfo(songCollection)
+        _allPlaylists.value = playlistManager.updatePlaylistInfo(immutableSongCollection)
     }
 
     fun addNewPlaylist(it: String) {
         playlistManager.addNewPlaylist(it)
-        _allPlaylists.value = playlistManager.updatePlaylistInfo(songCollection)
+        _allPlaylists.value = playlistManager.updatePlaylistInfo(immutableSongCollection)
     }
 
     fun removeSongFromPlaylist(playListInfo: PlaylistInfo, songInfo: SongInfo) {
         playlistManager.removeSongFromPlaylist(playListInfo, songInfo)
-        _allPlaylists.value = playlistManager.updatePlaylistInfo(songCollection)
+        _allPlaylists.value = playlistManager.updatePlaylistInfo(immutableSongCollection)
     }
 }
