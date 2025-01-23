@@ -1,39 +1,38 @@
 package com.bdlepla.android.mymusicplayer.ui
 
 import android.content.res.Configuration
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.gestures.AnchoredDraggableState
-import androidx.compose.foundation.gestures.DraggableAnchors
-import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.anchoredDraggable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -49,12 +48,6 @@ import com.danrusu.pods4k.immutableArrays.immutableArrayOf
 import kotlinx.coroutines.delay
 import kotlin.math.roundToInt
 
-enum class DragAnchors {
-    //Start,
-    Center,
-    End,
-}
-
 @Composable
 fun SongList(
     songInfos: ImmutableArray<SongInfo>,
@@ -65,7 +58,7 @@ fun SongList(
     val listState = rememberLazyListState()
     LazyColumn(state = listState) {
         items(items = songInfos.asList(), key = { it.songId }) { songInfo ->
-            SongWithImage(songInfo, onClick, onAddSongToPlaylist, true)
+            ScrollableSongWithImage(songInfo, onClick, onAddSongToPlaylist)
             HorizontalDivider(thickness = 10.dp, color = MaterialTheme.colorScheme.background)
         }
     }
@@ -103,83 +96,71 @@ fun Song(songInfo: SongInfo) {
 @Composable
 fun SongWithImage(
     songInfo: SongInfo,
-    onClick: (SongInfo) -> Unit = emptyFunction1(),
-    onAddSongToPlaylist: (ImmutableArray<SongInfo>) -> Unit = emptyFunction1(),
-    swipeEnabled: Boolean = false) {
-
-    val density = LocalDensity.current
-    val defaultActionSize = 80.dp
-    val endActionSizePx = with(density) { (defaultActionSize).toPx() }
-    //val startActionSizePx = with(density) { 0.dp.toPx() }
-
-    val state = remember {
-        AnchoredDraggableState(
-            initialValue = DragAnchors.Center,
-            anchors = DraggableAnchors {
-                DragAnchors.Center at 0f
-                DragAnchors.End at endActionSizePx
-            },
-            positionalThreshold = { distance: Float -> distance * 0.5f },
-            velocityThreshold = { with(density) { 100.dp.toPx() } },
-            animationSpec = tween(),
+    onClick: (SongInfo) -> Unit = emptyFunction1()
+){
+    Row(verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .combinedClickable (onClick = {onClick(songInfo)} )
+            .semantics(mergeDescendants = true) {}) {
+        Spacer(modifier = Modifier.padding(vertical = 4.dp))
+        Image(
+            painter = songInfo.albumArt.toImagePainter(),
+            contentDescription = songInfo.title,
+            modifier = Modifier.size(50.dp),
         )
+        Spacer(modifier = Modifier.padding(all = 4.dp))
+        Song(songInfo)
     }
+}
 
-    SwipeableItem(
-        state = state,
-        endAction = {
-            Box(
-                modifier = Modifier
-                    .align(Alignment.CenterEnd)
-                    .offset {
-                        IntOffset(
-                            ((-state
-                                .requireOffset()) + endActionSizePx)
-                                .roundToInt(), 0
-                        )
-                    }
-            )
-            {
-                SwipeAction(
-                    modifier = Modifier
-                        .width(defaultActionSize)
-                        .combinedClickable(onClick = {
-                            onAddSongToPlaylist(immutableArrayOf(songInfo))
-                        }),
-                    "",
-                    Color.Blue,
-                    Icons.Filled.Add
-                )
-            } },
-        content = {
-            Row(verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .background(color = MaterialTheme.colorScheme.background)
-                    .fillMaxWidth()
-                    .combinedClickable(
-                        onClick = { onClick(songInfo) }
-                    )
-                    .padding(all = 4.dp)
-                    .offset{
-                        IntOffset(
-                        x = -state
-                            .requireOffset()
-                            .roundToInt(),
-                        y = 0)
-                    }
-                    .anchoredDraggable(state, Orientation.Horizontal, reverseDirection = true, enabled = swipeEnabled)
-                .semantics(mergeDescendants = true) {}) {
-                Spacer(modifier = Modifier.padding(vertical = 4.dp))
-                Image(
-                    painter = songInfo.albumArt.toImagePainter(),
-                    contentDescription = songInfo.title,
-                    modifier = Modifier.size(50.dp),
-                )
-                Spacer(modifier = Modifier.padding(all = 4.dp))
-                Song(songInfo)
+@Composable
+fun ScrollableSongWithImage(
+    songInfo: SongInfo,
+    onClick: (SongInfo) -> Unit = emptyFunction1(),
+    onAddSongToPlaylist: (ImmutableArray<SongInfo>) -> Unit = emptyFunction1()
+) {
+
+    val offsetX = remember { mutableFloatStateOf(0f) }
+    val iconWidth=175
+
+    Box( modifier =
+        Modifier.
+        fillMaxSize().
+        pointerInput(Unit) {
+            detectHorizontalDragGestures { _, dragAmount ->
+                offsetX.floatValue = (offsetX.floatValue + dragAmount).coerceIn(-175f, 0f)
             }
         }
-    )
+    ) {
+        // Actions revealed
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp)
+                .offset { IntOffset(iconWidth + offsetX.floatValue.roundToInt(), 0)},
+            horizontalArrangement = Arrangement.End,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            IconButton( modifier = Modifier.background(Color.Blue),
+                onClick = {
+                    offsetX.floatValue = 0f
+                    onAddSongToPlaylist(immutableArrayOf(songInfo))
+                }) {
+                Icon(
+                    Icons.Default.Add,
+                    contentDescription = "",
+                    tint = Color.White
+                )
+            }
+        }
+
+        // Main content
+        Box(modifier = Modifier
+            .offset { IntOffset(offsetX.floatValue.roundToInt(), 0) }) {
+            SongWithImage(songInfo, onClick)
+        }
+    }
+
 }
 
 @Preview(
