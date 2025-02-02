@@ -20,8 +20,10 @@
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
 
--keepclassmembers class com.bdlepla.android.mymusicplayer.SampleData {
-    public *;
+#-printconfiguration /home/bryan/tmp/full-r8-config.txt
+
+-keepclassmembers class * extends com.google.protobuf.GeneratedMessageLite* {
+   <fields>;
 }
 
 -dontwarn org.bouncycastle.jsse.BCSSLParameters
