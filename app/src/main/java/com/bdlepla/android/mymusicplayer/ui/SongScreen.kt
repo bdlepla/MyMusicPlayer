@@ -1,6 +1,7 @@
 package com.bdlepla.android.mymusicplayer.ui
 
 import android.content.res.Configuration
+import androidx.activity.compose.ReportDrawn
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -55,6 +56,7 @@ fun SongList(
     onAddSongToPlaylist: (ImmutableArray<SongInfo>) -> Unit = emptyFunction1(),
     currentSongIndex: Int = -1
 ) {
+
     val listState = rememberLazyListState()
     LazyColumn(state = listState) {
         items(items = songInfos.asList(), key = { it.songId }) { songInfo ->
@@ -69,6 +71,7 @@ fun SongList(
             listState.animateScrollToItem(currentSongIndex)
         }
     }
+    ReportDrawn()
 }
 
 
