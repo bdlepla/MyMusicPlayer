@@ -188,7 +188,7 @@ class PlayService: MediaLibraryService() {
             if (playingSongIdx != -1) {
                 val playingPosition = musicDataStore.playingPosition
                 player.seekTo(playingSongIdx, playingPosition)
-                player.play()
+                //player.play()
             }
         }
     }
