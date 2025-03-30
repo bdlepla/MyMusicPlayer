@@ -1,7 +1,6 @@
 package com.bdlepla.android.mymusicplayer
 
 import android.Manifest
-import android.content.pm.PackageManager
 import android.media.AudioManager
 import android.os.Bundle
 import androidx.activity.compose.setContent
@@ -9,6 +8,10 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import com.bdlepla.android.mymusicplayer.ui.MainScreen
+import com.bdlepla.android.mymusicplayer.ui.PermissionScreen
+import com.bdlepla.android.mymusicplayer.ui.theme.MyMusicPlayerTheme
+import com.meticha.permissions_compose.AppPermission
+import com.meticha.permissions_compose.rememberAppPermissionState
 import dagger.hilt.android.AndroidEntryPoint
 
 
@@ -19,15 +22,25 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        checkPermissions()
         enableEdgeToEdge()
-        setContent { MainScreen(myMusicViewModel,this) }
-    }
-
-    private fun checkPermissions() {
-        val readAudioPermission = Manifest.permission.READ_MEDIA_AUDIO
-        if (checkSelfPermission(readAudioPermission) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(arrayOf(readAudioPermission), 1)
+        setContent {
+            MyMusicPlayerTheme {
+                val permissions = rememberAppPermissionState(
+                    permissions = listOf(
+                        AppPermission(
+                            permission = Manifest.permission.READ_MEDIA_AUDIO,
+                            description = "Media read access is needed to play music. Please grant this permission.",
+                            isRequired = true
+                        )
+                    )
+                )
+                if (!permissions.allRequiredGranted()) {
+                    PermissionScreen(permissions)
+                }
+                else {
+                    MainScreen(myMusicViewModel, this)
+                }
+            }
         }
     }
 

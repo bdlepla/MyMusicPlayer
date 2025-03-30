@@ -108,6 +108,7 @@ dependencies {
     implementation(libs.media3.session)
     implementation(libs.media3.ui)
     implementation(libs.navigation.compose)
+    implementation(libs.permissions.compose)
     implementation(libs.profile.installer)
     implementation(libs.protobuf.javalite)
     implementation(libs.ui)
