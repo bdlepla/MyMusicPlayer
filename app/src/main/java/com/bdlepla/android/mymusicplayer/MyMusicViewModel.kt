@@ -23,7 +23,6 @@ import com.bdlepla.android.mymusicplayer.business.artistId
 import com.bdlepla.android.mymusicplayer.business.artistName
 import com.bdlepla.android.mymusicplayer.extensions.any
 import com.bdlepla.android.mymusicplayer.extensions.forSorting
-import com.bdlepla.android.mymusicplayer.extensions.random
 import com.bdlepla.android.mymusicplayer.repository.ALBUM_ID
 import com.bdlepla.android.mymusicplayer.repository.ARTIST_ID
 import com.bdlepla.android.mymusicplayer.repository.ITEM_ID
@@ -152,7 +151,7 @@ class MyMusicViewModel
 
             childrenFuture.addListener( {
                 val childrenResult = childrenFuture.get()
-                val children = childrenResult.value!!.toImmutableArray(); // OK, do not change
+                val children = childrenResult.value!!.toImmutableArray() // OK, do not change
                 if (children.any()) {
                     val artists = children.map {
                         val artistName = it.mediaMetadata.artistName
@@ -172,12 +171,11 @@ class MyMusicViewModel
 
     private fun checkIfServiceIsPlayingAtAppStartup() {
         val b = browser ?: return
-        if (b.isPlaying) {
-            val mediaItem = b.currentMediaItem ?: return
-            _currentlyPlaying = mediaItem.mediaMetadata.toSongInfo() ?: return
-            _isPaused.value = false
+        val mediaItem = b.currentMediaItem
+        if (mediaItem != null) {
+            _currentlyPlaying = mediaItem.mediaMetadata.toSongInfo()
         }
-        // might need to figure out how to get current playlist at startup from serice
+        _isPaused.value = !b.isPlaying()
     }
 
     inner class PlayerCastStateListener: CastStateListener
