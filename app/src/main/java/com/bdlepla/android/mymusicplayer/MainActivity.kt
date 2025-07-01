@@ -2,6 +2,7 @@ package com.bdlepla.android.mymusicplayer
 
 import android.Manifest
 import android.media.AudioManager
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -25,15 +26,22 @@ class MainActivity : AppCompatActivity() {
         enableEdgeToEdge()
         setContent {
             MyMusicPlayerTheme {
-                val permissions = rememberAppPermissionState(
-                    permissions = listOf(
-                        AppPermission(
-                            permission = Manifest.permission.READ_MEDIA_AUDIO,
-                            description = "Media read access is needed to play music. Please grant this permission.",
-                            isRequired = true
+                val permissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    rememberAppPermissionState(
+                        permissions = listOf(
+                            AppPermission(
+                                permission = Manifest.permission.READ_MEDIA_AUDIO,
+                                description = "Media read access is needed to play music. Please grant this permission.",
+                                isRequired = true
+                            )
                         )
                     )
-                )
+                } else {
+                    rememberAppPermissionState(
+                        permissions = listOf(
+                        )
+                    )
+                }
                 if (!permissions.allRequiredGranted()) {
                     PermissionScreen(permissions)
                 }

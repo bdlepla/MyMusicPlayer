@@ -33,8 +33,6 @@ import com.danrusu.pods4k.immutableArrays.emptyImmutableArray
 import com.danrusu.pods4k.immutableArrays.indexOf
 import com.danrusu.pods4k.immutableArrays.multiplicativeSpecializations.map
 import com.danrusu.pods4k.immutableArrays.toImmutableArray
-import com.google.android.gms.cast.framework.CastContext
-import com.google.android.gms.cast.framework.CastStateListener
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.MoreExecutors
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -50,7 +48,7 @@ import javax.inject.Inject
 class MyMusicViewModel
 @Inject constructor(application: Application): AndroidViewModel(application) {
     private val playerListener = PlayerListener()
-    private val castStateListener = PlayerCastStateListener()
+//    private val castStateListener = PlayerCastStateListener()
     private lateinit var browserFuture: ListenableFuture<MediaBrowser>
     val browser: MediaBrowser?
         get() = if (browserFuture.isDone) browserFuture.get() else null
@@ -58,8 +56,8 @@ class MyMusicViewModel
 
     // Initialize the Cast context. This is required so that the media route button can be
     // created in the AppBar
-    private val castContext:CastContext = CastContext.getSharedInstance(application)
-        .also { it.addCastStateListener(castStateListener) }
+//    private val castContext:CastContext = CastContext.getSharedInstance(application)
+//        .also { it.addCastStateListener(castStateListener) }
 
    init {
        initializeBrowser(application.applicationContext)
@@ -71,7 +69,7 @@ class MyMusicViewModel
 
     override fun onCleared() {
         super.onCleared()
-        castContext.removeCastStateListener(castStateListener)
+//        castContext.removeCastStateListener(castStateListener)
         browser?.removeListener(playerListener)
         browser?.release()
     }
@@ -178,12 +176,12 @@ class MyMusicViewModel
         _isPaused.value = !b.isPlaying()
     }
 
-    inner class PlayerCastStateListener: CastStateListener
-    {
-        override fun onCastStateChanged(castState: Int) {
-            _castState.value = castState
-        }
-    }
+//    inner class PlayerCastStateListener: CastStateListener
+//    {
+//        override fun onCastStateChanged(castState: Int) {
+//            _castState.value = castState
+//        }
+//    }
 
     inner class PlayerListener: Player.Listener {
         override fun onIsPlayingChanged(isPlaying: Boolean) {
