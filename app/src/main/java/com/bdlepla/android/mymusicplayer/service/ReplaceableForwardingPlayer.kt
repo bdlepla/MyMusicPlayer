@@ -22,45 +22,45 @@ class ReplaceableForwardingPlayer(private var player: Player) : ForwardingSimple
     init { player.addListener(playerListener) }
 
     /** Sets a new [Player] instance to which the state of the previous player is transferred. */
-    fun setPlayer(player: Player) {
-        // Remove add all listeners before changing the player state.
-        for (listener in listeners) {
-            this.player.removeListener(listener)
-            player.addListener(listener)
-        }
-        // Add/remove our listener we use to workaround the missing metadata support of CastPlayer.
-        this.player.removeListener(playerListener)
-        player.addListener(playerListener)
-
-        player.repeatMode = this.player.repeatMode
-        player.shuffleModeEnabled = this.player.shuffleModeEnabled
-        player.playlistMetadata = this.player.playlistMetadata
-        player.trackSelectionParameters = this.player.trackSelectionParameters
-        player.volume = this.player.volume
-        player.playWhenReady = this.player.playWhenReady
-
-        // Prepare the new player.
-        player.setMediaItems(playlist.take(1), 0, 0)
-        //player.setMediaItems(playlist, currentMediaItemIndex, this.player.contentPosition)
-        // The above line sends too much info for the network message to handle (> 256K)
-        // So break up the items into chunks of 50(?) then set the current item and position
-        // to play after sending the items.
-//        player.clearMediaItems()
-//        val chunkSize = 50
-//        val chunksOfMediaItems = playlist.chunked(chunkSize)
-//        chunksOfMediaItems.forEachIndexed{ idx, items ->
-//            player.replaceMediaItems(idx*chunkSize, (idx+1)*chunkSize-1, items)
+//    fun setPlayer(player: Player) {
+//        // Remove add all listeners before changing the player state.
+//        for (listener in listeners) {
+//            this.player.removeListener(listener)
+//            player.addListener(listener)
 //        }
-//        player.seekTo(currentMediaItemIndex, this.player.contentPosition)
-
-        player.prepare()
-
-        // Stop the previous player. Don't release so it can be used again.
-        this.player.clearMediaItems()
-        this.player.stop()
-
-        this.player = player
-    }
+//        // Add/remove our listener we use to workaround the missing metadata support of CastPlayer.
+//        this.player.removeListener(playerListener)
+//        player.addListener(playerListener)
+//
+//        player.repeatMode = this.player.repeatMode
+//        player.shuffleModeEnabled = this.player.shuffleModeEnabled
+//        player.playlistMetadata = this.player.playlistMetadata
+//        player.trackSelectionParameters = this.player.trackSelectionParameters
+//        player.volume = this.player.volume
+//        player.playWhenReady = this.player.playWhenReady
+//
+//        // Prepare the new player.
+//        player.setMediaItems(playlist.take(1), 0, 0)
+//        //player.setMediaItems(playlist, currentMediaItemIndex, this.player.contentPosition)
+//        // The above line sends too much info for the network message to handle (> 256K)
+//        // So break up the items into chunks of 50(?) then set the current item and position
+//        // to play after sending the items.
+////        player.clearMediaItems()
+////        val chunkSize = 50
+////        val chunksOfMediaItems = playlist.chunked(chunkSize)
+////        chunksOfMediaItems.forEachIndexed{ idx, items ->
+////            player.replaceMediaItems(idx*chunkSize, (idx+1)*chunkSize-1, items)
+////        }
+////        player.seekTo(currentMediaItemIndex, this.player.contentPosition)
+//
+//        player.prepare()
+//
+//        // Stop the previous player. Don't release so it can be used again.
+//        this.player.clearMediaItems()
+//        this.player.stop()
+//
+//        this.player = player
+//    }
 
     private inner class PlayerListener : Player.Listener {
         override fun onEvents(player: Player, events: Player.Events) {

@@ -4,9 +4,6 @@ import android.app.PendingIntent
 import android.app.PendingIntent.FLAG_IMMUTABLE
 import android.os.Bundle
 import android.os.Handler
-import android.util.Log
-import androidx.media3.cast.CastPlayer
-import androidx.media3.cast.SessionAvailabilityListener
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
@@ -26,7 +23,6 @@ import com.bdlepla.android.mymusicplayer.service.MediaItemTree.ITEM_PREFIX
 import com.danrusu.pods4k.immutableArrays.asList
 import com.danrusu.pods4k.immutableArrays.buildImmutableLongArray
 import com.danrusu.pods4k.immutableArrays.multiplicativeSpecializations.mapNotNull
-import com.google.android.gms.cast.framework.CastContext
 import com.google.common.collect.ImmutableList
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
@@ -58,25 +54,25 @@ class PlayService: MediaLibraryService() {
         ret
     }
 
-    private val castPlayer: CastPlayer? by lazy {
-        try {
-            val castContext = CastContext.getSharedInstance(this)
-            CastPlayer(castContext).apply {
-                setSessionAvailabilityListener(CastSessionAvailabilityListener())
-                addListener(playerListener)
-            }
-        } catch (e: Exception) {
-            // We wouldn't normally catch the generic `Exception` however
-            // calling `CastContext.getSharedInstance` can throw various exceptions, all of which
-            // indicate that Cast is unavailable.
-            // Related internal bug b/68009560.
-            Log.i(
-                TAG, "Cast is not available on this device. " +
-                        "Exception thrown when attempting to obtain CastContext. " + e.message
-            )
-            null
-        }
-    }
+//    private val castPlayer: CastPlayer? by lazy {
+//        try {
+//            val castContext = CastContext.getSharedInstance(this)
+//            CastPlayer(castContext).apply {
+//                setSessionAvailabilityListener(CastSessionAvailabilityListener())
+//                addListener(playerListener)
+//            }
+//        } catch (e: Exception) {
+//            // We wouldn't normally catch the generic `Exception` however
+//            // calling `CastContext.getSharedInstance` can throw various exceptions, all of which
+//            // indicate that Cast is unavailable.
+//            // Related internal bug b/68009560.
+//            Log.i(
+//                TAG, "Cast is not available on this device. " +
+//                        "Exception thrown when attempting to obtain CastContext. " + e.message
+//            )
+//            null
+//        }
+//    }
 
     private val currentPlayer: ReplaceableForwardingPlayer by lazy {
         ReplaceableForwardingPlayer(exoPlayer)
@@ -137,9 +133,9 @@ class PlayService: MediaLibraryService() {
     override fun onCreate() {
         super.onCreate()
         MediaItemTree.initialize(this)
-        if (castPlayer?.isCastSessionAvailable == true) {
-            currentPlayer.setPlayer(castPlayer!!)
-        }
+//        if (castPlayer?.isCastSessionAvailable == true) {
+//            currentPlayer.setPlayer(castPlayer!!)
+//        }
         //setupCustomCommands()
         initializeMediaSession()
     }
@@ -218,23 +214,23 @@ class PlayService: MediaLibraryService() {
         private const val POSITION_UPDATE_INTERVAL_MILLIS = 500L
     }
 
-    private inner class CastSessionAvailabilityListener : SessionAvailabilityListener {
-
-        /**
-         * Called when a Cast session has started and the user wishes to control playback on a
-         * remote Cast receiver rather than play audio locally.
-         */
-        override fun onCastSessionAvailable() {
-            currentPlayer.setPlayer(castPlayer!!)
-        }
-
-        /**
-         * Called when a Cast session has ended and the user wishes to control playback locally.
-         */
-        override fun onCastSessionUnavailable() {
-            currentPlayer.setPlayer(exoPlayer)
-        }
-    }
+//    private inner class CastSessionAvailabilityListener : SessionAvailabilityListener {
+//
+//        /**
+//         * Called when a Cast session has started and the user wishes to control playback on a
+//         * remote Cast receiver rather than play audio locally.
+//         */
+////        override fun onCastSessionAvailable() {
+////            currentPlayer.setPlayer(castPlayer!!)
+////        }
+//
+//        /**
+//         * Called when a Cast session has ended and the user wishes to control playback locally.
+//         */
+//        override fun onCastSessionUnavailable() {
+//            currentPlayer.setPlayer(exoPlayer)
+//        }
+//    }
 
    private inner class PlayerListener: Player.Listener {
 //        override fun onMediaMetadataChanged(mediaMetadata: MediaMetadata) {
