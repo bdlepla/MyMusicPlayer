@@ -107,7 +107,7 @@ class MyMusicViewModel
             childrenFuture.addListener( {
                     val childrenResult = childrenFuture.get()
                     val children = childrenResult.value!!
-                    if (children.size > 0) {
+                    if (children.isNotEmpty()) {
                         val songs = children.map { SongInfo(it) }
                         addSongs(songs)
                         doLoadSongs(browser, page+1, pageSize)
@@ -215,7 +215,7 @@ class MyMusicViewModel
     }
 
     private fun MediaMetadata.toSongInfo(): SongInfo? =
-        songCollection.firstOrNull { si -> si.artist == artist && si.title == title }
+        songCollection.firstOrNull { si -> si.artist == artist && si.title == title && si.album == albumTitle }
 
     private val _castState = MutableStateFlow(0)
     val castState: StateFlow<Int>

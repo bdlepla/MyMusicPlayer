@@ -18,7 +18,6 @@ import com.bdlepla.android.mymusicplayer.business.albumId
 import com.bdlepla.android.mymusicplayer.business.artistId
 import com.bdlepla.android.mymusicplayer.extensions.forSorting
 import com.bdlepla.android.mymusicplayer.extensions.isFalseOrNull
-import com.bdlepla.android.mymusicplayer.extensions.random
 import com.bdlepla.android.mymusicplayer.repository.ALBUM
 import com.bdlepla.android.mymusicplayer.repository.ALBUM_ID
 import com.bdlepla.android.mymusicplayer.repository.ARTIST

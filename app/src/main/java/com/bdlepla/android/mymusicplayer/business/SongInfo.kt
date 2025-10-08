@@ -2,7 +2,13 @@ package com.bdlepla.android.mymusicplayer.business
 
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
-import com.bdlepla.android.mymusicplayer.repository.*
+import com.bdlepla.android.mymusicplayer.repository.ALBUM
+import com.bdlepla.android.mymusicplayer.repository.ALBUM_ID
+import com.bdlepla.android.mymusicplayer.repository.ARTIST
+import com.bdlepla.android.mymusicplayer.repository.ARTIST_ID
+import com.bdlepla.android.mymusicplayer.repository.DURATION
+import com.bdlepla.android.mymusicplayer.repository.MEDIA_URI
+import com.bdlepla.android.mymusicplayer.repository.TRACK_NUMBER
 
 class SongInfo(private val mediaItem: MediaItem) {
     fun toMediaItem() = mediaItem
@@ -36,14 +42,14 @@ val MediaMetadata.track: Int
 
 val MediaMetadata.artistName:String
     get() {
-        return if (artist != null) artist.toString()
-        else extras?.getString(ARTIST) ?: throw NoSuchFieldException(ARTIST)
+        return artist?.toString()
+            ?: (extras?.getString(ARTIST) ?: throw NoSuchFieldException(ARTIST))
     }
 
 val MediaMetadata.albumName:String
     get() {
-        return if (albumTitle != null) albumTitle.toString()
-        else extras?.getString(ALBUM) ?: throw NoSuchFieldException(ALBUM)
+        return albumTitle?.toString()
+            ?: (extras?.getString(ALBUM) ?: throw NoSuchFieldException(ALBUM))
     }
 
 val MediaMetadata.duration:Int
