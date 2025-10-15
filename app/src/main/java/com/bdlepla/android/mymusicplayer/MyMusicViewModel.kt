@@ -95,7 +95,7 @@ class MyMusicViewModel
                 val currPosition = currPositionInMs.toInt() / 1000
                 val maxPosition = browser.duration.toInt() / 1000
                 _currentlyPlayingStats.value = CurrentPlayingStats(_currentlyPlaying,
-                    currPosition, maxPosition)
+                    currPosition, maxPosition, browser.repeatMode)
                 delay(POSITION_UPDATE_INTERVAL_MILLIS)
             }
         }
@@ -287,7 +287,12 @@ class MyMusicViewModel
 
     fun toggleRepeat() {
         val b = browser ?: return
-        b.repeatMode = Player.REPEAT_MODE_ALL
+        if (b.repeatMode == Player.REPEAT_MODE_OFF) {
+            b.repeatMode = Player.REPEAT_MODE_ALL
+        }
+        else {
+            b.repeatMode = Player.REPEAT_MODE_OFF;
+        }
     }
 
     private val songCollection = mutableListOf<SongInfo>()

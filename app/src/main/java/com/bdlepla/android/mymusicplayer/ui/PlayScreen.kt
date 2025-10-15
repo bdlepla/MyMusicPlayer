@@ -154,6 +154,6 @@ fun PlayerControllerButtons(isPaused: Boolean, callbacks: Callbacks) {
 fun PlayScreenPreview() {
     MyMusicPlayerTheme {
         val songs = SampleData().songs
-        PlayScreen(CurrentPlayingStats(songs[0], 0, 0), songs, false)
+        PlayScreen(CurrentPlayingStats(songs[0], 0, 0, 0), songs, false)
     }
 }

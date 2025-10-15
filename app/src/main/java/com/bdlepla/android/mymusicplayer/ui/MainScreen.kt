@@ -37,7 +37,6 @@ import com.bdlepla.android.mymusicplayer.business.CurrentPlayingStats
 import com.bdlepla.android.mymusicplayer.business.PlaylistInfo
 import com.bdlepla.android.mymusicplayer.business.SongInfo
 import com.bdlepla.android.mymusicplayer.extensions.any
-import com.bdlepla.android.mymusicplayer.extensions.shuffled
 import com.bdlepla.android.mymusicplayer.ui.theme.MyMusicPlayerTheme
 import com.danrusu.pods4k.immutableArrays.ImmutableArray
 import com.danrusu.pods4k.immutableArrays.emptyImmutableArray
@@ -171,7 +170,7 @@ private fun MainContent(
     MyMusicPlayerTheme {
         Surface {
             Scaffold(
-                topBar = { TopAppBar(castState, activity, onShuffleClick, onRepeatClick) },
+                topBar = { TopAppBar(castState, currentPlayingStats?.repeat ?: 0, activity, onShuffleClick, onRepeatClick) },
                 bottomBar = {
                     BottomAppBar(
                         onPlayPauseClick,

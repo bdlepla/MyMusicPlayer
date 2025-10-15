@@ -16,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.media3.common.Player
 import com.bdlepla.android.mymusicplayer.R
 import com.bdlepla.android.mymusicplayer.ui.theme.MyMusicPlayerTheme
 
@@ -23,6 +24,7 @@ import com.bdlepla.android.mymusicplayer.ui.theme.MyMusicPlayerTheme
 @Composable
 fun TopAppBar(
     castState: Int,
+    repeatState: Int,
     activity: Context? = null,
     onShuffleClick: ()->Unit = emptyFunction(),
     onRepeatClick: ()->Unit = emptyFunction(),
@@ -46,8 +48,11 @@ fun TopAppBar(
                     )
                 }
                 IconButton(onClick = { onRepeatClick() }) {
+                    val repeatPainter = if (repeatState== Player.REPEAT_MODE_OFF)
+                        R.drawable.ic_repeat else R.drawable.ic_repeat_on
+
                     Icon(
-                        painter = painterResource(id = R.drawable.ic_repeat),
+                        painter = painterResource(id = repeatPainter),
                         contentDescription = "Repeat"
                     )
                 }
@@ -72,6 +77,6 @@ fun TopAppBar(
 @Composable
 fun TopAppBarPreview() {
     MyMusicPlayerTheme {
-        TopAppBar(0)
+        TopAppBar(0, 0)
     }
 }
