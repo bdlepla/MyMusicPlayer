@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "com.bdlepla.android.mymusicplayer.baselineprofile"
-    compileSdk = 35
+    compileSdk = 36
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -41,12 +41,12 @@ dependencies {
     implementation(libs.macro.benchmark)
 }
 
-androidComponents {
-    onVariants { v ->
-        val artifactsLoader = v.artifacts.getBuiltArtifactsLoader()
-        v.instrumentationRunnerArguments.put(
-            "targetAppId",
-            v.testedApks.map { artifactsLoader.load(it)?.applicationId }
-        )
-    }
-}
+//androidComponents {
+//    onVariants { v ->
+//        val artifactsLoader = v.artifacts.getBuiltArtifactsLoader()
+//        v.instrumentationRunnerArguments.put(
+//            "targetAppId",
+//            v.testedApks.map { artifactsLoader.load(it)?.applicationId }
+//        )
+//    }
+//}

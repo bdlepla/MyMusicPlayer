@@ -8,7 +8,7 @@ plugins {
 }
 
 android {
-    compileSdk = 35
+    compileSdk = 36
 
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.3"
@@ -16,7 +16,7 @@ android {
     defaultConfig {
         //applicationId("com.bdlepla.android.mymusicplayer")
         minSdk = 30
-        targetSdk = 34
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -100,6 +100,7 @@ dependencies {
     implementation(libs.lifecycle.viewmodel)
     implementation(libs.macro.benchmark)
     implementation(libs.material)
+    implementation(libs.material.icons.extended)
     implementation(libs.material3)
     implementation(libs.media)
     implementation(libs.media3.cast)
