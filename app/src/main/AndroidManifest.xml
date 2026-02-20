@@ -53,9 +53,10 @@
                 <action android:name="android.intent.action.MEDIA_BUTTON" />
             </intent-filter>
         </receiver>
+        <!-- Artwork provider for content:// URIs -->
         <provider
-            android:name=".service.AlbumArtContentProvider"
-            android:authorities="com.bdlepla.android.mymusicplayer"
+            android:name=".service.AlbumArtProvider"
+            android:authorities="androidx.media3"
             android:exported="true" />
         <meta-data android:name="com.google.android.gms.car.application"
             android:resource="@xml/automotive_app_desc"/>

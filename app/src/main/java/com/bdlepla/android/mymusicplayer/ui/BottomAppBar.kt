@@ -48,7 +48,7 @@ fun BottomAppBar(
     Column {
         if (isCurrentlyPlaying && currentRoute != NavigationItem.Playing.route) {
             CurrentlyPlayingSmallScreen(
-                currentlyPlaying!!,
+                currentlyPlaying,
                 isPaused,
                 onPlayPauseClick,
                 onNextClick,
