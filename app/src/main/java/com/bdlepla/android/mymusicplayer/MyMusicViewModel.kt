@@ -8,6 +8,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
+import androidx.media3.common.Player.TIMELINE_CHANGE_REASON_SOURCE_UPDATE
 import androidx.media3.common.Timeline
 import androidx.media3.session.MediaBrowser
 import androidx.media3.session.SessionToken
@@ -29,6 +30,7 @@ import com.bdlepla.android.mymusicplayer.repository.ITEM_ID
 import com.bdlepla.android.mymusicplayer.service.PlayService
 import com.danrusu.pods4k.immutableArrays.ImmutableArray
 import com.danrusu.pods4k.immutableArrays.asList
+import com.danrusu.pods4k.immutableArrays.buildImmutableArray
 import com.danrusu.pods4k.immutableArrays.emptyImmutableArray
 import com.danrusu.pods4k.immutableArrays.indexOf
 import com.danrusu.pods4k.immutableArrays.multiplicativeSpecializations.map
@@ -64,7 +66,7 @@ class MyMusicViewModel
    }
 
     companion object {
-        private const val POSITION_UPDATE_INTERVAL_MILLIS = 100L
+        private const val POSITION_UPDATE_INTERVAL_MILLIS = 500L
     }
 
     override fun onCleared() {
@@ -204,16 +206,18 @@ class MyMusicViewModel
         private val window = Timeline.Window()
         override fun onTimelineChanged(timeline: Timeline, reason: Int) {
             super.onTimelineChanged(timeline, reason)
-
-            val songInfos =
-                (0..<timeline.windowCount).mapNotNull {
-                    timeline.getWindow(it, window)
-                    window.mediaItem.mediaMetadata.toSongInfo()
-                }.distinctBy { it.songId }
-            _currentSongList.value = songInfos.toImmutableArray() // OK, do not change
+            if (reason == TIMELINE_CHANGE_REASON_SOURCE_UPDATE) {
+                val songInfos: ImmutableArray<SongInfo> = buildImmutableArray {
+                    (0..<timeline.windowCount).mapNotNull {
+                        timeline.getWindow(it, window)
+                        val songInfo = window.mediaItem.mediaMetadata.toSongInfo()
+                        if (songInfo != null) add(songInfo)
+                    }
+                }
+                _currentSongList.value = songInfos
+            }
         }
     }
-
     private fun MediaMetadata.toSongInfo(): SongInfo? =
         songCollection.firstOrNull { si -> si.artist == artist && si.title == title && si.album == albumTitle }
 
@@ -291,7 +295,7 @@ class MyMusicViewModel
             b.repeatMode = Player.REPEAT_MODE_ALL
         }
         else {
-            b.repeatMode = Player.REPEAT_MODE_OFF;
+            b.repeatMode = Player.REPEAT_MODE_OFF
         }
     }
 

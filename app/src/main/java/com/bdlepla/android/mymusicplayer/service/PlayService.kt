@@ -7,7 +7,10 @@ import android.os.Handler
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
+import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
+import androidx.media3.common.Player.COMMAND_SEEK_TO_NEXT
+import androidx.media3.common.Player.TIMELINE_CHANGE_REASON_SOURCE_UPDATE
 import androidx.media3.common.Timeline
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.util.EventLogger
@@ -38,7 +41,7 @@ class PlayService: MediaLibraryService() {
     private val librarySessionCallback = CustomMediaLibrarySessionCallback()
     private val playerListener = PlayerListener()
     private val musicDataStore: MyMusicPlayerSettingsDataStore by lazy { MyMusicPlayerSettingsDataStore(this) }
-    private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
+    private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private val handler:Handler by lazy { Handler(currentPlayer.applicationLooper) }
     private val myPlayerAudioAttributesBuilder = AudioAttributes.Builder()
         .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
@@ -184,7 +187,6 @@ class PlayService: MediaLibraryService() {
             if (playingSongIdx != -1) {
                 val playingPosition = musicDataStore.playingPosition
                 player.seekTo(playingSongIdx, playingPosition)
-                //player.play()
             }
         }
     }
@@ -246,18 +248,29 @@ class PlayService: MediaLibraryService() {
 //
 //        }
 
+       override fun onPlayerErrorChanged(error: PlaybackException?) {
+           if (error != null) {
+               super.onPlayerError(error)
+                if (currentPlayer.isCommandAvailable(COMMAND_SEEK_TO_NEXT)) {
+                    currentPlayer.seekToNext()
+                    currentPlayer.play()
+                }
+           }
+       }
+
        // for changes in playlist
        private val window = Timeline.Window()
        override fun onTimelineChanged(timeline: Timeline, reason: Int) {
            super.onTimelineChanged(timeline, reason)
-
-           val songIds = buildImmutableLongArray {
-               (0..<timeline.windowCount).map { windowIdx ->
-                   timeline.getWindow(windowIdx, window)
-                   add(window.mediaItem.mediaId.substring(6).toLong())
+           if (reason == TIMELINE_CHANGE_REASON_SOURCE_UPDATE) {
+               val songIds = buildImmutableLongArray {
+                   (0..<timeline.windowCount).map { windowIdx ->
+                       timeline.getWindow(windowIdx, window)
+                       add(window.mediaItem.mediaId.substring(6).toLong())
+                   }
                }
+               scope.launch { musicDataStore.saveCurrentList(songIds) }
            }
-           scope.launch { musicDataStore.saveCurrentList(songIds) }
        }
     }
 
@@ -407,4 +420,4 @@ class PlayService: MediaLibraryService() {
 //}
 
 
-private const val TAG = "PlayService"
+//private const val TAG = "PlayService"

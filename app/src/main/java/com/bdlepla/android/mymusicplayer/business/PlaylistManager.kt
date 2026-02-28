@@ -4,7 +4,6 @@ import android.content.Context
 import android.content.ContextWrapper
 import android.os.Environment
 import com.bdlepla.android.mymusicplayer.extensions.any
-import com.bdlepla.android.mymusicplayer.extensions.random
 import com.danrusu.pods4k.immutableArrays.ImmutableArray
 import com.danrusu.pods4k.immutableArrays.emptyImmutableArray
 import com.danrusu.pods4k.immutableArrays.multiplicativeSpecializations.map
@@ -116,9 +115,6 @@ class PlaylistManager(context: ContextWrapper) : PlaylistReader(context) {
             File(fileName).delete()
         }
     }
-
-    // support the current playlist; save it so that upon restart, can pick up where left off
-
 }
 
 
