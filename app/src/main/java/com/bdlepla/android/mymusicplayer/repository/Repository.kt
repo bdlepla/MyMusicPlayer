@@ -137,23 +137,32 @@ object Repository {
     }
 
     private fun getAlbumArt(context: Context, albumId:Long): String? {
-        val albumArtUri = ContentUris.withAppendedId(MediaStore.Audio.Albums.EXTERNAL_CONTENT_URI, albumId)
-         try {
-           val art = File(context.cacheDir, "albumArt$albumId.webp")
-                .also {
-                    if (!it.exists()) {
-                       it.createNewFile()
-                        FileOutputStream(it).use { fos ->
-                            context.contentResolver
-                                .loadThumbnail(albumArtUri, Size(256, 256), null)
-                                .compress(Bitmap.CompressFormat.WEBP_LOSSY, 10, fos)
-                            fos.flush()
-                        }
-                    }
+        val fileName = "albumArt$albumId.jpg"
+        val file = File(context.cacheDir, fileName)
+
+        // If we already have it in cache, return the content URI immediately
+        if (file.exists()) {
+            return "content://androidx.media3/$fileName"
+        }
+
+        val albumArtUri = ContentUris.withAppendedId(
+            MediaStore.Audio.Albums.EXTERNAL_CONTENT_URI,
+            albumId
+        )
+
+        return try {
+            context.contentResolver.loadThumbnail(albumArtUri, Size(256, 256), null).let { bitmap ->
+                FileOutputStream(file).use { fos ->
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 50, fos)
+                    fos.flush()
                 }
-            return art.absolutePath
-        } catch(_:Exception) {
-            return null
+            }
+            // Return the provider URI so external apps can read it
+            "content://androidx.media3/$fileName"
+        } catch (_: Exception) {
+            // Fallback: Return a default image from your assets folder
+            // if you have one (e.g., assets/default_art.png)
+            "content://androidx.media3/default_art.png"
         }
     }
 }
