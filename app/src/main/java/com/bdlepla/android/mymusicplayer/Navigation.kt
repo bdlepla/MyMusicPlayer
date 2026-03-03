@@ -1,6 +1,8 @@
 package com.bdlepla.android.mymusicplayer
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.media3.session.MediaController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -43,73 +45,106 @@ fun Navigation(
     isPaused: Boolean = false,
     setShuffledSongs: (ImmutableArray<SongInfo>) -> Unit = emptyFunction1()
 ) {
-    val onAddSongsToPlaylist: (ImmutableArray<SongInfo>)->Unit = { pickPlaylistToAddSongs(it) }
+    val onAddSongsToPlaylist: (ImmutableArray<SongInfo>) -> Unit = remember(pickPlaylistToAddSongs) {
+        { pickPlaylistToAddSongs(it) }
+    }
 
     NavHost(navController, startDestination = NavigationItem.Songs.route) {
         val isExpandedWindow = false
 
         composable(NavigationItem.Songs.route) {
-            val myOnClick:(SongInfo)->Unit = { onSongClick(it, songs) }
-            setShuffledSongs(songs.shuffled())
+            LaunchedEffect(songs) {
+                setShuffledSongs(songs.shuffled())
+            }
+            val myOnClick: (SongInfo) -> Unit = remember(songs, onSongClick) {
+                { onSongClick(it, songs) }
+            }
             SongList(songs, myOnClick, onAddSongsToPlaylist)
         }
 
         composable(NavigationItem.Artists.route) {
-            val shuffledArtists = artists.shuffled()
-            val shuffledArtistAlbums = shuffledArtists.flatMap{artist -> artist.albumsByYear.shuffled()}
-            val shuffledSongs = shuffledArtistAlbums.flatMap { album -> album.songs }
-            setShuffledSongs(shuffledSongs )
+            LaunchedEffect(artists) {
+                val shuffledSongs = artists.shuffled()
+                    .flatMap { artist -> artist.albumsByYear.shuffled() }
+                    .flatMap { album -> album.songs }
+                setShuffledSongs(shuffledSongs)
+            }
             ArtistList(artists, navController, onAddSongsToPlaylist)
         }
 
         composable("artistsongs/{artistId}") { backStack ->
             val args = backStack.arguments ?: return@composable
-            val artistId = args.getString("artistId")?.toLong()?: return@composable
-            val theArtist = artists.firstOrNull{it.artistId == artistId} ?: return@composable
+            val artistId = args.getString("artistId")?.toLong() ?: return@composable
+            val theArtist = artists.firstOrNull { it.artistId == artistId } ?: return@composable
             val songsForArtist = theArtist.songs
-            setShuffledSongs(songsForArtist.shuffled())
-            val myOnClick:(SongInfo)->Unit = { onSongClick(it, songsForArtist) }
+
+            LaunchedEffect(songsForArtist) {
+                setShuffledSongs(songsForArtist.shuffled())
+            }
+
+            val myOnClick: (SongInfo) -> Unit = remember(songsForArtist, onSongClick) {
+                { onSongClick(it, songsForArtist) }
+            }
             ArtistSongsScreen(theArtist, songsForArtist, myOnClick, onAddSongsToPlaylist)
         }
 
         composable(NavigationItem.Albums.route) {
-            setShuffledSongs(albums.shuffled().flatMap{album -> album.songs})
+            LaunchedEffect(albums) {
+                setShuffledSongs(albums.shuffled().flatMap { album -> album.songs })
+            }
             AlbumList(albums, navController, onAddSongsToPlaylist)
         }
 
         composable("albumsongs/{albumId}") { backStack ->
             val args = backStack.arguments ?: return@composable
             val albumId = args.getString("albumId")?.toLong() ?: return@composable
-            val theAlbum = albums.firstOrNull{it.albumId == albumId} ?: return@composable
+            val theAlbum = albums.firstOrNull { it.albumId == albumId } ?: return@composable
             val songsInAlbum = theAlbum.songs
-            setShuffledSongs(songsInAlbum.shuffled())
-            val myOnClick:(SongInfo)->Unit = { onSongClick(it, songsInAlbum) }
+
+            LaunchedEffect(songsInAlbum) {
+                setShuffledSongs(songsInAlbum.shuffled())
+            }
+
+            val myOnClick: (SongInfo) -> Unit = remember(songsInAlbum, onSongClick) {
+                { onSongClick(it, songsInAlbum) }
+            }
             AlbumSongsScreen(isExpandedWindow, theAlbum, songsInAlbum, myOnClick, onAddSongsToPlaylist)
         }
 
         composable(NavigationItem.Playing.route) {
-            setShuffledSongs(emptyImmutableArray())
+            LaunchedEffect(Unit) {
+                setShuffledSongs(emptyImmutableArray())
+            }
             PlayScreen(currentPlayingStats, currentSongList, isPaused, mediaController)
         }
 
         composable(NavigationItem.Playlist.route) {
-            val onClick: (PlaylistInfo) -> Unit = {
-                val playlistName = it.name
-                val route = "playlistsongs/${playlistName}"
-                navController.navigate(route)
+            val onClick: (PlaylistInfo) -> Unit = remember(navController) {
+                {
+                    val playlistName = it.name
+                    val route = "playlistsongs/${playlistName}"
+                    navController.navigate(route)
+                }
             }
-            setShuffledSongs(playlists.shuffled().flatMap { playlist -> playlist.songs.shuffled() })
+            LaunchedEffect(playlists) {
+                setShuffledSongs(playlists.shuffled().flatMap { playlist -> playlist.songs.shuffled() })
+            }
             PlaylistScreen(playlists, onClick, onCreateNewPlaylist, onRemovePlaylist)
         }
 
-        composable("playlistsongs/{playlistId}") {
-            val backStack = navController.currentBackStackEntry?: return@composable
+        composable("playlistsongs/{playlistId}") { backStack ->
             val args = backStack.arguments ?: return@composable
             val playlistName = args.getString("playlistId") ?: return@composable
-            val playlist = playlists.firstOrNull{it.name == playlistName} ?: return@composable
+            val playlist = playlists.firstOrNull { it.name == playlistName } ?: return@composable
             val songsInPlaylist = playlist.songs
-            setShuffledSongs(songsInPlaylist.shuffled())
-            val myOnClick:(SongInfo)->Unit = { onSongClick(it, songsInPlaylist) }
+
+            LaunchedEffect(songsInPlaylist) {
+                setShuffledSongs(songsInPlaylist.shuffled())
+            }
+
+            val myOnClick: (SongInfo) -> Unit = remember(songsInPlaylist, onSongClick) {
+                { onSongClick(it, songsInPlaylist) }
+            }
             PlaylistSongsScreen(playlist, songsInPlaylist, myOnClick, onRemoveSongFromPlaylist)
         }
     }
