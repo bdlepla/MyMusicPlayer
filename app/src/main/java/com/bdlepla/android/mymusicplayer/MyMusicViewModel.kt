@@ -204,9 +204,10 @@ class MyMusicViewModel
 
         // for changes in playlist
         private val window = Timeline.Window()
+        private var everReceivedTimeline = false
         override fun onTimelineChanged(timeline: Timeline, reason: Int) {
             super.onTimelineChanged(timeline, reason)
-            if (reason == TIMELINE_CHANGE_REASON_SOURCE_UPDATE) {
+            if (!everReceivedTimeline || reason == TIMELINE_CHANGE_REASON_SOURCE_UPDATE) {
                 val songInfos: ImmutableArray<SongInfo> = buildImmutableArray {
                     (0..<timeline.windowCount).mapNotNull {
                         timeline.getWindow(it, window)
@@ -215,6 +216,7 @@ class MyMusicViewModel
                     }
                 }
                 _currentSongList.value = songInfos
+                everReceivedTimeline = true
             }
         }
     }
