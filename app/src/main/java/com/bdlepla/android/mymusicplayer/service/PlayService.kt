@@ -7,9 +7,7 @@ import android.os.Handler
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
-import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
-import androidx.media3.common.Player.COMMAND_SEEK_TO_NEXT
 import androidx.media3.common.Player.TIMELINE_CHANGE_REASON_SOURCE_UPDATE
 import androidx.media3.common.Timeline
 import androidx.media3.exoplayer.ExoPlayer
@@ -248,15 +246,15 @@ class PlayService: MediaLibraryService() {
 //
 //        }
 
-       override fun onPlayerErrorChanged(error: PlaybackException?) {
-           if (error != null) {
-               super.onPlayerError(error)
-                if (currentPlayer.isCommandAvailable(COMMAND_SEEK_TO_NEXT)) {
-                    currentPlayer.seekToNext()
-                    currentPlayer.play()
-                }
-           }
-       }
+//       override fun onPlayerErrorChanged(error: PlaybackException?) {
+//           if (error != null) {
+//               super.onPlayerError(error)
+//                if (currentPlayer.isCommandAvailable(COMMAND_SEEK_TO_NEXT)) {
+//                    currentPlayer.seekToNext()
+//                    currentPlayer.play()
+//                }
+//           }
+//       }
 
        // for changes in playlist
        private val window = Timeline.Window()
