@@ -15,6 +15,7 @@ import androidx.media3.common.MediaMetadata.MEDIA_TYPE_MUSIC
 import androidx.media3.common.MediaMetadata.MEDIA_TYPE_PLAYLIST
 import com.bdlepla.android.mymusicplayer.business.PlaylistReader
 import com.bdlepla.android.mymusicplayer.business.albumId
+import com.bdlepla.android.mymusicplayer.business.albumName
 import com.bdlepla.android.mymusicplayer.business.artistId
 import com.bdlepla.android.mymusicplayer.extensions.forSorting
 import com.bdlepla.android.mymusicplayer.extensions.isFalseOrNull
@@ -58,6 +59,7 @@ object MediaItemTree {
         mediaType: Int,
         album: String? = null,
         albumId: Long = 0L,
+        albumYear: Int = 0,
         artist: String? = null,
         artistId: Long = 0L,
         imageUri: Uri? = null,
@@ -74,6 +76,7 @@ object MediaItemTree {
         val metadata =
             MediaMetadata.Builder()
                 .setAlbumTitle(album)
+                .setReleaseYear(albumYear)
                 .setTitle(title)
                 .setArtist(artist)
                 .setMediaType(mediaType)
@@ -176,8 +179,8 @@ object MediaItemTree {
             val albumFolderIdInTree = ALBUM_PREFIX + albumId.toString()
             val artist = items[0].mediaMetadata.artist.toString()
             val artistId = items[0].mediaMetadata.artistId
-            //val albumId = items[0].mediaMetadata.albumId
-             val album = items[0].mediaMetadata.albumTitle.toString()
+            val album = items[0].mediaMetadata.albumTitle.toString()
+            val albumYear = items[0].mediaMetadata.releaseYear ?: 0
             val imageUri = items[0].mediaMetadata.artworkUri
             treeNodes[albumFolderIdInTree] =
                 MediaItemNode(
@@ -188,6 +191,7 @@ object MediaItemTree {
                         mediaType = MEDIA_TYPE_ALBUM,
                         album = album,
                         albumId = albumId,
+                        albumYear = albumYear,
                         artist= artist,
                         artistId = artistId,
                         imageUri = imageUri
@@ -198,10 +202,13 @@ object MediaItemTree {
             items.map { it.mediaId }.forEach { thisAlbum.addChild(it) }
         }
 
-        val albumsByArtist = sortedSongs.asList()
-            .groupBy { k -> k.mediaMetadata.artist.toString() }
-            .mapValues { kv -> kv.value.distinct().sortedBy { it.mediaMetadata.releaseYear } }
-            .toSortedMap(compareBy { it.forSorting() })
+        val albumsByArtist = sortedSongs.asSequence()
+        .groupBy { k -> k.mediaMetadata.artist.toString() }
+        .mapValues { kv ->
+            kv.value.distinctBy{it.mediaMetadata.albumName}
+            .sortedBy { it.mediaMetadata.releaseYear }
+        }
+        .toSortedMap(compareBy { it.forSorting() })
         val artistsInTree = treeNodes[ARTIST_ID]!!
         val artistIds = mutableSetOf<Long>()
         albumsByArtist.forEach { (artist, albums) ->

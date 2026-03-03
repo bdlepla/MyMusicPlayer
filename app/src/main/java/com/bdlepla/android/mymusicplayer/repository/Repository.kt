@@ -21,7 +21,38 @@ import java.io.FileOutputStream
 
 object Repository {
 
+    fun getAllAlbumYears(context: Context): Map<Long, Int> {
+        return buildMap {
+            val collection = MediaStore.Audio.Albums.getContentUri(MediaStore.VOLUME_EXTERNAL)
+            val projection = arrayOf(
+                MediaStore.Audio.Albums._ID,
+                MediaStore.Audio.Albums.FIRST_YEAR
+            )
+
+            val selection = null
+            val selectionArgs = null
+            val sortOrder =  null
+
+            context.contentResolver.query(
+                collection,
+                projection,
+                selection,
+                selectionArgs,
+                sortOrder
+            )?.use { cursor ->
+                val songIdColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Albums._ID)
+                val titleColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Albums.FIRST_YEAR)
+                while (cursor.moveToNext()) {
+                    val albumId = cursor.getLong(songIdColumn)
+                    val year = cursor.getInt(titleColumn)
+                    put(albumId, year)
+                }
+            }
+        }
+    }
+
     fun getAllSongs(context: Context):ImmutableArray<MediaItem> {
+        val albumYears = getAllAlbumYears(context)
         val ret = ImmutableArray.Builder<MediaItem>()
 
         val collection = MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL)
@@ -42,7 +73,7 @@ object Repository {
         )
         val selection = MediaStore.Audio.Media.IS_MUSIC + " != 0"
         val selectionArgs = null
-        val sortOrder =  "year ASC, track ASC"
+        val sortOrder =  "album ASC, track ASC"
 
         context.contentResolver.query(
             collection,
@@ -57,7 +88,6 @@ object Repository {
             val artistColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST)
             val albumArtistColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM_ARTIST)
             val dataColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA)
-            val yearColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.YEAR)
             val trackColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.TRACK)
             val albumIdColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM_ID)
             val artistIdColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST_ID)
@@ -79,9 +109,9 @@ object Repository {
                 val artist = albumArtist ?: cursor.getString(artistColumn)
                 val artistId = cursor.getLong(artistIdColumn)
 
-                val year = cursor.getInt(yearColumn)
                 val track = cursor.getInt(trackColumn)
                 val albumId = cursor.getLong(albumIdColumn)
+                val year = albumYears.getOrDefault(albumId, 0)
                 val albumArt = getAlbumArt(context, albumId)
                 //val genre = cursor.getString(genreColumn)
                 //val genreId = cursor.getLong(genreIdColumn)

@@ -10,7 +10,6 @@ import com.bdlepla.android.mymusicplayer.business.ArtistInfo
 import com.bdlepla.android.mymusicplayer.business.CurrentPlayingStats
 import com.bdlepla.android.mymusicplayer.business.PlaylistInfo
 import com.bdlepla.android.mymusicplayer.business.SongInfo
-import com.bdlepla.android.mymusicplayer.extensions.shuffled
 import com.bdlepla.android.mymusicplayer.ui.AlbumList
 import com.bdlepla.android.mymusicplayer.ui.AlbumSongsScreen
 import com.bdlepla.android.mymusicplayer.ui.ArtistList
