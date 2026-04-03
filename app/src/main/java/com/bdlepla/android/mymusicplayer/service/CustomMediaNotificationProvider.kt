@@ -9,16 +9,18 @@ import androidx.media3.session.MediaSession
 import com.bdlepla.android.mymusicplayer.R
 import com.google.common.collect.ImmutableList
 
-class CustomMediaNotificationProvider(private val context: Context): MediaNotification.Provider {
+class CustomMediaNotificationProvider(context: Context): MediaNotification.Provider {
+    private val defaultNotificationProvider = DefaultMediaNotificationProvider(context).apply {
+        setSmallIcon(R.drawable.icons8_musical_notes_18___)
+    }
+
     override fun createNotification(
         mediaSession: MediaSession,
         customLayout: ImmutableList<CommandButton>,
         actionFactory: MediaNotification.ActionFactory,
         onNotificationChangedCallback: MediaNotification.Provider.Callback
     ): MediaNotification {
-        val ret = DefaultMediaNotificationProvider(context)
-        ret.setSmallIcon(R.drawable.icons8_musical_notes_18___)
-        return ret.createNotification(
+        return defaultNotificationProvider.createNotification(
             mediaSession,
             customLayout,
             actionFactory,
@@ -31,6 +33,10 @@ class CustomMediaNotificationProvider(private val context: Context): MediaNotifi
         action: String,
         extras: Bundle
     ): Boolean {
-        return false
+        return defaultNotificationProvider.handleCustomCommand(session, action, extras)
+    }
+
+    override fun getNotificationChannelInfo(): MediaNotification.Provider.NotificationChannelInfo {
+        return defaultNotificationProvider.notificationChannelInfo
     }
 }

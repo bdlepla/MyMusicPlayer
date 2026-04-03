@@ -4,6 +4,7 @@ import android.app.PendingIntent
 import android.app.PendingIntent.FLAG_IMMUTABLE
 import android.os.Bundle
 import android.os.Handler
+import android.util.Log
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
@@ -30,11 +31,13 @@ import com.google.common.util.concurrent.ListenableFuture
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 
 
 class PlayService: MediaLibraryService() {
     private lateinit var mediaLibrarySession: MediaLibrarySession
+    private var isReleasing = false
 
     private val librarySessionCallback = CustomMediaLibrarySessionCallback()
     private val playerListener = PlayerListener()
@@ -142,34 +145,43 @@ class PlayService: MediaLibraryService() {
     }
 
     override fun onDestroy() {
+        isReleasing = true
+        handler.removeCallbacksAndMessages(null)
+        scope.cancel()
         releaseMediaSession()
         super.onDestroy()
     }
 
     private fun releaseMediaSession() {
-        this.mediaLibrarySession.run {
-            release()
-            if (player.playbackState != Player.STATE_IDLE) {
-                player.removeListener(playerListener)
-                player.release()
-            }
+        if (::mediaLibrarySession.isInitialized) {
+            mediaLibrarySession.release()
+        }
+        exoPlayer.removeListener(playerListener)
+        try {
+            currentPlayer.release()
+        } catch (e: Exception) {
+            Log.e("PlayService", "Error releasing player", e)
         }
     }
 
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaLibrarySession = mediaLibrarySession
 
-    private fun checkPlaybackPosition(player: Player): Boolean = handler.postDelayed({
-        if (player.isPlaying) {
-            val currPositionInMs = player.currentPosition
-            val currentlyPlaying = player.currentMediaItem
-            if (currentlyPlaying != null) {
-                scope.launch {
-                    musicDataStore.saveCurrentPlaying(currentlyPlaying.mediaId.substring(6).toLong(), currPositionInMs)
+    private fun checkPlaybackPosition(player: Player): Boolean {
+        if (isReleasing) return false
+        return handler.postDelayed({
+            if (isReleasing) return@postDelayed
+            if (player.isPlaying) {
+                val currPositionInMs = player.currentPosition
+                val currentlyPlaying = player.currentMediaItem
+                if (currentlyPlaying != null) {
+                    scope.launch {
+                        musicDataStore.saveCurrentPlaying(currentlyPlaying.mediaId.substring(6).toLong(), currPositionInMs)
+                    }
                 }
             }
-        }
-        checkPlaybackPosition(player)
-    }, POSITION_UPDATE_INTERVAL_MILLIS)
+            checkPlaybackPosition(player)
+        }, POSITION_UPDATE_INTERVAL_MILLIS)
+    }
 
     fun populateMediaOnConnectIfNotPlaying(player:Player) {
         if (player.isPlaying) return

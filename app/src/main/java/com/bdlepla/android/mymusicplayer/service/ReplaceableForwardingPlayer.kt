@@ -3,6 +3,7 @@ package com.bdlepla.android.mymusicplayer.service
 import androidx.media3.common.ForwardingSimpleBasePlayer
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
+import com.google.common.util.concurrent.ListenableFuture
 
 /**
  * A [Player] implementation that delegates to an actual [Player] implementation that is
@@ -20,6 +21,11 @@ class ReplaceableForwardingPlayer(private var player: Player) : ForwardingSimple
     private val playerListener: Player.Listener = PlayerListener()
 
     init { player.addListener(playerListener) }
+
+    override fun handleRelease(): ListenableFuture<*> {
+        player.removeListener(playerListener)
+        return super.handleRelease()
+    }
 
     /** Sets a new [Player] instance to which the state of the previous player is transferred. */
 //    fun setPlayer(player: Player) {

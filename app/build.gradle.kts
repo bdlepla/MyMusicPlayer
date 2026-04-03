@@ -107,7 +107,6 @@ dependencies {
     implementation(libs.immutable.array)
     implementation(libs.lifecycle.ktx)
     implementation(libs.lifecycle.viewmodel)
-    implementation(libs.macro.benchmark)
     implementation(libs.material)
     implementation(libs.material.icons.extended)
     implementation(libs.material3)
@@ -127,6 +126,7 @@ dependencies {
     androidTestImplementation(libs.test.junit)
     androidTestImplementation(libs.test.espresso)
     androidTestImplementation(libs.test.compose)
+    androidTestImplementation(libs.macro.benchmark)
     "baselineProfile"(project(":app:baselineprofile"))
 
     debugImplementation(libs.ui.test.manifest)
