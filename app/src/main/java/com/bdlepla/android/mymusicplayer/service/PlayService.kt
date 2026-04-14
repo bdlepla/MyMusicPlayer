@@ -274,7 +274,7 @@ class PlayService: MediaLibraryService() {
            super.onTimelineChanged(timeline, reason)
            if (reason == TIMELINE_CHANGE_REASON_SOURCE_UPDATE) {
                val songIds = buildImmutableLongArray {
-                   (0..<timeline.windowCount).map { windowIdx ->
+                   (0..<timeline.windowCount).forEach { windowIdx ->
                        timeline.getWindow(windowIdx, window)
                        add(window.mediaItem.mediaId.substring(6).toLong())
                    }

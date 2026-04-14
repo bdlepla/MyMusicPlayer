@@ -34,7 +34,7 @@ class ReplaceableForwardingPlayer(private var player: Player) : ForwardingSimple
 //            this.player.removeListener(listener)
 //            player.addListener(listener)
 //        }
-//        // Add/remove our listener we use to workaround the missing metadata support of CastPlayer.
+//        // Add/remove our listener we use to work around the missing metadata support of CastPlayer.
 //        this.player.removeListener(playerListener)
 //        player.addListener(playerListener)
 //
