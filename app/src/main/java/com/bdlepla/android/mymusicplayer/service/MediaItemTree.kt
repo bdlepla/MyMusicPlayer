@@ -301,5 +301,12 @@ object MediaItemTree {
             .count{it in titleSplits}}.maxByOrNull { it.second } ?: return null
         return titleMap[key.first]
     }
+
+    fun search(query: String): List<MediaItem> {
+        val queryForSorting = query.trim().forSorting().lowercase()
+        return titleMap.filter { (title, _) ->
+            title.contains(queryForSorting)
+        }.values.toList()
+    }
 }
 

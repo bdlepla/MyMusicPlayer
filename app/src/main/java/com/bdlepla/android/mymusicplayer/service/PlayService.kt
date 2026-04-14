@@ -341,6 +341,32 @@ class PlayService: MediaLibraryService() {
             return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
         }
 
+        override fun onSearch(
+            session: MediaLibrarySession,
+            browser: MediaSession.ControllerInfo,
+            query: String,
+            params: LibraryParams?
+        ): ListenableFuture<LibraryResult<Void>> {
+            val items = MediaItemTree.search(query)
+            session.notifySearchResultChanged(browser, query, items.size, params)
+            return Futures.immediateFuture(LibraryResult.ofVoid())
+        }
+
+        override fun onGetSearchResult(
+            session: MediaLibrarySession,
+            browser: MediaSession.ControllerInfo,
+            query: String,
+            page: Int,
+            pageSize: Int,
+            params: LibraryParams?
+        ): ListenableFuture<LibraryResult<ImmutableList<MediaItem>>> {
+            val items = MediaItemTree.search(query)
+            val start = (page * pageSize).coerceAtMost(items.size)
+            val end = (start + pageSize).coerceAtMost(items.size)
+            val itemsSubset = ImmutableList.copyOf(items.subList(start, end))
+            return Futures.immediateFuture(LibraryResult.ofItemList(itemsSubset, params))
+        }
+
         override fun onGetLibraryRoot(
             session: MediaLibrarySession,
             browser: MediaSession.ControllerInfo,
