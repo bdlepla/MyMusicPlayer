@@ -220,7 +220,8 @@ class PlayService: MediaLibraryService() {
     companion object {
         //private const val SEARCH_QUERY_PREFIX_COMPAT = "androidx://media3-session/playFromSearch"
         //private const val SEARCH_QUERY_PREFIX = "androidx://media3-session/setMediaUri"
-        //private const val TAG = "MusicService"
+        private const val TAG = "PlayService"
+
         private const val CUSTOM_COMMAND_TOGGLE_SHUFFLE_MODE_ON = "android.media3.session.demo.SHUFFLE_ON"
         private const val CUSTOM_COMMAND_TOGGLE_SHUFFLE_MODE_OFF = "android.media3.session.demo.SHUFFLE_OFF"
         private const val POSITION_UPDATE_INTERVAL_MILLIS = 500L
@@ -381,6 +382,7 @@ class PlayService: MediaLibraryService() {
             browser: MediaSession.ControllerInfo,
             mediaId: String
         ): ListenableFuture<LibraryResult<MediaItem>> {
+            Log.d(TAG, "onGetItem: $mediaId")
             val item = MediaItemTree.getItem(mediaId)
                     ?: return Futures.immediateFuture(
                         LibraryResult.ofError(SessionError.ERROR_BAD_VALUE)
@@ -456,4 +458,3 @@ class PlayService: MediaLibraryService() {
 //}
 
 
-//private const val TAG = "PlayService"

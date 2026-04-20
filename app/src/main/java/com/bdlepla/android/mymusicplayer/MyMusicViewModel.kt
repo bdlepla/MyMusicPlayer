@@ -168,6 +168,7 @@ class MyMusicViewModel
         }
         doLoadArtists(browser, 0, Int.MAX_VALUE)
     }
+    private var everReceivedTimeline = false
 
     private fun checkIfServiceIsPlayingAtAppStartup() {
         val b = browser ?: return
@@ -176,7 +177,15 @@ class MyMusicViewModel
             _currentlyPlaying = mediaItem.mediaMetadata.toSongInfo()
         }
         _isPaused.value = !b.isPlaying()
+        val songInfos: ImmutableArray<SongInfo> = buildImmutableArray {
+            (0..< b.mediaItemCount).forEach {
+                b.getMediaItemAt(it).mediaMetadata.toSongInfo()?.let(::add)
+            }
+        }
+        _currentSongList.value = songInfos
+        everReceivedTimeline = true
     }
+
 
 //    inner class PlayerCastStateListener: CastStateListener
 //    {
@@ -204,15 +213,14 @@ class MyMusicViewModel
 
         // for changes in playlist
         private val window = Timeline.Window()
-        private var everReceivedTimeline = false
+
         override fun onTimelineChanged(timeline: Timeline, reason: Int) {
             super.onTimelineChanged(timeline, reason)
             if (!everReceivedTimeline || reason == TIMELINE_CHANGE_REASON_SOURCE_UPDATE) {
                 val songInfos: ImmutableArray<SongInfo> = buildImmutableArray {
-                    (0..<timeline.windowCount).mapNotNull {
-                        timeline.getWindow(it, window)
-                        val songInfo = window.mediaItem.mediaMetadata.toSongInfo()
-                        if (songInfo != null) add(songInfo)
+                    (0..<timeline.windowCount).forEach { windowIndex ->
+                        timeline.getWindow(windowIndex, window)
+                        window.mediaItem.mediaMetadata.toSongInfo()?.let{add(it)}
                     }
                 }
                 _currentSongList.value = songInfos
