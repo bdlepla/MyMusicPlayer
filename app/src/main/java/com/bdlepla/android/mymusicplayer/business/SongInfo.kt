@@ -24,7 +24,11 @@ class SongInfo(private val mediaItem: MediaItem) {
     //val genre = mediaMetadata.genreName
     val mediaUri = mediaMetadata.mediaUri
     private val mediaId = mediaItem.mediaId
-    val songId = mediaId.substring(6).toLong()
+    val songId = if (mediaId.startsWith("[item]")) {
+        mediaId.substring(6).toLongOrNull() ?: 0L
+    } else {
+        0L
+    }
     val albumId = mediaMetadata.albumId
     val artistId = mediaMetadata.artistId
     //val genreId = mediaMetadata.genreId
@@ -43,17 +47,17 @@ val MediaMetadata.track: Int
 val MediaMetadata.artistName:String
     get() {
         return artist?.toString()
-            ?: (extras?.getString(ARTIST) ?: throw NoSuchFieldException(ARTIST))
+            ?: (extras?.getString(ARTIST) ?: "")
     }
 
 val MediaMetadata.albumName:String
     get() {
         return albumTitle?.toString()
-            ?: (extras?.getString(ALBUM) ?: throw NoSuchFieldException(ALBUM))
+            ?: (extras?.getString(ALBUM) ?: "")
     }
 
 val MediaMetadata.duration:Int
-    get() = extras?.getInt(DURATION) ?: throw NoSuchFieldException(DURATION)
+    get() = extras?.getInt(DURATION) ?: 0
 
 //val MediaMetadata.genreName:String
 //    get() {
@@ -63,13 +67,13 @@ val MediaMetadata.duration:Int
 //
 
 val MediaMetadata.mediaUri:String
-    get() = extras?.getString(MEDIA_URI) ?: throw NoSuchFieldException(MEDIA_URI)
+    get() = extras?.getString(MEDIA_URI) ?: ""
 
 val MediaMetadata.albumId:Long
-    get() = extras?.getLong(ALBUM_ID) ?: throw NoSuchFieldException(ALBUM_ID)
+    get() = extras?.getLong(ALBUM_ID) ?: 0L
 
 val MediaMetadata.artistId:Long
-    get() = extras?.getLong(ARTIST_ID) ?: throw NoSuchFieldException(ARTIST_ID)
+    get() = extras?.getLong(ARTIST_ID) ?: 0L
 
 //val MediaMetadata.genreId:Long
 //    get() = extras?.getLong(GENRE_ID) ?: throw NoSuchFieldException(GENRE_ID)

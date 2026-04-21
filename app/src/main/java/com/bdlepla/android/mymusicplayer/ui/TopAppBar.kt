@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -14,6 +15,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.media3.common.Player
@@ -40,7 +42,7 @@ fun TopAppBar(
                 )
             },
             actions = {
-                CastIconButton(castState, activity)
+                CastButton(modifier = Modifier.size(48.dp))
                 IconButton(onClick = { onShuffleClick() }) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_shuffle),

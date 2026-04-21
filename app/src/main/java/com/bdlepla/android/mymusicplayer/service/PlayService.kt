@@ -28,6 +28,9 @@ import com.danrusu.pods4k.immutableArrays.multiplicativeSpecializations.mapNotNu
 import com.google.common.collect.ImmutableList
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
+import androidx.media3.cast.CastPlayer
+import androidx.media3.cast.SessionAvailabilityListener
+import com.google.android.gms.cast.framework.CastContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -43,6 +46,8 @@ class PlayService: MediaLibraryService() {
     private val playerListener = PlayerListener()
     private val musicDataStore: MyMusicPlayerSettingsDataStore by lazy { MyMusicPlayerSettingsDataStore(this) }
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+    private var httpServer: LocalHttpServer? = null
+    private val serverPort = 8080
     private val handler:Handler by lazy { Handler(currentPlayer.applicationLooper) }
     private val myPlayerAudioAttributesBuilder = AudioAttributes.Builder()
         .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
@@ -58,25 +63,25 @@ class PlayService: MediaLibraryService() {
         ret
     }
 
-//    private val castPlayer: CastPlayer? by lazy {
-//        try {
-//            val castContext = CastContext.getSharedInstance(this)
-//            CastPlayer(castContext).apply {
-//                setSessionAvailabilityListener(CastSessionAvailabilityListener())
-//                addListener(playerListener)
-//            }
-//        } catch (e: Exception) {
-//            // We wouldn't normally catch the generic `Exception` however
-//            // calling `CastContext.getSharedInstance` can throw various exceptions, all of which
-//            // indicate that Cast is unavailable.
-//            // Related internal bug b/68009560.
-//            Log.i(
-//                TAG, "Cast is not available on this device. " +
-//                        "Exception thrown when attempting to obtain CastContext. " + e.message
-//            )
-//            null
-//        }
-//    }
+    private val castPlayer: CastPlayer? by lazy {
+        try {
+            val castContext = CastContext.getSharedInstance(this)
+            CastPlayer(castContext).apply {
+                setSessionAvailabilityListener(CastSessionAvailabilityListener())
+                addListener(playerListener)
+            }
+        } catch (e: Exception) {
+            // We wouldn't normally catch the generic `Exception` however
+            // calling `CastContext.getSharedInstance` can throw various exceptions, all of which
+            // indicate that Cast is unavailable.
+            // Related internal bug b/68009560.
+            Log.i(
+                TAG, "Cast is not available on this device. " +
+                        "Exception thrown when attempting to obtain CastContext. " + e.message
+            )
+            null
+        }
+    }
 
     private val currentPlayer: ReplaceableForwardingPlayer by lazy {
         ReplaceableForwardingPlayer(exoPlayer)
@@ -137,15 +142,17 @@ class PlayService: MediaLibraryService() {
     override fun onCreate() {
         super.onCreate()
         MediaItemTree.initialize(this)
-//        if (castPlayer?.isCastSessionAvailable == true) {
-//            currentPlayer.setPlayer(castPlayer!!)
-//        }
+        startServer()
+        if (castPlayer?.isCastSessionAvailable == true) {
+            currentPlayer.setNewPlayer(castPlayer!!)
+        }
         //setupCustomCommands()
         initializeMediaSession()
     }
 
     override fun onDestroy() {
         isReleasing = true
+        stopServer()
         handler.removeCallbacksAndMessages(null)
         scope.cancel()
         releaseMediaSession()
@@ -157,6 +164,7 @@ class PlayService: MediaLibraryService() {
             mediaLibrarySession.release()
         }
         exoPlayer.removeListener(playerListener)
+        castPlayer?.removeListener(playerListener)
         try {
             currentPlayer.release()
         } catch (e: Exception) {
@@ -174,8 +182,13 @@ class PlayService: MediaLibraryService() {
                 val currPositionInMs = player.currentPosition
                 val currentlyPlaying = player.currentMediaItem
                 if (currentlyPlaying != null) {
-                    scope.launch {
-                        musicDataStore.saveCurrentPlaying(currentlyPlaying.mediaId.substring(6).toLong(), currPositionInMs)
+                    val mediaId = currentlyPlaying.mediaId
+                    if (mediaId.startsWith(ITEM_PREFIX)) {
+                        mediaId.substring(ITEM_PREFIX.length).toLongOrNull()?.let { songId ->
+                            scope.launch {
+                                musicDataStore.saveCurrentPlaying(songId, currPositionInMs)
+                            }
+                        }
                     }
                 }
             }
@@ -217,6 +230,22 @@ class PlayService: MediaLibraryService() {
 //        player.prepare()
 //    }
 
+    private fun stopServer() {
+        httpServer?.stop()
+        httpServer = null
+    }
+
+    private fun startServer() {
+        scope.launch {
+            try {
+                httpServer = LocalHttpServer(serverPort)
+                httpServer?.start()
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to start HTTP server", e)
+            }
+        }
+    }
+
     companion object {
         //private const val SEARCH_QUERY_PREFIX_COMPAT = "androidx://media3-session/playFromSearch"
         //private const val SEARCH_QUERY_PREFIX = "androidx://media3-session/setMediaUri"
@@ -227,23 +256,23 @@ class PlayService: MediaLibraryService() {
         private const val POSITION_UPDATE_INTERVAL_MILLIS = 500L
     }
 
-//    private inner class CastSessionAvailabilityListener : SessionAvailabilityListener {
-//
-//        /**
-//         * Called when a Cast session has started and the user wishes to control playback on a
-//         * remote Cast receiver rather than play audio locally.
-//         */
-////        override fun onCastSessionAvailable() {
-////            currentPlayer.setPlayer(castPlayer!!)
-////        }
-//
-//        /**
-//         * Called when a Cast session has ended and the user wishes to control playback locally.
-//         */
-//        override fun onCastSessionUnavailable() {
-//            currentPlayer.setPlayer(exoPlayer)
-//        }
-//    }
+    private inner class CastSessionAvailabilityListener : SessionAvailabilityListener {
+
+        /**
+         * Called when a Cast session has started and the user wishes to control playback on a
+         * remote Cast receiver rather than play audio locally.
+         */
+        override fun onCastSessionAvailable() {
+            castPlayer?.let { currentPlayer.setNewPlayer(it) }
+        }
+
+        /**
+         * Called when a Cast session has ended and the user wishes to control playback locally.
+         */
+        override fun onCastSessionUnavailable() {
+            currentPlayer.setNewPlayer(exoPlayer)
+        }
+    }
 
    private inner class PlayerListener: Player.Listener {
 //        override fun onMediaMetadataChanged(mediaMetadata: MediaMetadata) {
@@ -277,7 +306,10 @@ class PlayService: MediaLibraryService() {
                val songIds = buildImmutableLongArray {
                    (0..<timeline.windowCount).forEach { windowIdx ->
                        timeline.getWindow(windowIdx, window)
-                       add(window.mediaItem.mediaId.substring(6).toLong())
+                       val mediaId = window.mediaItem.mediaId
+                       if (mediaId.startsWith(ITEM_PREFIX)) {
+                           mediaId.substring(ITEM_PREFIX.length).toLongOrNull()?.let { add(it) }
+                       }
                    }
                }
                scope.launch { musicDataStore.saveCurrentList(songIds) }
@@ -309,6 +341,30 @@ class PlayService: MediaLibraryService() {
             return ret
         }
 
+
+        override fun onPlaybackResumption(
+            session: MediaSession,
+            controller: MediaSession.ControllerInfo
+        ): ListenableFuture<MediaSession.MediaItemsWithStartPosition> {
+            val playingItemIds = musicDataStore.playingList
+            val songsList = playingItemIds.mapNotNull { id ->
+                MediaItemTree.getItem(ITEM_PREFIX + id.toString())
+            }.asList()
+
+            if (songsList.isEmpty()) {
+                return Futures.immediateFailedFuture<MediaSession.MediaItemsWithStartPosition>(
+                    UnsupportedOperationException("No items to resume")
+                )
+            }
+
+            val playingSongId = ITEM_PREFIX + musicDataStore.playingSongId.toString()
+            val startIndex = songsList.indexOfFirst { it.mediaId == playingSongId }.coerceAtLeast(0)
+            val startPosition = musicDataStore.playingPosition
+
+            return Futures.immediateFuture<MediaSession.MediaItemsWithStartPosition>(
+                MediaSession.MediaItemsWithStartPosition(songsList, startIndex, startPosition)
+            )
+        }
 
         override fun onPostConnect(session: MediaSession, controller: MediaSession.ControllerInfo) {
 //            if (!customLayout.isEmpty() && controller.controllerVersion != 0) {

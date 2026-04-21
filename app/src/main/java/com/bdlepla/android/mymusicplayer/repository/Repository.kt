@@ -127,14 +127,6 @@ object Repository {
                     putString(MEDIA_URI, data)
                     putInt(TRACK_NUMBER, track)
                     putInt(DURATION, durationInSeconds)
-                    putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE, title)
-                    putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_SUBTITLE, artist)
-                    putString(MediaMetadataCompat.METADATA_KEY_ART_URI, albumArt)
-                    putLong(MediaConstants.METADATA_KEY_IS_EXPLICIT,
-                        MediaConstants.METADATA_VALUE_ATTRIBUTE_PRESENT)
-                    putLong(
-                        MediaDescriptionCompat.EXTRA_DOWNLOAD_STATUS,
-                        MediaDescriptionCompat.STATUS_DOWNLOADED)
                 }
 
                 val metadata =
