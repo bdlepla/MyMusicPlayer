@@ -1,20 +1,22 @@
 package com.bdlepla.android.mymusicplayer.service
 
+import android.content.Context
+import androidx.core.net.toUri
 import androidx.media3.cast.CastPlayer
 import androidx.media3.common.ForwardingSimpleBasePlayer
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
-import android.os.Bundle
 import com.google.common.util.concurrent.ListenableFuture
+import java.io.File
 
 /**
  * A [Player] implementation that delegates to an actual [Player] implementation that is
  * replaceable by another instance by calling [setNewPlayer].
  */
-class ReplaceableForwardingPlayer(private var player: Player) : ForwardingSimpleBasePlayer(player) {
+class ReplaceableForwardingPlayer(private val context: Context, private var player: Player) : ForwardingSimpleBasePlayer(player) {
 
-    private val listeners: MutableList<Player.Listener> = arrayListOf()
+    //private val listeners: MutableList<Player.Listener> = arrayListOf()
     // After disconnecting from the Cast device, the timeline of the CastPlayer is empty, so we
     // need to track the playlist to be able to transfer the playlist back to the local player after
     // having disconnected.
@@ -85,10 +87,25 @@ class ReplaceableForwardingPlayer(private var player: Player) : ForwardingSimple
     }
 
     private fun MediaMetadata.toCastSafeMetadata(): MediaMetadata {
+        val ipAddress = LocalHttpServer.getLocalIpAddress()
+        val artworkUri = this.artworkUri
+        val castArtworkUri = if (ipAddress != null && artworkUri != null && artworkUri.scheme == "content") {
+            val fileName = artworkUri.lastPathSegment
+            if (fileName != null) {
+                val file = File(context.cacheDir, fileName)
+                "http://$ipAddress:8080${file.absolutePath}".toUri()
+            } else {
+                artworkUri
+            }
+        } else {
+            artworkUri
+        }
+
         return MediaMetadata.Builder()
             .setTitle(this.title)
             .setArtist(this.artist)
             .setAlbumTitle(this.albumTitle)
+            .setArtworkUri(castArtworkUri)
             .build()
     }
 
@@ -159,22 +176,22 @@ class ReplaceableForwardingPlayer(private var player: Player) : ForwardingSimple
 
     private inner class PlayerListener : Player.Listener {
         override fun onEvents(player: Player, events: Player.Events) {
-            if (events.contains(Player.EVENT_MEDIA_ITEM_TRANSITION)
-                && !events.contains(Player.EVENT_MEDIA_METADATA_CHANGED)) {
+            //if (events.contains(EVENT_MEDIA_ITEM_TRANSITION)
+                //&& !events.contains(EVENT_MEDIA_METADATA_CHANGED)) {
                 // CastPlayer does not support onMetaDataChange. We can trigger this here when the
                 // media item changes.
-                if (playlist.isNotEmpty()) {
-                    val index = player.currentMediaItemIndex
-                    if (index < playlist.size) {
-                        val metadata = playlist[index].mediaMetadata
+                //if (playlist.isNotEmpty()) {
+                    //val index = player.currentMediaItemIndex
+                    //if (index < playlist.size) {
+                        //val metadata = playlist[index].mediaMetadata
                         // We can't easily notify external listeners from here without a reference to them,
                         // but ForwardingSimpleBasePlayer should handle metadata changes if the delegate notifies.
-                    }
-                }
-            }
-            if (events.contains(Player.EVENT_POSITION_DISCONTINUITY)
-                || events.contains(Player.EVENT_MEDIA_ITEM_TRANSITION)
-                || events.contains(Player.EVENT_TIMELINE_CHANGED)) {
+                    //}
+                //}
+            //}
+            if (events.contains(EVENT_POSITION_DISCONTINUITY)
+                || events.contains(EVENT_MEDIA_ITEM_TRANSITION)
+                || events.contains(EVENT_TIMELINE_CHANGED)) {
                 updatePlaylist()
             }
         }

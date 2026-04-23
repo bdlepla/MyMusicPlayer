@@ -5,6 +5,8 @@ import android.app.PendingIntent.FLAG_IMMUTABLE
 import android.os.Bundle
 import android.os.Handler
 import android.util.Log
+import androidx.media3.cast.CastPlayer
+import androidx.media3.cast.SessionAvailabilityListener
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
@@ -25,12 +27,10 @@ import com.bdlepla.android.mymusicplayer.service.MediaItemTree.ITEM_PREFIX
 import com.danrusu.pods4k.immutableArrays.asList
 import com.danrusu.pods4k.immutableArrays.buildImmutableLongArray
 import com.danrusu.pods4k.immutableArrays.multiplicativeSpecializations.mapNotNull
+import com.google.android.gms.cast.framework.CastContext
 import com.google.common.collect.ImmutableList
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
-import androidx.media3.cast.CastPlayer
-import androidx.media3.cast.SessionAvailabilityListener
-import com.google.android.gms.cast.framework.CastContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -84,7 +84,7 @@ class PlayService: MediaLibraryService() {
     }
 
     private val currentPlayer: ReplaceableForwardingPlayer by lazy {
-        ReplaceableForwardingPlayer(exoPlayer)
+        ReplaceableForwardingPlayer(this, exoPlayer)
     }
 
     private fun initializeMediaSession() {
@@ -342,6 +342,7 @@ class PlayService: MediaLibraryService() {
         }
 
 
+        @Deprecated("Deprecated in Java")
         override fun onPlaybackResumption(
             session: MediaSession,
             controller: MediaSession.ControllerInfo

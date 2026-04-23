@@ -4,11 +4,10 @@ import fi.iki.elonen.NanoHTTPD
 import java.io.File
 import java.io.FileInputStream
 import java.io.IOException
-import java.net.InetAddress
 import java.net.NetworkInterface
 import java.util.Collections
 
-class LocalHttpServer(private val port: Int) : NanoHTTPD(port) {
+class LocalHttpServer(port: Int) : NanoHTTPD(port) {
 
     override fun serve(session: IHTTPSession): Response {
         val uri = session.uri
@@ -19,7 +18,7 @@ class LocalHttpServer(private val port: Int) : NanoHTTPD(port) {
                 val fis = FileInputStream(file)
                 val mimeType = getMimeType(uri)
                 newFixedLengthResponse(Response.Status.OK, mimeType, fis, file.length())
-            } catch (e: IOException) {
+            } catch (_: IOException) {
                 newFixedLengthResponse(Response.Status.INTERNAL_ERROR, MIME_PLAINTEXT, "Error reading file")
             }
         }
@@ -34,6 +33,9 @@ class LocalHttpServer(private val port: Int) : NanoHTTPD(port) {
             uri.endsWith(".ogg", ignoreCase = true) -> "audio/ogg"
             uri.endsWith(".flac", ignoreCase = true) -> "audio/flac"
             uri.endsWith(".m4a", ignoreCase = true) -> "audio/mp4"
+            uri.endsWith(".jpg", ignoreCase = true) || uri.endsWith(".jpeg", ignoreCase = true) -> "image/jpeg"
+            uri.endsWith(".png", ignoreCase = true) -> "image/png"
+            uri.endsWith(".css", ignoreCase = true) -> "text/css"
             else -> "application/octet-stream"
         }
     }
@@ -47,7 +49,7 @@ class LocalHttpServer(private val port: Int) : NanoHTTPD(port) {
                     for (addr in addrs) {
                         if (!addr.isLoopbackAddress) {
                             val sAddr = addr.hostAddress
-                            val isIPv4 = sAddr.indexOf(':') < 0
+                            val isIPv4 = sAddr!!.indexOf(':') < 0
                             if (isIPv4) return sAddr
                         }
                     }

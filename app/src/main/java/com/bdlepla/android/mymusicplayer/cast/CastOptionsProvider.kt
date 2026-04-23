@@ -1,32 +1,32 @@
 package com.bdlepla.android.mymusicplayer.cast
 
 import android.content.Context
-import androidx.media3.cast.DefaultCastOptionsProvider
+import com.bdlepla.android.mymusicplayer.MainActivity
 import com.google.android.gms.cast.framework.CastOptions
 import com.google.android.gms.cast.framework.OptionsProvider
 import com.google.android.gms.cast.framework.SessionProvider
+import com.google.android.gms.cast.framework.media.CastMediaOptions
+import com.google.android.gms.cast.framework.media.NotificationOptions
 
 // specified in Manifest
 @Suppress("unused")
 class CastOptionsProvider : OptionsProvider {
 
-    override fun getCastOptions(context: Context): CastOptions = DefaultCastOptionsProvider().getCastOptions(context)
-//    {
-//        return CastOptions.Builder()
-//            // Use the Default Media Receiver with DRM support.
-//            .setResumeSavedSession(false)
-//            .setEnableReconnectionService(false)
-//            .setReceiverApplicationId(CastMediaControlIntent.DEFAULT_MEDIA_RECEIVER_APPLICATION_ID)
-//            //.setSupportedNamespaces()
-//            .setCastMediaOptions(
-//                CastMediaOptions.Builder()
-//                    // We manage the media session and the notifications ourselves.
-//                    .setMediaSessionEnabled(false)
-//                    .setNotificationOptions(null)
-//                    .build()
-//            )
-//            .setStopReceiverApplicationWhenEndingSession(true).build()
-//    }
+    override fun getCastOptions(context: Context): CastOptions {
+        val notificationOptions = NotificationOptions.Builder()
+            .setTargetActivityClassName(MainActivity::class.java.name)
+            .build()
+
+        val mediaOptions = CastMediaOptions.Builder()
+            .setNotificationOptions(notificationOptions)
+            .build()
+
+        return CastOptions.Builder()
+            .setReceiverApplicationId("95543E08")
+            .setCastMediaOptions(mediaOptions)
+            .setStopReceiverApplicationWhenEndingSession(true)
+            .build()
+    }
 
     override fun getAdditionalSessionProviders(context: Context): MutableList<SessionProvider> {
         return mutableListOf()
