@@ -2,28 +2,27 @@ package com.bdlepla.android.mymusicplayer.datastore
 
 import android.content.Context
 import com.bdlepla.android.mymusicplayer.MyMusicPlayerSettings
-import com.danrusu.pods4k.immutableArrays.ImmutableLongArray
-import com.danrusu.pods4k.immutableArrays.toImmutableArray
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import kotlin.io.path.Path
 import kotlin.io.path.exists
 
 class MyMusicPlayerSettingsDataStore @Inject constructor(private val context: Context) {
-    private var _settings:MyMusicPlayerSettings = MyMusicPlayerSettingsSerializer().defaultValue
-    private var settings:MyMusicPlayerSettings
+    private var _settings: MyMusicPlayerSettings = MyMusicPlayerSettingsSerializer().defaultValue
+    val settings: MyMusicPlayerSettings
         get() = _settings
-        set(value)  {_settings = value}
 
     init {
-        if (exists) { settings = runBlocking { readFile() } }
+        if (exists) {
+            _settings = runBlocking { readFile() }
+        }
     }
 
-    val playingPosition: Long = settings.playingPosition
-    val playingSongId: Long = settings.playingSongId
-    val playingList: ImmutableLongArray = settings.currentListIdsList.toImmutableArray()
+    suspend fun saveSettings(setting: MyMusicPlayerSettings) {
+        _settings = setting
+        writeFile(setting)
+    }
+
     private val appStoragePath
         get() = Path(context.getExternalFilesDir(null).toString())
 
@@ -40,15 +39,5 @@ class MyMusicPlayerSettingsDataStore @Inject constructor(private val context: Co
         Path(getFullFilename).toFile().outputStream().use {
             return MyMusicPlayerSettingsSerializer().writeTo(setting, it)
         }
-    }
-
-    suspend fun saveCurrentList(ids:ImmutableLongArray) {
-        settings = settings.toBuilder().clearCurrentListIds().addAllCurrentListIds(ids.asIterable()).build()
-        withContext(Dispatchers.IO) { writeFile(settings) }
-    }
-
-    suspend fun saveCurrentPlaying(songId:Long, position:Long) {
-        settings = settings.toBuilder().setPlayingSongId(songId).setPlayingPosition(position).build()
-        withContext(Dispatchers.IO) { writeFile(settings) }
     }
 }

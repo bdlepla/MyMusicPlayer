@@ -3,6 +3,7 @@ package com.bdlepla.android.mymusicplayer.ui
 import android.content.Context
 import android.content.res.Configuration
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -20,6 +22,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -56,9 +59,14 @@ internal fun MainScreen(viewModel: MyMusicViewModel=viewModel(), activity: Conte
     val castState by viewModel.castState.collectAsState()
 
 
-    val onSongClick: (SongInfo, ImmutableArray<SongInfo>) -> Unit = { itSong, itSongs ->
-        viewModel.setPlaylist(itSongs)
-        viewModel.setCurrentlyPlaying(itSong)
+    val onSongClick: (SongInfo, ImmutableArray<SongInfo>) -> Unit = { itSong, _ ->
+        viewModel.playSongNow(itSong)
+    }
+    val onPlayNext: (ImmutableArray<SongInfo>) -> Unit = {
+        viewModel.playAfterCurrentSong(PlaylistInfo("Next", it))
+    }
+    val onQueue: (ImmutableArray<SongInfo>) -> Unit = {
+        viewModel.playAfterCurrentPlaylist(PlaylistInfo("Queued", it))
     }
     val onRepeatClick: ()->Unit = { viewModel.toggleRepeat() }
     val onPlayPauseClick: ()->Unit = { viewModel.togglePlayPause() }
@@ -67,20 +75,73 @@ internal fun MainScreen(viewModel: MyMusicViewModel=viewModel(), activity: Conte
     val onCreateNewPlaylist: (String)->Unit = { viewModel.addNewPlaylist(it) }
     val onRemovePlaylist:(PlaylistInfo)->Unit = { viewModel.removePlaylist(it) }
 
-    val songsToAddToPlaylist = remember { mutableStateOf<ImmutableArray<SongInfo>>(
-        emptyImmutableArray()
-    )}
+    val songsForAction = remember { mutableStateOf<ImmutableArray<SongInfo>>(emptyImmutableArray()) }
+    val playlistForAction = remember { mutableStateOf<PlaylistInfo?>(null) }
     val pickPlaylist = remember { mutableStateOf(false) }
-    val onAddSongsToPlaylist: (ImmutableArray<SongInfo>)->Unit = {
-        songsToAddToPlaylist.value = it
-        pickPlaylist.value = true
+    val showActionChoice = remember { mutableStateOf(false) }
+
+    val onLongPressAction: (ImmutableArray<SongInfo>, PlaylistInfo?)->Unit = { songs, playlist ->
+        songsForAction.value = songs
+        playlistForAction.value = playlist
+        showActionChoice.value = true
+    }
+
+    if (showActionChoice.value) {
+        MyMusicPlayerTheme {
+            Dialog(onDismissRequest = { showActionChoice.value = false }) {
+                Box(
+                    Modifier
+                        .background(MaterialTheme.colorScheme.background)
+                        .padding(16.dp)
+                ) {
+                    Column {
+                        Text(
+                            text = "Choose Action",
+                            style = MaterialTheme.typography.titleLarge,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                        Spacer(modifier = Modifier.padding(all = 8.dp))
+                        ListItem(
+                            headlineContent = { Text("Play Next") },
+                            modifier = Modifier.clickable {
+                                onPlayNext(songsForAction.value)
+                                showActionChoice.value = false
+                            }
+                        )
+                        ListItem(
+                            headlineContent = { Text("Queue") },
+                            modifier = Modifier.clickable {
+                                onQueue(songsForAction.value)
+                                showActionChoice.value = false
+                            }
+                        )
+                        ListItem(
+                            headlineContent = { Text("Add to Playlist") },
+                            modifier = Modifier.clickable {
+                                pickPlaylist.value = true
+                                showActionChoice.value = false
+                            }
+                        )
+                        playlistForAction.value?.let { playlist ->
+                            ListItem(
+                                headlineContent = { Text("Remove Playlist", color = Color.Red) },
+                                modifier = Modifier.clickable {
+                                    onRemovePlaylist(playlist)
+                                    showActionChoice.value = false
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+        }
     }
 
     if (pickPlaylist.value) {
         MyMusicPlayerTheme {
             Dialog(onDismissRequest = { pickPlaylist.value = false }) {
                 val onCLick: (PlaylistInfo) -> Unit = {
-                    viewModel.addSongsToPlaylist(it, songsToAddToPlaylist.value)
+                    viewModel.addSongsToPlaylist(it, songsForAction.value)
                     pickPlaylist.value = false
                 }
 
@@ -120,9 +181,11 @@ internal fun MainScreen(viewModel: MyMusicViewModel=viewModel(), activity: Conte
         playlists,
         onCreateNewPlaylist,
         onRemovePlaylist,
-        onAddSongsToPlaylist,
+        onLongPressAction,
         onRemoveSongFromPlaylist,
         onSongClick,
+        onPlayNext,
+        onQueue,
         onRepeatClick,
         onPlayPauseClick,
         onNextClick,
@@ -145,9 +208,11 @@ private fun MainContent(
     playlists: ImmutableArray<PlaylistInfo>,
     onCreateNewPlaylist: (String) -> Unit = emptyFunction1(),
     onRemovePlaylist: (PlaylistInfo) -> Unit = emptyFunction1(),
-    onAddSongsToPlaylist: (ImmutableArray<SongInfo>)->Unit = emptyFunction1(),
+    onLongPress: (ImmutableArray<SongInfo>, PlaylistInfo?)->Unit = emptyFunction2(),
     onRemoveSongFromPlaylist:(PlaylistInfo, SongInfo)->Unit = emptyFunction2(),
     onSongClick: (SongInfo, ImmutableArray<SongInfo>) -> Unit = emptyFunction2(),
+    onPlayNext: (ImmutableArray<SongInfo>) -> Unit = emptyFunction1(),
+    onQueue: (ImmutableArray<SongInfo>) -> Unit = emptyFunction1(),
     onRepeatClick: () -> Unit = emptyFunction(),
     onPlayPauseClick: () -> Unit = emptyFunction(),
     onNextClick: () -> Unit = emptyFunction(),
@@ -185,7 +250,8 @@ private fun MainContent(
                 Column(modifier = Modifier.padding(paddingValues)) {
                     Navigation(navController, mediaController, songs, currentSongList, artists,
                         albums, playlists, onCreateNewPlaylist, onRemovePlaylist,
-                        onAddSongsToPlaylist, onRemoveSongFromPlaylist, onSongClick,
+                        onLongPress, onRemoveSongFromPlaylist, onSongClick,
+                        onPlayNext, onQueue,
                         currentPlayingStats, isPaused, setShuffledSongs)
                 }
             }

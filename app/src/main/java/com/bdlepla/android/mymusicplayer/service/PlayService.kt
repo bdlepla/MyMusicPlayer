@@ -11,22 +11,23 @@ import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
-import androidx.media3.common.Player.TIMELINE_CHANGE_REASON_SOURCE_UPDATE
-import androidx.media3.common.Timeline
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.util.EventLogger
+import androidx.media3.session.CommandButton
 import androidx.media3.session.LibraryResult
 import androidx.media3.session.MediaLibraryService
 import androidx.media3.session.MediaSession
 import androidx.media3.session.SessionCommand
 import androidx.media3.session.SessionError
 import androidx.media3.session.SessionResult
+import com.bdlepla.android.mymusicplayer.MyMusicPlayerSettings
+import com.bdlepla.android.mymusicplayer.business.PlaylistInfo
+import com.bdlepla.android.mymusicplayer.business.SongInfo
 import com.bdlepla.android.mymusicplayer.datastore.MyMusicPlayerSettingsDataStore
-import com.bdlepla.android.mymusicplayer.extensions.any
-import com.bdlepla.android.mymusicplayer.service.MediaItemTree.ITEM_PREFIX
+import com.bdlepla.android.mymusicplayer.repository.ITEM_ID
 import com.danrusu.pods4k.immutableArrays.asList
-import com.danrusu.pods4k.immutableArrays.buildImmutableLongArray
-import com.danrusu.pods4k.immutableArrays.multiplicativeSpecializations.mapNotNull
+import com.danrusu.pods4k.immutableArrays.emptyImmutableArray
+import com.danrusu.pods4k.immutableArrays.toImmutableArray
 import com.google.android.gms.cast.framework.CastContext
 import com.google.common.collect.ImmutableList
 import com.google.common.util.concurrent.Futures
@@ -36,11 +37,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import kotlin.math.abs
 
 
 class PlayService: MediaLibraryService() {
     private lateinit var mediaLibrarySession: MediaLibrarySession
     private var isReleasing = false
+    private var customCommands: List<CommandButton> = emptyList()
+    private var customLayout: ImmutableList<CommandButton> = ImmutableList.of()
 
     private val librarySessionCallback = CustomMediaLibrarySessionCallback()
     private val playerListener = PlayerListener()
@@ -52,6 +56,14 @@ class PlayService: MediaLibraryService() {
     private val myPlayerAudioAttributesBuilder = AudioAttributes.Builder()
         .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
         .setUsage(C.USAGE_MEDIA)
+
+    private val queueManager by lazy {
+        QueueManager {
+            val allSongs = MediaItemTree.getChildren(ITEM_ID) ?: emptyImmutableArray()
+            val songInfos = allSongs.asList().map { SongInfo(it) }.shuffled().toImmutableArray()
+            PlaylistInfo("Default Playlist", songInfos)
+        }
+    }
 
     private val exoPlayer: ExoPlayer by lazy {
         val ret = ExoPlayer.Builder(this).build().apply {
@@ -88,6 +100,7 @@ class PlayService: MediaLibraryService() {
     }
 
     private fun initializeMediaSession() {
+        setupCustomCommands()
         mediaLibrarySession =
             with(MediaLibrarySession.Builder(this@PlayService, currentPlayer, librarySessionCallback)) {
                 setId(packageName)
@@ -107,47 +120,62 @@ class PlayService: MediaLibraryService() {
     }
 
 
-//    private fun setupCustomCommands() {
-//        customCommands =
-//            listOf(
-//                getShuffleCommandButton(
-//                    SessionCommand(CUSTOM_COMMAND_TOGGLE_SHUFFLE_MODE_ON, Bundle.EMPTY)
-//                ),
-//                getShuffleCommandButton(
-//                    SessionCommand(CUSTOM_COMMAND_TOGGLE_SHUFFLE_MODE_OFF, Bundle.EMPTY)
-//                )
-//            )
-//        customLayout = ImmutableList.of(customCommands[0])
-//    }
+    private fun setupCustomCommands() {
+        customCommands =
+            listOf(
+                getShuffleCommandButton(
+                    SessionCommand(CUSTOM_COMMAND_TOGGLE_SHUFFLE_MODE_ON, Bundle.EMPTY)
+                ),
+                getShuffleCommandButton(
+                    SessionCommand(CUSTOM_COMMAND_TOGGLE_SHUFFLE_MODE_OFF, Bundle.EMPTY)
+                )
+            )
+        customLayout = ImmutableList.of(customCommands[0])
+    }
 
-//    private fun getShuffleCommandButton(sessionCommand: SessionCommand): CommandButton {
-//        val isOn = sessionCommand.customAction == CUSTOM_COMMAND_TOGGLE_SHUFFLE_MODE_ON
-//        return CommandButton.Builder()
-//            .setDisplayName(if (isOn) getShuffleOnDescription() else getShuffleOffDescription())
-//            .setSessionCommand(sessionCommand)
-//            //.setIconResId(if (isOn) R.drawable.exo_icon_shuffle_off else R.drawable.exo_icon_shuffle_on)
-//            .build()
-//    }
+    private fun getShuffleCommandButton(sessionCommand: SessionCommand): CommandButton {
+        val isOn = sessionCommand.customAction == CUSTOM_COMMAND_TOGGLE_SHUFFLE_MODE_ON
+        return CommandButton.Builder()
+            .setDisplayName(if (isOn) getShuffleOnDescription() else getShuffleOffDescription())
+            .setSessionCommand(sessionCommand)
+            .setIconResId(com.bdlepla.android.mymusicplayer.R.drawable.ic_shuffle)
+            .build()
+    }
 
-//    private fun getShuffleOnDescription(): String {
-//        //getString( R.string.exo_controls_shuffle_on_description)
-//        return "Shuffle on"
-//    }
-//
-//    private fun getShuffleOffDescription(): String {
-//        //getString(R.string.exo_controls_shuffle_off_description)
-//        return "Shuffle off"
-//    }
+    private fun getShuffleOnDescription(): String {
+        return "Shuffle on"
+    }
+
+    private fun getShuffleOffDescription(): String {
+        return "Shuffle off"
+    }
+
 
     override fun onCreate() {
         super.onCreate()
         MediaItemTree.initialize(this)
+        loadSavedQueue()
         startServer()
         if (castPlayer?.isCastSessionAvailable == true) {
             currentPlayer.setNewPlayer(castPlayer!!)
         }
-        //setupCustomCommands()
         initializeMediaSession()
+    }
+
+    private fun loadSavedQueue() {
+        val savedData = musicDataStore.settings
+        if (savedData.songIdsCount > 0) {
+            val songs = savedData.songIdsList.mapNotNull { songId ->
+                MediaItemTree.getItem(MediaItemTree.ITEM_PREFIX + songId.toString())?.let { SongInfo(it) }
+            }
+            if (songs.isNotEmpty()) {
+                queueManager.setSongs(
+                    songs,
+                    savedData.currentIndex.toInt(),
+                    savedData.currentPosition
+                )
+            }
+        }
     }
 
     override fun onDestroy() {
@@ -174,21 +202,27 @@ class PlayService: MediaLibraryService() {
 
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaLibrarySession = mediaLibrarySession
 
+    private var lastSavedPosition = -1L
+    private var lastSavedIndex = -1
+
     private fun checkPlaybackPosition(player: Player): Boolean {
         if (isReleasing) return false
         return handler.postDelayed({
             if (isReleasing) return@postDelayed
             if (player.isPlaying) {
                 val currPositionInMs = player.currentPosition
+                val currIndex = player.currentMediaItemIndex
                 val currentlyPlaying = player.currentMediaItem
+                
                 if (currentlyPlaying != null) {
-                    val mediaId = currentlyPlaying.mediaId
-                    if (mediaId.startsWith(ITEM_PREFIX)) {
-                        mediaId.substring(ITEM_PREFIX.length).toLongOrNull()?.let { songId ->
-                            scope.launch {
-                                musicDataStore.saveCurrentPlaying(songId, currPositionInMs)
-                            }
-                        }
+                    val indexChanged = currIndex != lastSavedIndex
+                    val positionMovedSignificantly = abs(currPositionInMs - lastSavedPosition) > 2000
+                    
+                    if (indexChanged || positionMovedSignificantly) {
+                        queueManager.updateCurrentState(currIndex, currPositionInMs)
+                        saveQueue()
+                        lastSavedIndex = currIndex
+                        lastSavedPosition = currPositionInMs
                     }
                 }
             }
@@ -198,19 +232,28 @@ class PlayService: MediaLibraryService() {
 
     fun populateMediaOnConnectIfNotPlaying(player:Player) {
         if (player.isPlaying) return
-        val playingItemIds = musicDataStore.playingList
-        if (playingItemIds.any()) {
-            val songsList = playingItemIds.mapNotNull { id ->
-                 MediaItemTree.getItem(ITEM_PREFIX+id.toString()) }
+        if (!queueManager.isEmpty) {
+            loadQueuedPlaylist(queueManager)
+            return
+        }
+    }
 
-            player.setMediaItems(songsList.asList())
-            player.prepare()
-            val playingSongId = ITEM_PREFIX+musicDataStore.playingSongId.toString()
-            val playingSongIdx = songsList.indexOfFirst { it.mediaId == playingSongId }
-            if (playingSongIdx != -1) {
-                val playingPosition = musicDataStore.playingPosition
-                player.seekTo(playingSongIdx, playingPosition)
-            }
+    private fun loadQueuedPlaylist(queueManager:QueueManager) {
+        val mediaItems = queueManager.getSongs().map { it.toMediaItem() }
+        currentPlayer.setMediaItems(mediaItems, queueManager.currentIndex, queueManager.currentPosition)
+        currentPlayer.prepare()
+        currentPlayer.play()
+        saveQueue()
+    }
+
+    private fun saveQueue() {
+        val settings = MyMusicPlayerSettings.newBuilder()
+            .setCurrentIndex(queueManager.currentIndex.toLong())
+            .setCurrentPosition(queueManager.currentPosition)
+            .addAllSongIds(queueManager.getSongs().map { it.songId })
+            .build()
+        scope.launch {
+            musicDataStore.saveSettings(settings)
         }
     }
 
@@ -253,6 +296,9 @@ class PlayService: MediaLibraryService() {
 
         private const val CUSTOM_COMMAND_TOGGLE_SHUFFLE_MODE_ON = "android.media3.session.demo.SHUFFLE_ON"
         private const val CUSTOM_COMMAND_TOGGLE_SHUFFLE_MODE_OFF = "android.media3.session.demo.SHUFFLE_OFF"
+        const val CUSTOM_COMMAND_PUSH_IMMEDIATELY = "PUSH_IMMEDIATELY"
+        const val CUSTOM_COMMAND_PLAY_AFTER_PLAYLIST = "PLAY_AFTER_PLAYLIST"
+        const val CUSTOM_COMMAND_PLAY_AFTER_SONG = "PLAY_AFTER_SONG"
         private const val POSITION_UPDATE_INTERVAL_MILLIS = 500L
     }
 
@@ -298,22 +344,26 @@ class PlayService: MediaLibraryService() {
 //           }
 //       }
 
-       // for changes in playlist
-       private val window = Timeline.Window()
-       override fun onTimelineChanged(timeline: Timeline, reason: Int) {
-           super.onTimelineChanged(timeline, reason)
-           if (reason == TIMELINE_CHANGE_REASON_SOURCE_UPDATE) {
-               val songIds = buildImmutableLongArray {
-                   (0..<timeline.windowCount).forEach { windowIdx ->
-                       timeline.getWindow(windowIdx, window)
-                       val mediaId = window.mediaItem.mediaId
-                       if (mediaId.startsWith(ITEM_PREFIX)) {
-                           mediaId.substring(ITEM_PREFIX.length).toLongOrNull()?.let { add(it) }
-                       }
-                   }
-               }
-               scope.launch { musicDataStore.saveCurrentList(songIds) }
+       override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
+           super.onMediaItemTransition(mediaItem, reason)
+           if (reason != Player.MEDIA_ITEM_TRANSITION_REASON_PLAYLIST_CHANGED) {
+               queueManager.updateCurrentState(currentPlayer.currentMediaItemIndex, currentPlayer.currentPosition)
+               saveQueue()
            }
+       }
+
+       override fun onPlaybackStateChanged(playbackState: Int) {
+           super.onPlaybackStateChanged(playbackState)
+           if (playbackState == Player.STATE_ENDED) {
+               queueManager.setSongs(emptyList(), 0, 0)
+               loadQueuedPlaylist(queueManager)
+           }
+       }
+
+       override fun onShuffleModeEnabledChanged(shuffleModeEnabled: Boolean) {
+           super.onShuffleModeEnabledChanged(shuffleModeEnabled)
+           customLayout = ImmutableList.of(if (shuffleModeEnabled) customCommands[1] else customCommands[0])
+           mediaLibrarySession.setCustomLayout(customLayout)
        }
     }
 
@@ -325,11 +375,11 @@ class PlayService: MediaLibraryService() {
             val connectionResult = super.onConnect(session, controller)
 
             val availableSessionCommands = connectionResult.availableSessionCommands.buildUpon()
-//            customCommands.forEach { commandButton ->
-//                // Add custom command to available session commaMediaLibrarySessionnds.
-//                // these are cached to be used as a lookup when the user presses it
-//                commandButton.sessionCommand?.let { availableSessionCommands.add(it) }
-//            }
+            availableSessionCommands.add(SessionCommand(CUSTOM_COMMAND_PUSH_IMMEDIATELY, Bundle.EMPTY))
+            availableSessionCommands.add(SessionCommand(CUSTOM_COMMAND_PLAY_AFTER_PLAYLIST, Bundle.EMPTY))
+            availableSessionCommands.add(SessionCommand(CUSTOM_COMMAND_PLAY_AFTER_SONG, Bundle.EMPTY))
+            availableSessionCommands.add(SessionCommand(CUSTOM_COMMAND_TOGGLE_SHUFFLE_MODE_ON, Bundle.EMPTY))
+            availableSessionCommands.add(SessionCommand(CUSTOM_COMMAND_TOGGLE_SHUFFLE_MODE_OFF, Bundle.EMPTY))
 
             val ret = MediaSession.ConnectionResult.accept(
                 availableSessionCommands.build(),
@@ -341,38 +391,12 @@ class PlayService: MediaLibraryService() {
             return ret
         }
 
-
-        @Deprecated("Deprecated in Java")
-        override fun onPlaybackResumption(
-            session: MediaSession,
-            controller: MediaSession.ControllerInfo
-        ): ListenableFuture<MediaSession.MediaItemsWithStartPosition> {
-            val playingItemIds = musicDataStore.playingList
-            val songsList = playingItemIds.mapNotNull { id ->
-                MediaItemTree.getItem(ITEM_PREFIX + id.toString())
-            }.asList()
-
-            if (songsList.isEmpty()) {
-                return Futures.immediateFailedFuture<MediaSession.MediaItemsWithStartPosition>(
-                    UnsupportedOperationException("No items to resume")
-                )
-            }
-
-            val playingSongId = ITEM_PREFIX + musicDataStore.playingSongId.toString()
-            val startIndex = songsList.indexOfFirst { it.mediaId == playingSongId }.coerceAtLeast(0)
-            val startPosition = musicDataStore.playingPosition
-
-            return Futures.immediateFuture<MediaSession.MediaItemsWithStartPosition>(
-                MediaSession.MediaItemsWithStartPosition(songsList, startIndex, startPosition)
-            )
-        }
-
         override fun onPostConnect(session: MediaSession, controller: MediaSession.ControllerInfo) {
-//            if (!customLayout.isEmpty() && controller.controllerVersion != 0) {
-//                // Let Media3 controller (for instance the MediaNotificationProvider) know about the custom
-//                // layout right after it connected.
-//                ignoreFuture(mediaLibrarySession.setCustomLayout(controller, customLayout))
-//            }
+            if (customLayout.isNotEmpty() && controller.controllerVersion != 0) {
+                // Let Media3 controller (for instance the MediaNotificationProvider) know about the custom
+                // layout right after it connected.
+                mediaLibrarySession.setCustomLayout(controller, customLayout)
+            }
         }
 
         override fun onCustomCommand(
@@ -381,22 +405,44 @@ class PlayService: MediaLibraryService() {
             customCommand: SessionCommand,
             args: Bundle
         ): ListenableFuture<SessionResult> {
-            if (CUSTOM_COMMAND_TOGGLE_SHUFFLE_MODE_ON == customCommand.customAction) {
-                // Enable shuffling.
-                currentPlayer.shuffleModeEnabled = true
-                // Change the custom layout to contain the `Disable shuffling` command.
-                //customLayout = ImmutableList.of(customCommands[1])
-                // Send the updated custom layout to controllers.
-                //session.setCustomLayout(customLayout)
-            } else if (CUSTOM_COMMAND_TOGGLE_SHUFFLE_MODE_OFF == customCommand.customAction) {
-                // Disable shuffling.
-                currentPlayer.shuffleModeEnabled = false
-                // Change the custom layout to contain the `Enable shuffling` command.
-                //customLayout = ImmutableList.of(customCommands[0])
-                // Send the updated custom layout to controllers.
-                //session.setCustomLayout(customLayout)
+            when (customCommand.customAction) {
+                CUSTOM_COMMAND_TOGGLE_SHUFFLE_MODE_ON -> {
+                    // Enable shuffling.
+                    currentPlayer.shuffleModeEnabled = true
+                }
+                CUSTOM_COMMAND_TOGGLE_SHUFFLE_MODE_OFF -> {
+                    // Disable shuffling.
+                    currentPlayer.shuffleModeEnabled = false
+                }
+                CUSTOM_COMMAND_PUSH_IMMEDIATELY -> {
+                    val playlist = args.getPlaylistInfo()
+                    queueManager.pushImmediately(playlist)
+                    saveQueue()
+                    loadQueuedPlaylist(queueManager)
+                }
+                CUSTOM_COMMAND_PLAY_AFTER_PLAYLIST -> {
+                    val playlist = args.getPlaylistInfo()
+                    queueManager.playAfterCurrentPlaylist(playlist)
+                    saveQueue()
+                    loadQueuedPlaylist(queueManager)
+                }
+                CUSTOM_COMMAND_PLAY_AFTER_SONG -> {
+                    val playlist = args.getPlaylistInfo()
+                    queueManager.playAfterCurrentSong(playlist)
+                    saveQueue()
+                    loadQueuedPlaylist(queueManager)
+                }
             }
             return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
+        }
+
+        private fun Bundle.getPlaylistInfo(): PlaylistInfo {
+            val name = getString("name") ?: ""
+            val mediaIds = getStringArray("mediaIds") ?: emptyArray()
+            val songs = mediaIds.mapNotNull { mediaId ->
+                MediaItemTree.getItem(mediaId)?.let { SongInfo(it) }
+            }.toImmutableArray()
+            return PlaylistInfo(name, songs)
         }
 
         override fun onSearch(

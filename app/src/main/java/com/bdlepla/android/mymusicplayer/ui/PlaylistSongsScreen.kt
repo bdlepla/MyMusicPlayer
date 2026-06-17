@@ -22,7 +22,9 @@ fun PlaylistSongsScreen(
     playlist:PlaylistInfo,
     songs: ImmutableArray<SongInfo>,
     onSongClick:(SongInfo)->Unit = emptyFunction1(),
-    onRemoveSongFromPlayList:(PlaylistInfo, SongInfo)->Unit = emptyFunction2()) {
+    onRemoveSongFromPlayList:(PlaylistInfo, SongInfo)->Unit = emptyFunction2(),
+    onPlayNext: (ImmutableArray<SongInfo>) -> Unit = emptyFunction1(),
+    onQueue: (ImmutableArray<SongInfo>) -> Unit = emptyFunction1()) {
     val onLongPress:(ImmutableArray<SongInfo>)->Unit = {
         if (it.any()) {
             onRemoveSongFromPlayList(playlist, it.first())
@@ -39,6 +41,6 @@ fun PlaylistSongsScreen(
             )
         }
         Spacer(modifier= Modifier.padding(all=4.dp))
-        SongList(songInfos = songs, onSongClick, onLongPress)
+        SongList(songInfos = songs, onSongClick, onLongPress, onPlayNext, onQueue)
     }
 }

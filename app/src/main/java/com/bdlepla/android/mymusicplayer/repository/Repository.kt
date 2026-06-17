@@ -5,13 +5,10 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.provider.MediaStore
-import android.support.v4.media.MediaDescriptionCompat
-import android.support.v4.media.MediaMetadataCompat
 import android.util.Log
 import android.util.Size
 import androidx.core.database.getStringOrNull
 import androidx.core.net.toUri
-import androidx.media.utils.MediaConstants
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import com.bdlepla.android.mymusicplayer.service.MediaItemTree.ITEM_PREFIX

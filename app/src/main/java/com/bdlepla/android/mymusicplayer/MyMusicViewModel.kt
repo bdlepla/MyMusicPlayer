@@ -3,6 +3,7 @@ package com.bdlepla.android.mymusicplayer
 import android.app.Application
 import android.content.ComponentName
 import android.content.Context
+import android.os.Bundle
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -11,6 +12,7 @@ import androidx.media3.common.Player
 import androidx.media3.common.Player.TIMELINE_CHANGE_REASON_SOURCE_UPDATE
 import androidx.media3.common.Timeline
 import androidx.media3.session.MediaBrowser
+import androidx.media3.session.SessionCommand
 import androidx.media3.session.SessionToken
 import com.bdlepla.android.mymusicplayer.business.AlbumInfo
 import com.bdlepla.android.mymusicplayer.business.ArtistInfo
@@ -32,7 +34,7 @@ import com.danrusu.pods4k.immutableArrays.ImmutableArray
 import com.danrusu.pods4k.immutableArrays.asList
 import com.danrusu.pods4k.immutableArrays.buildImmutableArray
 import com.danrusu.pods4k.immutableArrays.emptyImmutableArray
-import com.danrusu.pods4k.immutableArrays.indexOf
+import com.danrusu.pods4k.immutableArrays.immutableArrayOf
 import com.danrusu.pods4k.immutableArrays.multiplicativeSpecializations.map
 import com.danrusu.pods4k.immutableArrays.toImmutableArray
 import com.google.common.util.concurrent.ListenableFuture
@@ -45,6 +47,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.milliseconds
 
 @HiltViewModel
 class MyMusicViewModel
@@ -98,7 +101,7 @@ class MyMusicViewModel
                 val maxPosition = browser.duration.toInt() / 1000
                 _currentlyPlayingStats.value = CurrentPlayingStats(_currentlyPlaying,
                     currPosition, maxPosition, browser.repeatMode)
-                delay(POSITION_UPDATE_INTERVAL_MILLIS)
+                delay(POSITION_UPDATE_INTERVAL_MILLIS.milliseconds)
             }
         }
 
@@ -266,19 +269,36 @@ class MyMusicViewModel
     val currentSongList : StateFlow<ImmutableArray<SongInfo>>
         get() = _currentSongList.asStateFlow()
 
-    fun setCurrentlyPlaying(songInfo: SongInfo) {
-        val c = _currentSongList.value
-        val idx = c.indexOf(songInfo)
-        if (idx == -1) return
-        val b = browser ?: return
-        b.seekTo(idx, 0)
-        b.play()
+    fun playSongNow(song: SongInfo) {
+        playPlaylistNow(immutableArrayOf(song))
+    }
+    fun playPlaylistNow(songs: ImmutableArray<SongInfo>, name: String = "Selected Songs") {
+        val playlist = PlaylistInfo(name, songs)
+        pushPlaylistImmediately(playlist)
     }
 
-    fun setPlaylist(songs: ImmutableArray<SongInfo>) {
-        val b = browser ?: return
-        b.setMediaItems(songs.map { it.toMediaItem() }.asList())
-        b.prepare()
+    fun pushPlaylistImmediately(playlist: PlaylistInfo) {
+        val bundle = Bundle().apply {
+            putString("name", playlist.name)
+            putStringArray("mediaIds", playlist.songs.map { it.toMediaItem().mediaId }.asList().toTypedArray())
+        }
+        browser?.sendCustomCommand(SessionCommand(PlayService.CUSTOM_COMMAND_PUSH_IMMEDIATELY, Bundle.EMPTY), bundle)
+    }
+
+    fun playAfterCurrentPlaylist(playlist: PlaylistInfo) {
+        val bundle = Bundle().apply {
+            putString("name", playlist.name)
+            putStringArray("mediaIds", playlist.songs.map { it.toMediaItem().mediaId }.asList().toTypedArray())
+        }
+        browser?.sendCustomCommand(SessionCommand(PlayService.CUSTOM_COMMAND_PLAY_AFTER_PLAYLIST, Bundle.EMPTY), bundle)
+    }
+
+    fun playAfterCurrentSong(playlist: PlaylistInfo) {
+        val bundle = Bundle().apply {
+            putString("name", playlist.name)
+            putStringArray("mediaIds", playlist.songs.map { it.toMediaItem().mediaId }.asList().toTypedArray())
+        }
+        browser?.sendCustomCommand(SessionCommand(PlayService.CUSTOM_COMMAND_PLAY_AFTER_SONG, Bundle.EMPTY), bundle)
     }
 
     fun playNext() {

@@ -1,7 +1,6 @@
 package com.bdlepla.android.mymusicplayer.ui
 
 import android.content.res.Configuration
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
@@ -35,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.bdlepla.android.mymusicplayer.SampleData
 import com.bdlepla.android.mymusicplayer.business.PlaylistInfo
+import com.bdlepla.android.mymusicplayer.business.SongInfo
 import com.bdlepla.android.mymusicplayer.extensions.count
 import com.bdlepla.android.mymusicplayer.extensions.toHourMinutesSeconds
 import com.bdlepla.android.mymusicplayer.extensions.toImagePainter
@@ -47,7 +47,8 @@ fun PlaylistScreen(
     playlistList: ImmutableArray<PlaylistInfo>,
     onClick: (PlaylistInfo) -> Unit = emptyFunction1(),
     onCreateNewPlaylist: (String) -> Unit = emptyFunction1(),
-    onRemovePlaylist: (PlaylistInfo) -> Unit = emptyFunction1()){
+    onRemovePlaylist: (PlaylistInfo) -> Unit = emptyFunction1(),
+    onLongPress: (ImmutableArray<SongInfo>, PlaylistInfo?) -> Unit = emptyFunction2()){
 
     val nameNewPlaylist = remember { mutableStateOf(false) }
     val savedPlaylistNameToAdd = remember { mutableStateOf("") }
@@ -56,7 +57,9 @@ fun PlaylistScreen(
         nameNewPlaylist.value = true
     }
 
-    val onLongPress: (PlaylistInfo)->Unit = onRemovePlaylist
+    val myOnLongPress: (PlaylistInfo)->Unit = {
+        onLongPress(it.songs.shuffled(), it)
+    }
 
     if (nameNewPlaylist.value) {
         MyMusicPlayerTheme {
@@ -117,7 +120,7 @@ fun PlaylistScreen(
                 )
                 Spacer(modifier = Modifier.padding(all = 4.dp))
                 HorizontalDivider(color = MaterialTheme.colorScheme.primary)
-                PlaylistList(playlistList, onClick, onLongPress)
+                PlaylistList(playlistList, onClick, myOnLongPress)
             }
         }
     )
@@ -146,7 +149,7 @@ fun PlaylistList(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
+//@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun Playlist(playlistInfo: PlaylistInfo,
              onClick: (PlaylistInfo)->Unit=emptyFunction1(),

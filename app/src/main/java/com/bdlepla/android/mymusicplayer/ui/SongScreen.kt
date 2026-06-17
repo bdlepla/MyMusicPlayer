@@ -20,7 +20,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -48,26 +50,29 @@ import com.danrusu.pods4k.immutableArrays.asList
 import com.danrusu.pods4k.immutableArrays.immutableArrayOf
 import kotlinx.coroutines.delay
 import kotlin.math.roundToInt
+import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
 fun SongList(
     songInfos: ImmutableArray<SongInfo>,
     onClick: (SongInfo) -> Unit = emptyFunction1(),
     onAddSongToPlaylist: (ImmutableArray<SongInfo>) -> Unit = emptyFunction1(),
+    onPlayNext: (ImmutableArray<SongInfo>) -> Unit = emptyFunction1(),
+    onQueue: (ImmutableArray<SongInfo>) -> Unit = emptyFunction1(),
     currentSongIndex: Int = -1
 ) {
 
     val listState = rememberLazyListState()
     LazyColumn(state = listState) {
         items(items = songInfos.asList(), key = { it.songId }) { songInfo ->
-            ScrollableSongWithImage(songInfo, onClick, onAddSongToPlaylist)
+            ScrollableSongWithImage(songInfo, onClick, onAddSongToPlaylist, onPlayNext, onQueue)
             HorizontalDivider(thickness = 10.dp, color = MaterialTheme.colorScheme.background)
         }
     }
 
     if (currentSongIndex != -1) {
         LaunchedEffect(currentSongIndex) {
-            delay(250)
+            delay(250.milliseconds)
             listState.animateScrollToItem(currentSongIndex)
         }
     }
@@ -120,18 +125,20 @@ fun SongWithImage(
 fun ScrollableSongWithImage(
     songInfo: SongInfo,
     onClick: (SongInfo) -> Unit = emptyFunction1(),
-    onAddSongToPlaylist: (ImmutableArray<SongInfo>) -> Unit = emptyFunction1()
+    onAddSongToPlaylist: (ImmutableArray<SongInfo>) -> Unit = emptyFunction1(),
+    onPlayNext: (ImmutableArray<SongInfo>) -> Unit = emptyFunction1(),
+    onQueue: (ImmutableArray<SongInfo>) -> Unit = emptyFunction1()
 ) {
 
     val offsetX = remember { mutableFloatStateOf(0f) }
-    val iconWidth=175
+    val iconWidth=300
 
     Box( modifier =
         Modifier.
         fillMaxSize().
         pointerInput(Unit) {
             detectHorizontalDragGestures { _, dragAmount ->
-                offsetX.floatValue = (offsetX.floatValue + dragAmount).coerceIn(-175f, 0f)
+                offsetX.floatValue = (offsetX.floatValue + dragAmount).coerceIn(-iconWidth.toFloat(), 0f)
             }
         }
     ) {
@@ -151,6 +158,29 @@ fun ScrollableSongWithImage(
                 }) {
                 Icon(
                     Icons.Default.Add,
+                    contentDescription = "",
+                    tint = Color.White
+                )
+            }
+            IconButton( modifier = Modifier.background(Color.Green),
+                onClick = {
+                    offsetX.floatValue = 0f
+                    val playNextList = immutableArrayOf(songInfo)
+                    onPlayNext(playNextList)
+                }) {
+                Icon(
+                    Icons.Default.PlayArrow,
+                    contentDescription = "",
+                    tint = Color.White
+                )
+            }
+            IconButton( modifier = Modifier.background(Color.Red),
+                onClick = {
+                    offsetX.floatValue = 0f
+                    onQueue(immutableArrayOf(songInfo))
+                }) {
+                Icon(
+                    Icons.AutoMirrored.Filled.List,
                     contentDescription = "",
                     tint = Color.White
                 )
