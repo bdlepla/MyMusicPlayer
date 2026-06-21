@@ -65,7 +65,7 @@ fun PlayScreen(
             Song(currentSong)
         }
         Spacer(modifier= Modifier.padding(all=4.dp))
-        SongList(currentSongs, currentSongIndex = currentSongIndex)
+        SongList(currentSongs, currentSongIndex = currentSongIndex, showActions = false)
     }
 }
 

@@ -59,13 +59,18 @@ fun SongList(
     onAddSongToPlaylist: (ImmutableArray<SongInfo>) -> Unit = emptyFunction1(),
     onPlayNext: (ImmutableArray<SongInfo>) -> Unit = emptyFunction1(),
     onQueue: (ImmutableArray<SongInfo>) -> Unit = emptyFunction1(),
-    currentSongIndex: Int = -1
+    currentSongIndex: Int = -1,
+    showActions: Boolean = true
 ) {
 
     val listState = rememberLazyListState()
     LazyColumn(state = listState) {
         items(items = songInfos.asList(), key = { it.songId }) { songInfo ->
-            ScrollableSongWithImage(songInfo, onClick, onAddSongToPlaylist, onPlayNext, onQueue)
+            if (showActions) {
+                ScrollableSongWithImage(songInfo, onClick, onAddSongToPlaylist, onPlayNext, onQueue)
+            } else {
+                SongWithImage(songInfo, onClick)
+            }
             HorizontalDivider(thickness = 10.dp, color = MaterialTheme.colorScheme.background)
         }
     }
@@ -131,14 +136,14 @@ fun ScrollableSongWithImage(
 ) {
 
     val offsetX = remember { mutableFloatStateOf(0f) }
-    val iconWidth=300
+    val iconWidth=175*3
 
     Box( modifier =
         Modifier.
         fillMaxSize().
         pointerInput(Unit) {
             detectHorizontalDragGestures { _, dragAmount ->
-                offsetX.floatValue = (offsetX.floatValue + dragAmount).coerceIn(-iconWidth.toFloat(), 0f)
+                offsetX.floatValue = (offsetX.floatValue + dragAmount).coerceIn(-175f*3, 0f)
             }
         }
     ) {
