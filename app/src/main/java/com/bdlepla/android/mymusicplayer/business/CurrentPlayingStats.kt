@@ -5,4 +5,5 @@ data class CurrentPlayingStats(
     val currentPosition:Int,
     val maxPosition:Int,
     val repeat:Int,
+    val shuffle:Boolean,
 )

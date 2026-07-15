@@ -2,7 +2,6 @@ package com.bdlepla.android.mymusicplayer
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
 import androidx.media3.session.MediaController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -23,6 +22,7 @@ import com.bdlepla.android.mymusicplayer.ui.PlaylistSongsScreen
 import com.bdlepla.android.mymusicplayer.ui.SongList
 import com.bdlepla.android.mymusicplayer.ui.emptyFunction1
 import com.bdlepla.android.mymusicplayer.ui.emptyFunction2
+import com.bdlepla.android.mymusicplayer.ui.emptyFunction3
 import com.danrusu.pods4k.immutableArrays.ImmutableArray
 import com.danrusu.pods4k.immutableArrays.emptyImmutableArray
 import com.danrusu.pods4k.immutableArrays.multiplicativeSpecializations.flatMap
@@ -37,12 +37,8 @@ fun Navigation(
     albums: ImmutableArray<AlbumInfo>,
     playlists: ImmutableArray<PlaylistInfo>,
     onCreateNewPlaylist: (String) -> Unit = emptyFunction1(),
-    onRemovePlaylist: (PlaylistInfo) -> Unit = emptyFunction1(),
-    onLongPress: (ImmutableArray<SongInfo>, PlaylistInfo?)->Unit = emptyFunction2(),
+    onLongPress: (ImmutableArray<SongInfo>, PlaylistInfo?, Boolean) -> Unit = emptyFunction3(),
     onRemoveSongFromPlaylist:(PlaylistInfo, SongInfo)->Unit = emptyFunction2(),
-    onSongClick: (SongInfo, ImmutableArray<SongInfo>) -> Unit = emptyFunction2(),
-    onPlayNext: (ImmutableArray<SongInfo>) -> Unit = emptyFunction1(),
-    onQueue: (ImmutableArray<SongInfo>) -> Unit = emptyFunction1(),
     currentPlayingStats: CurrentPlayingStats? = null,
     isPaused: Boolean = false,
     setShuffledSongs: (ImmutableArray<SongInfo>) -> Unit = emptyFunction1()
@@ -54,10 +50,7 @@ fun Navigation(
             LaunchedEffect(songs) {
                 setShuffledSongs(songs.shuffled())
             }
-            val myOnClick: (SongInfo) -> Unit = remember(songs, onSongClick) {
-                { onSongClick(it, songs) }
-            }
-            SongList(songs, myOnClick, { onLongPress(it, null) }, onPlayNext, onQueue)
+            SongList(songs, { onLongPress(it, null, true) })
         }
 
         composable(NavigationItem.Artists.route) {
@@ -67,7 +60,7 @@ fun Navigation(
                     .flatMap { album -> album.songs }
                 setShuffledSongs(shuffledSongs)
             }
-            ArtistList(artists, navController) { onLongPress(it, null) }
+            ArtistList(artists, navController) { onLongPress(it, null, true) }
         }
 
         composable("artistsongs/{artistId}") { backStack ->
@@ -80,17 +73,14 @@ fun Navigation(
                 setShuffledSongs(songsForArtist.shuffled())
             }
 
-            val myOnClick: (SongInfo) -> Unit = remember(songsForArtist, onSongClick) {
-                { onSongClick(it, songsForArtist) }
-            }
-            ArtistSongsScreen(theArtist, songsForArtist, myOnClick, { onLongPress(it, null) }, onPlayNext, onQueue)
+            ArtistSongsScreen(theArtist, songsForArtist, { onLongPress(it, null, true) })
         }
 
         composable(NavigationItem.Albums.route) {
             LaunchedEffect(albums) {
                 setShuffledSongs(albums.shuffled().flatMap { album -> album.songs })
             }
-            AlbumList(albums, navController) { onLongPress(it, null) }
+            AlbumList(albums, navController) { onLongPress(it, null, true) }
         }
 
         composable("albumsongs/{albumId}") { backStack ->
@@ -103,10 +93,7 @@ fun Navigation(
                 setShuffledSongs(songsInAlbum.shuffled())
             }
 
-            val myOnClick: (SongInfo) -> Unit = remember(songsInAlbum, onSongClick) {
-                { onSongClick(it, songsInAlbum) }
-            }
-            AlbumSongsScreen(isExpandedWindow, theAlbum, songsInAlbum, myOnClick, { onLongPress(it, null) }, onPlayNext, onQueue)
+            AlbumSongsScreen(isExpandedWindow, theAlbum, songsInAlbum, { onLongPress(it, null, true) })
         }
 
         composable(NavigationItem.Playing.route) {
@@ -117,17 +104,15 @@ fun Navigation(
         }
 
         composable(NavigationItem.Playlist.route) {
-            val onClick: (PlaylistInfo) -> Unit = remember(navController) {
-                {
-                    val playlistName = it.name
-                    val route = "playlistsongs/${playlistName}"
-                    navController.navigate(route)
-                }
+            val onClick: (PlaylistInfo) -> Unit = {
+                val playlistName = it.name
+                val route = "playlistsongs/${playlistName}"
+                navController.navigate(route)
             }
             LaunchedEffect(playlists) {
                 setShuffledSongs(playlists.shuffled().flatMap { playlist -> playlist.songs.shuffled() })
             }
-            PlaylistScreen(playlists, onClick, onCreateNewPlaylist, onRemovePlaylist, onLongPress)
+            PlaylistScreen(playlists, onClick, onCreateNewPlaylist, onLongPress)
         }
 
         composable("playlistsongs/{playlistId}") { backStack ->
@@ -140,10 +125,7 @@ fun Navigation(
                 setShuffledSongs(songsInPlaylist.shuffled())
             }
 
-            val myOnClick: (SongInfo) -> Unit = remember(songsInPlaylist, onSongClick) {
-                { onSongClick(it, songsInPlaylist) }
-            }
-            PlaylistSongsScreen(playlist, songsInPlaylist, myOnClick, onRemoveSongFromPlaylist, onPlayNext, onQueue)
+            PlaylistSongsScreen(playlist, songsInPlaylist, onRemoveSongFromPlaylist)
         }
     }
 }

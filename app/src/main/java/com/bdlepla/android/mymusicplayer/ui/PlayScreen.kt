@@ -65,7 +65,7 @@ fun PlayScreen(
             Song(currentSong)
         }
         Spacer(modifier= Modifier.padding(all=4.dp))
-        SongList(currentSongs, currentSongIndex = currentSongIndex, showActions = false)
+        SongList(currentSongs, currentSongIndex = currentSongIndex)
     }
 }
 
@@ -154,6 +154,6 @@ fun PlayerControllerButtons(isPaused: Boolean, callbacks: Callbacks) {
 fun PlayScreenPreview() {
     MyMusicPlayerTheme {
         val songs = SampleData().songs
-        PlayScreen(CurrentPlayingStats(songs[0], 0, 0, 0), songs, false)
+        PlayScreen(CurrentPlayingStats(songs[0], 0, 0, 0, false), songs, false)
     }
 }

@@ -31,8 +31,7 @@ fun CurrentlyPlayingSmallScreen(
     currentSong: SongInfo,
     isPaused:Boolean,
     onPlayPauseClick:() -> Unit = emptyFunction(),
-    onNextClick:() -> Unit = emptyFunction(),
-    onClick:(SongInfo) -> Unit = emptyFunction1()
+    onNextClick:() -> Unit = emptyFunction()
 ) {
     val isDark = isSystemInDarkTheme()
     val playPauseIcon = painterResource( id =
@@ -59,7 +58,7 @@ fun CurrentlyPlayingSmallScreen(
             Box(
                 modifier = Modifier.weight(3f)
             ) {
-                SongWithImage(currentSong, onClick)
+                SongWithImage(currentSong)
             }
             Image(painter = playPauseIcon,
                 contentDescription = if (isPaused) "Play" else "Pause",

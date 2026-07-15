@@ -39,7 +39,6 @@ import com.bdlepla.android.mymusicplayer.business.ArtistInfo
 import com.bdlepla.android.mymusicplayer.business.CurrentPlayingStats
 import com.bdlepla.android.mymusicplayer.business.PlaylistInfo
 import com.bdlepla.android.mymusicplayer.business.SongInfo
-import com.bdlepla.android.mymusicplayer.extensions.any
 import com.bdlepla.android.mymusicplayer.ui.theme.MyMusicPlayerTheme
 import com.danrusu.pods4k.immutableArrays.ImmutableArray
 import com.danrusu.pods4k.immutableArrays.emptyImmutableArray
@@ -59,8 +58,8 @@ internal fun MainScreen(viewModel: MyMusicViewModel=viewModel(), activity: Conte
     val castState by viewModel.castState.collectAsState()
 
 
-    val onSongClick: (SongInfo, ImmutableArray<SongInfo>) -> Unit = { itSong, _ ->
-        viewModel.playSongNow(itSong)
+    val onPlayImmediately: (ImmutableArray<SongInfo>) -> Unit = {
+        viewModel.playPlaylistNow(it)
     }
     val onPlayNext: (ImmutableArray<SongInfo>) -> Unit = {
         viewModel.playAfterCurrentSong(PlaylistInfo("Next", it))
@@ -69,6 +68,7 @@ internal fun MainScreen(viewModel: MyMusicViewModel=viewModel(), activity: Conte
         viewModel.playAfterCurrentPlaylist(PlaylistInfo("Queued", it))
     }
     val onRepeatClick: ()->Unit = { viewModel.toggleRepeat() }
+    val onShuffleClick: () -> Unit = { viewModel.toggleShuffle() }
     val onPlayPauseClick: ()->Unit = { viewModel.togglePlayPause() }
     val onNextClick:()->Unit = { viewModel.playNext() }
 
@@ -77,12 +77,14 @@ internal fun MainScreen(viewModel: MyMusicViewModel=viewModel(), activity: Conte
 
     val songsForAction = remember { mutableStateOf<ImmutableArray<SongInfo>>(emptyImmutableArray()) }
     val playlistForAction = remember { mutableStateOf<PlaylistInfo?>(null) }
+    val showAddToPlaylistOption = remember { mutableStateOf(true) }
     val pickPlaylist = remember { mutableStateOf(false) }
     val showActionChoice = remember { mutableStateOf(false) }
 
-    val onLongPressAction: (ImmutableArray<SongInfo>, PlaylistInfo?)->Unit = { songs, playlist ->
+    val onLongPressAction: (ImmutableArray<SongInfo>, PlaylistInfo?, Boolean)->Unit = { songs, playlist, showAddToPlaylist ->
         songsForAction.value = songs
         playlistForAction.value = playlist
+        showAddToPlaylistOption.value = showAddToPlaylist
         showActionChoice.value = true
     }
 
@@ -102,6 +104,13 @@ internal fun MainScreen(viewModel: MyMusicViewModel=viewModel(), activity: Conte
                         )
                         Spacer(modifier = Modifier.padding(all = 8.dp))
                         ListItem(
+                            headlineContent = { Text("Play Immediately") },
+                            modifier = Modifier.clickable {
+                                onPlayImmediately(songsForAction.value)
+                                showActionChoice.value = false
+                            }
+                        )
+                        ListItem(
                             headlineContent = { Text("Play Next") },
                             modifier = Modifier.clickable {
                                 onPlayNext(songsForAction.value)
@@ -109,19 +118,21 @@ internal fun MainScreen(viewModel: MyMusicViewModel=viewModel(), activity: Conte
                             }
                         )
                         ListItem(
-                            headlineContent = { Text("Queue") },
+                            headlineContent = { Text("Add to Current Queue") },
                             modifier = Modifier.clickable {
                                 onQueue(songsForAction.value)
                                 showActionChoice.value = false
                             }
                         )
-                        ListItem(
-                            headlineContent = { Text("Add to Playlist") },
-                            modifier = Modifier.clickable {
-                                pickPlaylist.value = true
-                                showActionChoice.value = false
-                            }
-                        )
+                        if (showAddToPlaylistOption.value) {
+                            ListItem(
+                                headlineContent = { Text("Add to Playlist") },
+                                modifier = Modifier.clickable {
+                                    pickPlaylist.value = true
+                                    showActionChoice.value = false
+                                }
+                            )
+                        }
                         playlistForAction.value?.let { playlist ->
                             ListItem(
                                 headlineContent = { Text("Remove Playlist", color = Color.Red) },
@@ -180,12 +191,9 @@ internal fun MainScreen(viewModel: MyMusicViewModel=viewModel(), activity: Conte
         albums,
         playlists,
         onCreateNewPlaylist,
-        onRemovePlaylist,
         onLongPressAction,
         onRemoveSongFromPlaylist,
-        onSongClick,
-        onPlayNext,
-        onQueue,
+        onShuffleClick,
         onRepeatClick,
         onPlayPauseClick,
         onNextClick,
@@ -207,12 +215,9 @@ private fun MainContent(
     albums: ImmutableArray<AlbumInfo>,
     playlists: ImmutableArray<PlaylistInfo>,
     onCreateNewPlaylist: (String) -> Unit = emptyFunction1(),
-    onRemovePlaylist: (PlaylistInfo) -> Unit = emptyFunction1(),
-    onLongPress: (ImmutableArray<SongInfo>, PlaylistInfo?)->Unit = emptyFunction2(),
+    onLongPress: (ImmutableArray<SongInfo>, PlaylistInfo?, Boolean)->Unit = emptyFunction3(),
     onRemoveSongFromPlaylist:(PlaylistInfo, SongInfo)->Unit = emptyFunction2(),
-    onSongClick: (SongInfo, ImmutableArray<SongInfo>) -> Unit = emptyFunction2(),
-    onPlayNext: (ImmutableArray<SongInfo>) -> Unit = emptyFunction1(),
-    onQueue: (ImmutableArray<SongInfo>) -> Unit = emptyFunction1(),
+    onShuffleClick: () -> Unit = emptyFunction(),
     onRepeatClick: () -> Unit = emptyFunction(),
     onPlayPauseClick: () -> Unit = emptyFunction(),
     onNextClick: () -> Unit = emptyFunction(),
@@ -225,17 +230,18 @@ private fun MainContent(
     val setShuffledSongs: (ImmutableArray<SongInfo>) -> Unit = {
         shuffledSongs.value = it
     }
-    val onShuffleClick: () -> Unit = {
-        if (shuffledSongs.value.any()) {
-            onSongClick(shuffledSongs.value[0], shuffledSongs.value)
-        }
-    }
 
     val navController = rememberNavController()
     MyMusicPlayerTheme {
         Surface {
             Scaffold(
-                topBar = { TopAppBar(castState, currentPlayingStats?.repeat ?: 0, activity, onShuffleClick, onRepeatClick) },
+                topBar = { TopAppBar(
+                    castState,
+                    currentPlayingStats?.repeat ?: 0,
+                    currentPlayingStats?.shuffle ?: false,
+                    activity,
+                    onShuffleClick,
+                    onRepeatClick) },
                 bottomBar = {
                     BottomAppBar(
                         onPlayPauseClick,
@@ -248,11 +254,21 @@ private fun MainContent(
             ) { paddingValues ->
                 // A surface container using the 'background' color from the theme
                 Column(modifier = Modifier.padding(paddingValues)) {
-                    Navigation(navController, mediaController, songs, currentSongList, artists,
-                        albums, playlists, onCreateNewPlaylist, onRemovePlaylist,
-                        onLongPress, onRemoveSongFromPlaylist, onSongClick,
-                        onPlayNext, onQueue,
-                        currentPlayingStats, isPaused, setShuffledSongs)
+                    Navigation(
+                        navController = navController,
+                        mediaController = mediaController,
+                        songs = songs,
+                        currentSongList = currentSongList,
+                        artists = artists,
+                        albums = albums,
+                        playlists = playlists,
+                        onCreateNewPlaylist = onCreateNewPlaylist,
+                        onLongPress = onLongPress,
+                        onRemoveSongFromPlaylist = onRemoveSongFromPlaylist,
+                        currentPlayingStats = currentPlayingStats,
+                        isPaused = isPaused,
+                        setShuffledSongs = setShuffledSongs
+                    )
                 }
             }
         }
@@ -283,5 +299,3 @@ fun MainContentPreview() {
         )
     }
 }
-
-

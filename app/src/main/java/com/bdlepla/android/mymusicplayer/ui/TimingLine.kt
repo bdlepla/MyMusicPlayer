@@ -73,6 +73,6 @@ fun TimingLine(currentPlayingStats: CurrentPlayingStats?) {
 @Composable
 fun TimingLinePreview() {
     MyMusicPlayerTheme {
-        TimingLine(CurrentPlayingStats(null,50, 235, 0))
+        TimingLine(CurrentPlayingStats(null,50, 235, 0, false))
     }
 }

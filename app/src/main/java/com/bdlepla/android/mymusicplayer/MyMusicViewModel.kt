@@ -7,9 +7,9 @@ import android.os.Bundle
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.media3.common.C
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
-import androidx.media3.common.Player.TIMELINE_CHANGE_REASON_SOURCE_UPDATE
 import androidx.media3.common.Timeline
 import androidx.media3.session.MediaBrowser
 import androidx.media3.session.SessionCommand
@@ -34,7 +34,6 @@ import com.danrusu.pods4k.immutableArrays.ImmutableArray
 import com.danrusu.pods4k.immutableArrays.asList
 import com.danrusu.pods4k.immutableArrays.buildImmutableArray
 import com.danrusu.pods4k.immutableArrays.emptyImmutableArray
-import com.danrusu.pods4k.immutableArrays.immutableArrayOf
 import com.danrusu.pods4k.immutableArrays.multiplicativeSpecializations.map
 import com.danrusu.pods4k.immutableArrays.toImmutableArray
 import com.google.common.util.concurrent.ListenableFuture
@@ -73,7 +72,6 @@ class MyMusicViewModel
     }
 
     override fun onCleared() {
-        super.onCleared()
 //        castContext.removeCastStateListener(castStateListener)
         browser?.removeListener(playerListener)
         browser?.release()
@@ -100,7 +98,7 @@ class MyMusicViewModel
                 val currPosition = currPositionInMs.toInt() / 1000
                 val maxPosition = browser.duration.toInt() / 1000
                 _currentlyPlayingStats.value = CurrentPlayingStats(_currentlyPlaying,
-                    currPosition, maxPosition, browser.repeatMode)
+                    currPosition, maxPosition, browser.repeatMode, browser.shuffleModeEnabled)
                 delay(POSITION_UPDATE_INTERVAL_MILLIS.milliseconds)
             }
         }
@@ -180,9 +178,29 @@ class MyMusicViewModel
             _currentlyPlaying = mediaItem.mediaMetadata.toSongInfo()
         }
         _isPaused.value = !b.isPlaying()
+        updateCurrentSongList(b)
+    }
+
+    private fun updateCurrentSongList(player: Player) {
+        val timeline = player.currentTimeline
+        if (timeline.isEmpty) {
+            _currentSongList.value = emptyImmutableArray()
+            return
+        }
+
+        val window = Timeline.Window()
+        val shuffleModeEnabled = player.shuffleModeEnabled
+
         val songInfos: ImmutableArray<SongInfo> = buildImmutableArray {
-            (0..< b.mediaItemCount).forEach {
-                b.getMediaItemAt(it).mediaMetadata.toSongInfo()?.let(::add)
+            var windowIndex = timeline.getFirstWindowIndex(shuffleModeEnabled)
+            while (windowIndex != C.INDEX_UNSET) {
+                timeline.getWindow(windowIndex, window)
+                window.mediaItem.mediaMetadata.toSongInfo()?.let { add(it) }
+                windowIndex = timeline.getNextWindowIndex(
+                    windowIndex,
+                    Player.REPEAT_MODE_OFF,
+                    shuffleModeEnabled
+                )
             }
         }
         _currentSongList.value = songInfos
@@ -205,7 +223,7 @@ class MyMusicViewModel
 
         override fun onShuffleModeEnabledChanged(shuffleModeEnabled: Boolean) {
             super.onShuffleModeEnabledChanged(shuffleModeEnabled)
-            _shuffling.value = shuffleModeEnabled
+            browser?.let { updateCurrentSongList(it) }
         }
 
         override fun onMediaMetadataChanged(mediaMetadata: MediaMetadata) {
@@ -214,21 +232,9 @@ class MyMusicViewModel
             _currentlyPlaying = item
         }
 
-        // for changes in playlist
-        private val window = Timeline.Window()
-
         override fun onTimelineChanged(timeline: Timeline, reason: Int) {
             super.onTimelineChanged(timeline, reason)
-            if (!everReceivedTimeline || reason == TIMELINE_CHANGE_REASON_SOURCE_UPDATE) {
-                val songInfos: ImmutableArray<SongInfo> = buildImmutableArray {
-                    (0..<timeline.windowCount).forEach { windowIndex ->
-                        timeline.getWindow(windowIndex, window)
-                        window.mediaItem.mediaMetadata.toSongInfo()?.let{add(it)}
-                    }
-                }
-                _currentSongList.value = songInfos
-                everReceivedTimeline = true
-            }
+            browser?.let { updateCurrentSongList(it) }
         }
     }
     private fun MediaMetadata.toSongInfo(): SongInfo? =
@@ -261,17 +267,10 @@ class MyMusicViewModel
     val currentlyPlayingStats : StateFlow<CurrentPlayingStats?>
         get() = _currentlyPlayingStats.asStateFlow()
 
-    private val _shuffling = MutableStateFlow(false)
-//    val isShuffling: StateFlow<Boolean>
-//        get() = _shuffling.asStateFlow()
-
     private val  _currentSongList = MutableStateFlow<ImmutableArray<SongInfo>>(emptyImmutableArray())
     val currentSongList : StateFlow<ImmutableArray<SongInfo>>
         get() = _currentSongList.asStateFlow()
 
-    fun playSongNow(song: SongInfo) {
-        playPlaylistNow(immutableArrayOf(song))
-    }
     fun playPlaylistNow(songs: ImmutableArray<SongInfo>, name: String = "Selected Songs") {
         val playlist = PlaylistInfo(name, songs)
         pushPlaylistImmediately(playlist)
@@ -322,11 +321,16 @@ class MyMusicViewModel
     fun toggleRepeat() {
         val b = browser ?: return
         if (b.repeatMode == Player.REPEAT_MODE_OFF) {
-            b.repeatMode = Player.REPEAT_MODE_ALL
+            b.repeatMode = Player.REPEAT_MODE_ONE
         }
         else {
             b.repeatMode = Player.REPEAT_MODE_OFF
         }
+    }
+
+    fun toggleShuffle() {
+        val b = browser ?: return
+        b.shuffleModeEnabled = !b.shuffleModeEnabled
     }
 
     private val songCollection = mutableListOf<SongInfo>()

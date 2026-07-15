@@ -47,8 +47,7 @@ fun PlaylistScreen(
     playlistList: ImmutableArray<PlaylistInfo>,
     onClick: (PlaylistInfo) -> Unit = emptyFunction1(),
     onCreateNewPlaylist: (String) -> Unit = emptyFunction1(),
-    onRemovePlaylist: (PlaylistInfo) -> Unit = emptyFunction1(),
-    onLongPress: (ImmutableArray<SongInfo>, PlaylistInfo?) -> Unit = emptyFunction2()){
+    onLongPress: (ImmutableArray<SongInfo>, PlaylistInfo?, Boolean) -> Unit = emptyFunction3()){
 
     val nameNewPlaylist = remember { mutableStateOf(false) }
     val savedPlaylistNameToAdd = remember { mutableStateOf("") }
@@ -58,7 +57,7 @@ fun PlaylistScreen(
     }
 
     val myOnLongPress: (PlaylistInfo)->Unit = {
-        onLongPress(it.songs.shuffled(), it)
+        onLongPress(it.songs.shuffled(), it, false)
     }
 
     if (nameNewPlaylist.value) {

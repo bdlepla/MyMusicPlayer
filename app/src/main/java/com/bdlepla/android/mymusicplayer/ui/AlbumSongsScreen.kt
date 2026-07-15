@@ -27,15 +27,12 @@ fun AlbumSongsScreen(
     isExpandedWindowSize: Boolean = false,
     albumInfo: AlbumInfo,
     songsInAlbum: ImmutableArray<SongInfo>,
-    onSongClick:(SongInfo)->Unit = emptyFunction1(),
-    onLongPress: (ImmutableArray<SongInfo>) -> Unit = emptyFunction1(),
-    onPlayNext: (ImmutableArray<SongInfo>) -> Unit = emptyFunction1(),
-    onQueue: (ImmutableArray<SongInfo>) -> Unit = emptyFunction1()) {
+    onLongPress: (ImmutableArray<SongInfo>) -> Unit = emptyFunction1()) {
     if (isExpandedWindowSize) {
-        AlbumSongsScreenLandscape(albumInfo, songsInAlbum, onSongClick, onLongPress, onPlayNext, onQueue)
+        AlbumSongsScreenLandscape(albumInfo, songsInAlbum, onLongPress)
     }
     else {
-        AlbumSongsScreenPortrait(albumInfo, songsInAlbum, onSongClick, onLongPress, onPlayNext, onQueue)
+        AlbumSongsScreenPortrait(albumInfo, songsInAlbum, onLongPress)
     }
 }
 
@@ -43,10 +40,7 @@ fun AlbumSongsScreen(
 fun AlbumSongsScreenPortrait(
     albumInfo: AlbumInfo,
     songsInAlbum: ImmutableArray<SongInfo>,
-    onSongClick:(SongInfo)->Unit = emptyFunction1(),
-    onLongPress: (ImmutableArray<SongInfo>) -> Unit = emptyFunction1(),
-    onPlayNext: (ImmutableArray<SongInfo>) -> Unit = emptyFunction1(),
-    onQueue: (ImmutableArray<SongInfo>) -> Unit = emptyFunction1()) {
+    onLongPress: (ImmutableArray<SongInfo>) -> Unit = emptyFunction1()) {
     Column {
         Box (modifier = Modifier.fillMaxWidth()){
             Image(
@@ -58,7 +52,7 @@ fun AlbumSongsScreenPortrait(
             )
         }
         Spacer(modifier= Modifier.padding(all=4.dp))
-        SongList(songsInAlbum, onSongClick, onLongPress, onPlayNext, onQueue)
+        SongList(songsInAlbum, onLongPress)
     }
 }
 
@@ -81,10 +75,7 @@ fun AlbumSongsScreenPortraitPreview() {
 fun AlbumSongsScreenLandscape(
     albumInfo: AlbumInfo,
     songsInAlbum: ImmutableArray<SongInfo>,
-    onSongClick:(SongInfo)->Unit = emptyFunction1(),
-    onLongPress: (ImmutableArray<SongInfo>) -> Unit = emptyFunction1(),
-    onPlayNext: (ImmutableArray<SongInfo>) -> Unit = emptyFunction1(),
-    onQueue: (ImmutableArray<SongInfo>) -> Unit = emptyFunction1()) {
+    onLongPress: (ImmutableArray<SongInfo>) -> Unit = emptyFunction1()) {
     Row {
         //PlayScreen(currentPlayingStats = playingStats, isPaused = isPaused)
         //SongList
@@ -100,7 +91,7 @@ fun AlbumSongsScreenLandscape(
             )
         }
         Spacer(modifier= Modifier.padding(all=4.dp))
-        SongList(songsInAlbum, onSongClick, onLongPress, onPlayNext, onQueue)
+        SongList(songsInAlbum, onLongPress)
     }
 }
 
