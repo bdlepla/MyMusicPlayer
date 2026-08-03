@@ -100,7 +100,13 @@ fun Navigation(
             LaunchedEffect(Unit) {
                 setShuffledSongs(emptyImmutableArray())
             }
-            PlayScreen(currentPlayingStats, currentSongList, isPaused, mediaController)
+            PlayScreen(
+                currentPlayingStats = currentPlayingStats,
+                currentSongs = currentSongList,
+                isPaused = isPaused,
+                controller = mediaController,
+                onBackClick = { navController.popBackStack() }
+            )
         }
 
         composable(NavigationItem.Playlist.route) {

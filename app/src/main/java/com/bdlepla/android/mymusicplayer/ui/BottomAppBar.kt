@@ -38,7 +38,6 @@ fun BottomAppBar(
         NavigationItem.Songs,
         NavigationItem.Artists,
         NavigationItem.Albums,
-        NavigationItem.Playing,
         NavigationItem.Playlist
     )
     val isCurrentlyPlaying = currentlyPlaying != null
@@ -52,6 +51,7 @@ fun BottomAppBar(
                 isPaused,
                 onPlayPauseClick,
                 onNextClick,
+                onClick = { navController.navigate(NavigationItem.Playing.route) }
             )
         }
 

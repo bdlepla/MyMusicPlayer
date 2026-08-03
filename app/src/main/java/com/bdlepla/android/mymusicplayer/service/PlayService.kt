@@ -240,6 +240,8 @@ class PlayService: MediaLibraryService() {
 
     private fun loadQueuedPlaylist(queueManager:QueueManager) {
         val mediaItems = queueManager.getSongs().map { it.toMediaItem() }
+        if (mediaItems.isEmpty()) return
+        
         currentPlayer.setMediaItems(mediaItems, queueManager.currentIndex, queueManager.currentPosition)
         currentPlayer.prepare()
         currentPlayer.play()

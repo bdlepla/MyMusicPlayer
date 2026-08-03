@@ -31,7 +31,8 @@ fun CurrentlyPlayingSmallScreen(
     currentSong: SongInfo,
     isPaused:Boolean,
     onPlayPauseClick:() -> Unit = emptyFunction(),
-    onNextClick:() -> Unit = emptyFunction()
+    onNextClick:() -> Unit = emptyFunction(),
+    onClick:() -> Unit = emptyFunction()
 ) {
     val isDark = isSystemInDarkTheme()
     val playPauseIcon = painterResource( id =
@@ -49,7 +50,7 @@ fun CurrentlyPlayingSmallScreen(
         else R.drawable.baseline_skip_next_black_24
     )
 
-    Column {
+    Column(modifier = Modifier.clickable { onClick() }) {
         HorizontalDivider(
             modifier = Modifier.padding(vertical = 4.dp),
             color = MaterialTheme.colorScheme.primary
@@ -58,7 +59,7 @@ fun CurrentlyPlayingSmallScreen(
             Box(
                 modifier = Modifier.weight(3f)
             ) {
-                SongWithImage(currentSong)
+                SongWithImage(currentSong, onClick = { onClick() })
             }
             Image(painter = playPauseIcon,
                 contentDescription = if (isPaused) "Play" else "Pause",

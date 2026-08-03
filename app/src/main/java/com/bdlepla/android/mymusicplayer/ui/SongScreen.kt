@@ -38,7 +38,8 @@ import kotlin.time.Duration.Companion.milliseconds
 fun SongList(
     songInfos: ImmutableArray<SongInfo>,
     onLongClick: (ImmutableArray<SongInfo>) -> Unit = emptyFunction1(),
-    currentSongIndex: Int = -1
+    currentSongIndex: Int = -1,
+    onClick: (SongInfo) -> Unit = emptyFunction1()
 ) {
 
     val listState = rememberLazyListState()
@@ -46,7 +47,8 @@ fun SongList(
         items(items = songInfos.asList(), key = { it.songId }) { songInfo ->
             SongWithImage(
                 songInfo = songInfo,
-                onLongClick = { onLongClick(immutableArrayOf(it)) }
+                onClick = { onClick(songInfo) },
+                onLongClick = { onLongClick(immutableArrayOf(songInfo)) }
             )
             HorizontalDivider(thickness = 10.dp, color = MaterialTheme.colorScheme.background)
         }
@@ -86,12 +88,13 @@ fun Song(songInfo: SongInfo) {
 @Composable
 fun SongWithImage(
     songInfo: SongInfo,
+    onClick: (SongInfo) -> Unit = emptyFunction1(),
     onLongClick: (SongInfo) -> Unit = emptyFunction1()
 ){
     Row(verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .combinedClickable (
-                onClick = { },
+                onClick = { onClick(songInfo) },
                 onLongClick = { onLongClick(songInfo) }
             )
             .semantics(mergeDescendants = true) {}) {

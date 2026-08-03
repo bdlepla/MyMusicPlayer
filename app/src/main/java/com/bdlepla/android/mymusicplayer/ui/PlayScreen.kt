@@ -9,10 +9,16 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,7 +42,8 @@ fun PlayScreen(
     currentPlayingStats: CurrentPlayingStats?,
     currentSongs: ImmutableArray<SongInfo>,
     isPaused: Boolean,
-    controller: MediaController?=null) {
+    controller: MediaController?=null,
+    onBackClick:() -> Unit = emptyFunction()) {
     val currentSong = currentPlayingStats?.currentPlaying ?: return
     val currentSongIndex = currentSongs.indexOf(currentSong)
     val callbacks = Callbacks(
@@ -47,25 +54,44 @@ fun PlayScreen(
         onPrevious = {controller?.seekToPrevious()},
         onReverse = {controller?.seekBack()}
     )
-    Column {
-        Box(modifier = Modifier.fillMaxWidth()) {
-            Image(
-                painter = currentSong.albumArt.toImagePainter(),
-                contentDescription = currentSong.albumArt,
-                modifier = Modifier
-                    .size(300.dp)
-                    .align(Alignment.Center)
-            )
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.Top
+            ) {
+                Box(
+                    modifier = Modifier.weight(1f),
+                    contentAlignment = Alignment.TopCenter
+                ) {
+                    IconButton(
+                        onClick = onBackClick
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.KeyboardArrowDown,
+                            contentDescription = "Back",
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(48.dp)
+                        )
+                    }
+                }
+                Image(
+                    painter = currentSong.albumArt.toImagePainter(),
+                    contentDescription = currentSong.albumArt,
+                    modifier = Modifier.size(300.dp)
+                )
+                Spacer(modifier = Modifier.weight(1f))
+            }
+            Spacer(modifier = Modifier.padding(4.dp))
+            TimingLine(currentPlayingStats)
+            Spacer(modifier = Modifier.padding(all = 4.dp))
+            Column(modifier = Modifier.padding(all = 4.dp)) {
+                PlayerControllerButtons(isPaused, callbacks)
+                Song(currentSong)
+            }
+            Spacer(modifier = Modifier.padding(all = 4.dp))
+            SongList(currentSongs, currentSongIndex = currentSongIndex)
         }
-        Spacer(modifier = Modifier.padding(4.dp))
-        TimingLine(currentPlayingStats)
-        Spacer(modifier = Modifier.padding(all = 4.dp))
-        Column(modifier = Modifier.padding(all = 4.dp)) {
-            PlayerControllerButtons(isPaused, callbacks)
-            Song(currentSong)
-        }
-        Spacer(modifier= Modifier.padding(all=4.dp))
-        SongList(currentSongs, currentSongIndex = currentSongIndex)
     }
 }
 

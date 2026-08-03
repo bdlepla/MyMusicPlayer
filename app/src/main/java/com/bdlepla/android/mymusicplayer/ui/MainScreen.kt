@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.HorizontalDivider
@@ -29,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.media3.session.MediaController
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.bdlepla.android.mymusicplayer.MyMusicViewModel
 import com.bdlepla.android.mymusicplayer.Navigation
@@ -232,28 +234,39 @@ private fun MainContent(
     }
 
     val navController = rememberNavController()
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+    val isPlayingRoute = currentRoute == NavigationItem.Playing.route
+
     MyMusicPlayerTheme {
         Surface {
             Scaffold(
-                topBar = { TopAppBar(
-                    castState,
-                    currentPlayingStats?.repeat ?: 0,
-                    currentPlayingStats?.shuffle ?: false,
-                    activity,
-                    onShuffleClick,
-                    onRepeatClick) },
+                topBar = {
+                    if (!isPlayingRoute) {
+                        TopAppBar(
+                            castState,
+                            currentPlayingStats?.repeat ?: 0,
+                            currentPlayingStats?.shuffle ?: false,
+                            activity,
+                            onShuffleClick,
+                            onRepeatClick
+                        )
+                    }
+                },
                 bottomBar = {
-                    BottomAppBar(
-                        onPlayPauseClick,
-                        onNextClick,
-                        currentPlayingStats?.currentPlaying,
-                        isPaused,
-                        navController
-                    )
+                    if (!isPlayingRoute) {
+                        BottomAppBar(
+                            onPlayPauseClick,
+                            onNextClick,
+                            currentPlayingStats?.currentPlaying,
+                            isPaused,
+                            navController
+                        )
+                    }
                 }
             ) { paddingValues ->
                 // A surface container using the 'background' color from the theme
-                Column(modifier = Modifier.padding(paddingValues)) {
+                Column(modifier = Modifier.padding(paddingValues).fillMaxSize()) {
                     Navigation(
                         navController = navController,
                         mediaController = mediaController,

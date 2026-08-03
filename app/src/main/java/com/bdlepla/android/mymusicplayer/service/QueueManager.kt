@@ -42,6 +42,9 @@ class QueueManager(private val defaultPlaylistProvider: () -> PlaylistInfo) {
     }
 
     fun updateCurrentState(index: Int, position: Long) {
+        if (index < 0 || (songInfos.isNotEmpty() && index >= songInfos.size)) {
+            return
+        }
         currentIndex = index
         currentPosition = position
     }
@@ -49,7 +52,7 @@ class QueueManager(private val defaultPlaylistProvider: () -> PlaylistInfo) {
     fun setSongs(songs: List<SongInfo>, index: Int, position: Long) {
         songInfos.clear()
         songInfos.addAll(songs)
-        currentIndex = index
+        currentIndex = if (songs.isEmpty()) 0 else index.coerceIn(0, songs.size - 1)
         currentPosition = position
     }
 
