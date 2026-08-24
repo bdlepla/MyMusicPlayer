@@ -24,20 +24,26 @@ class MyMusicPlayerSettingsDataStore @Inject constructor(private val context: Co
     }
 
     private val appStoragePath
-        get() = Path(context.getExternalFilesDir(null).toString())
+        get() = context.getExternalFilesDir(null)?.absolutePath?.let { Path(it) }
 
     private val getFullFilename
-        get() = "$appStoragePath/MyMusicPlayerSettings.pb"
-    private val exists
-        get() = Path(getFullFilename).exists()
+        get() = appStoragePath?.resolve("MyMusicPlayerSettings.pb")?.toString()
 
-    private suspend fun readFile():MyMusicPlayerSettings =
-        Path(getFullFilename).toFile().inputStream().use{
-            return MyMusicPlayerSettingsSerializer().readFrom(it)
-        }
-    private suspend fun writeFile(setting:MyMusicPlayerSettings) {
-        Path(getFullFilename).toFile().outputStream().use {
-            return MyMusicPlayerSettingsSerializer().writeTo(setting, it)
+    private val exists
+        get() = getFullFilename?.let { Path(it).exists() } ?: false
+
+    private suspend fun readFile(): MyMusicPlayerSettings =
+        getFullFilename?.let { filename ->
+            Path(filename).toFile().inputStream().use {
+                return MyMusicPlayerSettingsSerializer().readFrom(it)
+            }
+        } ?: MyMusicPlayerSettingsSerializer().defaultValue
+
+    private suspend fun writeFile(setting: MyMusicPlayerSettings) {
+        getFullFilename?.let { filename ->
+            Path(filename).toFile().outputStream().use {
+                MyMusicPlayerSettingsSerializer().writeTo(setting, it)
+            }
         }
     }
 }

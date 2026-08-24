@@ -37,7 +37,6 @@ import com.danrusu.pods4k.immutableArrays.emptyImmutableArray
 import com.danrusu.pods4k.immutableArrays.multiplicativeSpecializations.map
 import com.danrusu.pods4k.immutableArrays.toImmutableArray
 import com.google.common.util.concurrent.ListenableFuture
-import com.google.common.util.concurrent.MoreExecutors
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -81,7 +80,7 @@ class MyMusicViewModel
         val componentName = ComponentName(context, PlayService::class.java)
         val sessionToken = SessionToken(context, componentName)
         browserFuture = MediaBrowser.Builder(context, sessionToken).buildAsync()
-        browserFuture.addListener({ setBrowser(context) }, MoreExecutors.directExecutor())
+        browserFuture.addListener({ setBrowser(context) }, ContextCompat.getMainExecutor(context))
     }
 
     private fun setBrowser(context: Context) {
@@ -109,8 +108,8 @@ class MyMusicViewModel
 
             childrenFuture.addListener( {
                     val childrenResult = childrenFuture.get()
-                    val children = childrenResult.value!!
-                    if (children.isNotEmpty()) {
+                    val children = childrenResult.value
+                    if (children != null && children.isNotEmpty()) {
                         val songs = children.map { SongInfo(it) }
                         addSongs(songs)
                         doLoadSongs(browser, page+1, pageSize)
@@ -127,7 +126,7 @@ class MyMusicViewModel
 
             childrenFuture.addListener( {
                 val childrenResult = childrenFuture.get()
-                val children = childrenResult.value!!.toImmutableArray() // OK; Do not change
+                val children = childrenResult.value?.toImmutableArray() ?: emptyImmutableArray()
                 if (children.any()) {
                     val albums = children.map {
                         val albumName = it.mediaMetadata.albumName
@@ -152,7 +151,7 @@ class MyMusicViewModel
 
             childrenFuture.addListener( {
                 val childrenResult = childrenFuture.get()
-                val children = childrenResult.value!!.toImmutableArray() // OK, do not change
+                val children = childrenResult.value?.toImmutableArray() ?: emptyImmutableArray()
                 if (children.any()) {
                     val artists = children.map {
                         val artistName = it.mediaMetadata.artistName

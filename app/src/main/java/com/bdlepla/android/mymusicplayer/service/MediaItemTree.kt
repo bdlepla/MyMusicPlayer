@@ -286,7 +286,8 @@ object MediaItemTree {
     fun getRandomItem(): MediaItem {
         var curRoot = getRootItem()
         while (curRoot.mediaMetadata.isPlayable.isFalseOrNull()) {
-            val children = getChildren(curRoot.mediaId)!!
+            val children = getChildren(curRoot.mediaId)
+            if (children == null || children.size == 0) return curRoot
             curRoot = children.random()
         }
         return curRoot

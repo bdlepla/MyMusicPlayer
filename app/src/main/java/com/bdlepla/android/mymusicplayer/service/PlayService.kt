@@ -375,17 +375,33 @@ class PlayService: MediaLibraryService() {
             controller: MediaSession.ControllerInfo
         ): MediaSession.ConnectionResult {
             val connectionResult = super.onConnect(session, controller)
-
             val availableSessionCommands = connectionResult.availableSessionCommands.buildUpon()
+
+            if (controller.packageName == packageName) {
+                availableSessionCommands.add(SessionCommand(SessionCommand.COMMAND_CODE_LIBRARY_GET_CHILDREN))
+                availableSessionCommands.add(SessionCommand(SessionCommand.COMMAND_CODE_LIBRARY_GET_ITEM))
+                availableSessionCommands.add(SessionCommand(SessionCommand.COMMAND_CODE_LIBRARY_GET_LIBRARY_ROOT))
+                availableSessionCommands.add(SessionCommand(SessionCommand.COMMAND_CODE_LIBRARY_SUBSCRIBE))
+                availableSessionCommands.add(SessionCommand(SessionCommand.COMMAND_CODE_LIBRARY_UNSUBSCRIBE))
+                availableSessionCommands.add(SessionCommand(SessionCommand.COMMAND_CODE_LIBRARY_SEARCH))
+                availableSessionCommands.add(SessionCommand(SessionCommand.COMMAND_CODE_LIBRARY_GET_SEARCH_RESULT))
+            }
+
             availableSessionCommands.add(SessionCommand(CUSTOM_COMMAND_PUSH_IMMEDIATELY, Bundle.EMPTY))
             availableSessionCommands.add(SessionCommand(CUSTOM_COMMAND_PLAY_AFTER_PLAYLIST, Bundle.EMPTY))
             availableSessionCommands.add(SessionCommand(CUSTOM_COMMAND_PLAY_AFTER_SONG, Bundle.EMPTY))
             availableSessionCommands.add(SessionCommand(CUSTOM_COMMAND_TOGGLE_SHUFFLE_MODE_ON, Bundle.EMPTY))
             availableSessionCommands.add(SessionCommand(CUSTOM_COMMAND_TOGGLE_SHUFFLE_MODE_OFF, Bundle.EMPTY))
 
+            val availablePlayerCommands = if (controller.packageName == packageName) {
+                Player.Commands.Builder().addAllCommands().build()
+            } else {
+                connectionResult.availablePlayerCommands
+            }
+
             val ret = MediaSession.ConnectionResult.accept(
                 availableSessionCommands.build(),
-                connectionResult.availablePlayerCommands
+                availablePlayerCommands
             )
 
             populateMediaOnConnectIfNotPlaying(currentPlayer)
@@ -394,7 +410,7 @@ class PlayService: MediaLibraryService() {
         }
 
         override fun onPostConnect(session: MediaSession, controller: MediaSession.ControllerInfo) {
-            if (customLayout.isNotEmpty() && controller.controllerVersion != 0) {
+            if (::mediaLibrarySession.isInitialized && customLayout.isNotEmpty() && controller.controllerVersion != 0) {
                 // Let Media3 controller (for instance the MediaNotificationProvider) know about the custom
                 // layout right after it connected.
                 mediaLibrarySession.setCustomLayout(controller, customLayout)
@@ -534,8 +550,9 @@ class PlayService: MediaLibraryService() {
         ): ListenableFuture<List<MediaItem>> {
             val updatedMediaItems: List<MediaItem> =
                 mediaItems.map { mediaItem ->
-                    if (mediaItem.requestMetadata.searchQuery != null)
-                        getMediaItemFromSearchQuery(mediaItem.requestMetadata.searchQuery!!)
+                    val query = mediaItem.requestMetadata.searchQuery
+                    if (query != null)
+                        getMediaItemFromSearchQuery(query)
                     else MediaItemTree.getItem(mediaItem.mediaId) ?: mediaItem
                 }
             return Futures.immediateFuture(updatedMediaItems)
