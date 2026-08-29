@@ -1,6 +1,6 @@
 [versions]
 android-material = "1.14.0"
-androidApplicationPlugin = "9.3.1"
+androidApplicationPlugin = "9.3.2"
 appcompat = "1.8.0"
 cast = "22.3.1"
 coil = "2.7.0"
