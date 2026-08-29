@@ -370,6 +370,16 @@ class PlayService: MediaLibraryService() {
     }
 
     private inner class CustomMediaLibrarySessionCallback : MediaLibrarySession.Callback {
+
+        private fun isTrustedController(controller: MediaSession.ControllerInfo): Boolean {
+            val pkgName = controller.packageName
+            return (pkgName == packageName) ||
+                    (pkgName == "com.google.android.projection.gearhead") || // Android Auto
+                    (pkgName == "com.android.systemui") || // System UI
+                    (pkgName == "com.google.android.bluetooth") || // Bluetooth
+                    (pkgName == "com.google.android.googlequicksearchbox") // Assistant
+        }
+
         override fun onConnect(
             session: MediaSession,
             controller: MediaSession.ControllerInfo
@@ -377,7 +387,7 @@ class PlayService: MediaLibraryService() {
             val connectionResult = super.onConnect(session, controller)
             val availableSessionCommands = connectionResult.availableSessionCommands.buildUpon()
 
-            if (controller.packageName == packageName) {
+            if (isTrustedController(controller)) {
                 availableSessionCommands.add(SessionCommand(SessionCommand.COMMAND_CODE_LIBRARY_GET_CHILDREN))
                 availableSessionCommands.add(SessionCommand(SessionCommand.COMMAND_CODE_LIBRARY_GET_ITEM))
                 availableSessionCommands.add(SessionCommand(SessionCommand.COMMAND_CODE_LIBRARY_GET_LIBRARY_ROOT))
@@ -393,7 +403,7 @@ class PlayService: MediaLibraryService() {
             availableSessionCommands.add(SessionCommand(CUSTOM_COMMAND_TOGGLE_SHUFFLE_MODE_ON, Bundle.EMPTY))
             availableSessionCommands.add(SessionCommand(CUSTOM_COMMAND_TOGGLE_SHUFFLE_MODE_OFF, Bundle.EMPTY))
 
-            val availablePlayerCommands = if (controller.packageName == packageName) {
+            val availablePlayerCommands = if (isTrustedController(controller)) {
                 Player.Commands.Builder().addAllCommands().build()
             } else {
                 connectionResult.availablePlayerCommands
@@ -523,6 +533,14 @@ class PlayService: MediaLibraryService() {
                         LibraryResult.ofError(SessionError.ERROR_BAD_VALUE)
                     )
             session.notifyChildrenChanged(browser, parentId, children.size, params)
+            return Futures.immediateFuture(LibraryResult.ofVoid())
+        }
+
+        override fun onUnsubscribe(
+            session: MediaLibrarySession,
+            browser: MediaSession.ControllerInfo,
+            parentId: String
+        ): ListenableFuture<LibraryResult<Void>> {
             return Futures.immediateFuture(LibraryResult.ofVoid())
         }
 
