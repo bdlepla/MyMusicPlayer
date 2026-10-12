@@ -21,10 +21,12 @@ import androidx.media3.session.SessionCommand
 import androidx.media3.session.SessionError
 import androidx.media3.session.SessionResult
 import com.bdlepla.android.mymusicplayer.MyMusicPlayerSettings
+import com.bdlepla.android.mymusicplayer.R
 import com.bdlepla.android.mymusicplayer.business.PlaylistInfo
 import com.bdlepla.android.mymusicplayer.business.SongInfo
 import com.bdlepla.android.mymusicplayer.datastore.MyMusicPlayerSettingsDataStore
 import com.bdlepla.android.mymusicplayer.repository.ITEM_ID
+import com.bdlepla.android.mymusicplayer.repository.Repository
 import com.danrusu.pods4k.immutableArrays.asList
 import com.danrusu.pods4k.immutableArrays.emptyImmutableArray
 import com.danrusu.pods4k.immutableArrays.toImmutableArray
@@ -37,6 +39,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlin.math.abs
 
 
@@ -130,7 +133,26 @@ class PlayService: MediaLibraryService() {
                     SessionCommand(CUSTOM_COMMAND_TOGGLE_SHUFFLE_MODE_OFF, Bundle.EMPTY)
                 )
             )
-        customLayout = ImmutableList.of(customCommands[0])
+        updateCustomLayout()
+    }
+
+    private fun updateCustomLayout() {
+        val currentMediaItem = currentPlayer.currentMediaItem
+        val songInfo = currentMediaItem?.let { SongInfo(it) }
+        val isFavorite = songInfo?.isFavorite ?: false
+
+        val favoriteCommand = CommandButton.Builder()
+            .setDisplayName(if (isFavorite) "Remove from favorites" else "Add to favorites")
+            .setSessionCommand(SessionCommand(CUSTOM_COMMAND_TOGGLE_FAVORITE, Bundle.EMPTY))
+            .setIconResId(if (isFavorite) R.drawable.ic_heart_filled else R.drawable.ic_heart_outline)
+            .build()
+
+        val shuffleCommand = if (currentPlayer.shuffleModeEnabled) customCommands[1] else customCommands[0]
+
+        customLayout = ImmutableList.of(favoriteCommand, shuffleCommand)
+        if (::mediaLibrarySession.isInitialized) {
+            mediaLibrarySession.setCustomLayout(customLayout)
+        }
     }
 
     private fun getShuffleCommandButton(sessionCommand: SessionCommand): CommandButton {
@@ -138,7 +160,7 @@ class PlayService: MediaLibraryService() {
         return CommandButton.Builder()
             .setDisplayName(if (isOn) getShuffleOnDescription() else getShuffleOffDescription())
             .setSessionCommand(sessionCommand)
-            .setIconResId(com.bdlepla.android.mymusicplayer.R.drawable.ic_shuffle)
+            .setIconResId(R.drawable.ic_shuffle)
             .build()
     }
 
@@ -160,6 +182,33 @@ class PlayService: MediaLibraryService() {
             currentPlayer.setNewPlayer(castPlayer!!)
         }
         initializeMediaSession()
+
+        scope.launch {
+            Repository.favoriteChanges.collect { (songId, isFavorite) ->
+                withContext(Dispatchers.Main) {
+                    updatePlayerSongFavorite(songId, isFavorite)
+                }
+            }
+        }
+    }
+
+    private fun updatePlayerSongFavorite(songId: Long, isFavorite: Boolean) {
+        val count = currentPlayer.mediaItemCount
+        for (i in 0 until count) {
+            val item = currentPlayer.getMediaItemAt(i)
+            val itemSongId = if (item.mediaId.startsWith(MediaItemTree.ITEM_PREFIX)) {
+                item.mediaId.substring(MediaItemTree.ITEM_PREFIX.length).toLongOrNull() ?: 0L
+            } else 0L
+
+            if (itemSongId == songId) {
+                val songInfo = SongInfo(item)
+                if (songInfo.isFavorite != isFavorite) {
+                    val updatedMediaItem = songInfo.copyWithFavorite(isFavorite).toMediaItem()
+                    currentPlayer.replaceMediaItem(i, updatedMediaItem)
+                }
+            }
+        }
+        updateCustomLayout()
     }
 
     private fun loadSavedQueue() {
@@ -298,6 +347,7 @@ class PlayService: MediaLibraryService() {
 
         private const val CUSTOM_COMMAND_TOGGLE_SHUFFLE_MODE_ON = "android.media3.session.demo.SHUFFLE_ON"
         private const val CUSTOM_COMMAND_TOGGLE_SHUFFLE_MODE_OFF = "android.media3.session.demo.SHUFFLE_OFF"
+        private const val CUSTOM_COMMAND_TOGGLE_FAVORITE = "TOGGLE_FAVORITE"
         const val CUSTOM_COMMAND_PUSH_IMMEDIATELY = "PUSH_IMMEDIATELY"
         const val CUSTOM_COMMAND_PLAY_AFTER_PLAYLIST = "PLAY_AFTER_PLAYLIST"
         const val CUSTOM_COMMAND_PLAY_AFTER_SONG = "PLAY_AFTER_SONG"
@@ -348,6 +398,7 @@ class PlayService: MediaLibraryService() {
 
        override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
            super.onMediaItemTransition(mediaItem, reason)
+           updateCustomLayout()
            if (reason != Player.MEDIA_ITEM_TRANSITION_REASON_PLAYLIST_CHANGED) {
                queueManager.updateCurrentState(currentPlayer.currentMediaItemIndex, currentPlayer.currentPosition)
                saveQueue()
@@ -364,8 +415,7 @@ class PlayService: MediaLibraryService() {
 
        override fun onShuffleModeEnabledChanged(shuffleModeEnabled: Boolean) {
            super.onShuffleModeEnabledChanged(shuffleModeEnabled)
-           customLayout = ImmutableList.of(if (shuffleModeEnabled) customCommands[1] else customCommands[0])
-           mediaLibrarySession.setCustomLayout(customLayout)
+           updateCustomLayout()
        }
     }
 
@@ -402,6 +452,7 @@ class PlayService: MediaLibraryService() {
             availableSessionCommands.add(SessionCommand(CUSTOM_COMMAND_PLAY_AFTER_SONG, Bundle.EMPTY))
             availableSessionCommands.add(SessionCommand(CUSTOM_COMMAND_TOGGLE_SHUFFLE_MODE_ON, Bundle.EMPTY))
             availableSessionCommands.add(SessionCommand(CUSTOM_COMMAND_TOGGLE_SHUFFLE_MODE_OFF, Bundle.EMPTY))
+            availableSessionCommands.add(SessionCommand(CUSTOM_COMMAND_TOGGLE_FAVORITE, Bundle.EMPTY))
 
             val availablePlayerCommands = if (isTrustedController(controller)) {
                 Player.Commands.Builder().addAllCommands().build()
@@ -434,6 +485,22 @@ class PlayService: MediaLibraryService() {
             args: Bundle
         ): ListenableFuture<SessionResult> {
             when (customCommand.customAction) {
+                CUSTOM_COMMAND_TOGGLE_FAVORITE -> {
+                    val currentMediaItem = currentPlayer.currentMediaItem
+                    if (currentMediaItem != null) {
+                        val songInfo = SongInfo(currentMediaItem)
+                        val newIsFavorite = !songInfo.isFavorite
+                        Repository.toggleSongFavorite(this@PlayService, songInfo.songId, newIsFavorite)
+
+                        val updatedSongInfo = songInfo.copyWithFavorite(newIsFavorite)
+                        val updatedMediaItem = updatedSongInfo.toMediaItem()
+                        val currentIndex = currentPlayer.currentMediaItemIndex
+                        if (currentIndex != C.INDEX_UNSET) {
+                            currentPlayer.replaceMediaItem(currentIndex, updatedMediaItem)
+                        }
+                        updateCustomLayout()
+                    }
+                }
                 CUSTOM_COMMAND_TOGGLE_SHUFFLE_MODE_ON -> {
                     // Enable shuffling.
                     currentPlayer.shuffleModeEnabled = true
@@ -591,10 +658,3 @@ class PlayService: MediaLibraryService() {
         }
     }
 }
-
-
-//private fun ignoreFuture(customLayout: ListenableFuture<SessionResult>) {
-//    /* Do nothing. */
-//}
-
-

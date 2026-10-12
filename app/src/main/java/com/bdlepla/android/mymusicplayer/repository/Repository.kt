@@ -15,10 +15,16 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import com.bdlepla.android.mymusicplayer.service.MediaItemTree.ITEM_PREFIX
 import com.danrusu.pods4k.immutableArrays.ImmutableArray
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import java.io.File
 import java.io.FileOutputStream
 
 object Repository {
+
+    private val _favoriteChanges = MutableSharedFlow<Pair<Long, Boolean>>(extraBufferCapacity = 64)
+    val favoriteChanges: SharedFlow<Pair<Long, Boolean>> = _favoriteChanges.asSharedFlow()
 
     private fun getFavoriteSongIds(context: Context): Set<Long> {
         val prefs = context.getSharedPreferences("favorite_songs_prefs", Context.MODE_PRIVATE)
@@ -179,6 +185,9 @@ object Repository {
             currentSet.remove(songId.toString())
         }
         prefs.edit { putStringSet("favorite_ids", currentSet) }
+
+        // Emit favorite change event
+        _favoriteChanges.tryEmit(songId to isFavorite)
 
         // 2. Also attempt to persist in MediaStore IS_FAVORITE column
         val uri = ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, songId)

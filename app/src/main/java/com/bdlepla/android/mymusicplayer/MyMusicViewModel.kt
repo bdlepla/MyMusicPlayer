@@ -66,6 +66,11 @@ class MyMusicViewModel
 
    init {
        initializeBrowser(application.applicationContext)
+       viewModelScope.launch {
+           Repository.favoriteChanges.collect { (songId, isFavorite) ->
+               updateSongFavoriteInMemory(songId, isFavorite)
+           }
+       }
    }
 
     companion object {
@@ -231,6 +236,33 @@ class MyMusicViewModel
             super.onMediaMetadataChanged(mediaMetadata)
             val item = mediaMetadata.toSongInfo() ?: return
             _currentlyPlaying = item
+
+            val songId = item.songId
+            val index = songCollection.indexOfFirst { it.songId == songId }
+            if (index != -1 && songCollection[index].isFavorite != item.isFavorite) {
+                val newSongInfo = songCollection[index].copyWithFavorite(item.isFavorite)
+                songCollection[index] = newSongInfo
+                _allSongs.value = immutableSongCollection.sortedBy { it.title.forSorting() }
+                _allPlaylists.value = playlistManager.updatePlaylistInfo(immutableSongCollection)
+
+                _allAlbums.value.forEach { album ->
+                    val songs = immutableSongCollection
+                        .filter { it.albumId == album.albumId }
+                        .sortedBy { it.trackNumber }
+                    album.addSongs(songs)
+                }
+                _allAlbums.value = _allAlbums.value.map { it }
+
+                _allArtists.value.forEach { artist ->
+                    val artistAlbums = _allAlbums.value.filter { album -> album.artistId == artist.artistId }
+                    artist.addAlbums(artistAlbums)
+                }
+                _allArtists.value = _allArtists.value.map { it }
+
+                _currentSongList.value = _currentSongList.value.map { song ->
+                    if (song.songId == songId) newSongInfo else song
+                }
+            }
         }
 
         override fun onTimelineChanged(timeline: Timeline, reason: Int) {
@@ -386,10 +418,24 @@ class MyMusicViewModel
 
     fun toggleFavorite(songInfo: SongInfo) {
         val newIsFavorite = !songInfo.isFavorite
-        val newSongInfo = songInfo.copyWithFavorite(newIsFavorite)
+        updateSongFavoriteInMemory(songInfo.songId, newIsFavorite)
+        if (_currentlyPlaying?.songId == songInfo.songId) {
+            browser?.let { b ->
+                val currIndex = b.currentMediaItemIndex
+                if (currIndex != C.INDEX_UNSET) {
+                    b.replaceMediaItem(currIndex, _currentlyPlaying!!.toMediaItem())
+                }
+            }
+        }
+        viewModelScope.launch(Dispatchers.IO) {
+            Repository.toggleSongFavorite(getApplication(), songInfo.songId, newIsFavorite)
+        }
+    }
 
-        val index = songCollection.indexOfFirst { it.songId == songInfo.songId }
-        if (index != -1) {
+    private fun updateSongFavoriteInMemory(songId: Long, isFavorite: Boolean) {
+        val index = songCollection.indexOfFirst { it.songId == songId }
+        if (index != -1 && songCollection[index].isFavorite != isFavorite) {
+            val newSongInfo = songCollection[index].copyWithFavorite(isFavorite)
             songCollection[index] = newSongInfo
             _allSongs.value = immutableSongCollection.sortedBy { it.title.forSorting() }
             _allPlaylists.value = playlistManager.updatePlaylistInfo(immutableSongCollection)
@@ -409,16 +455,12 @@ class MyMusicViewModel
             _allArtists.value = _allArtists.value.map { it }
 
             _currentSongList.value = _currentSongList.value.map { song ->
-                if (song.songId == songInfo.songId) newSongInfo else song
+                if (song.songId == songId) newSongInfo else song
             }
 
-            if (_currentlyPlaying?.songId == songInfo.songId) {
+            if (_currentlyPlaying?.songId == songId) {
                 _currentlyPlaying = newSongInfo
             }
-        }
-
-        viewModelScope.launch(Dispatchers.IO) {
-            Repository.toggleSongFavorite(getApplication(), songInfo.songId, newIsFavorite)
         }
     }
 }
