@@ -1,5 +1,6 @@
 package com.bdlepla.android.mymusicplayer.business
 
+import android.os.Bundle
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import com.bdlepla.android.mymusicplayer.repository.ALBUM
@@ -7,6 +8,7 @@ import com.bdlepla.android.mymusicplayer.repository.ALBUM_ID
 import com.bdlepla.android.mymusicplayer.repository.ARTIST
 import com.bdlepla.android.mymusicplayer.repository.ARTIST_ID
 import com.bdlepla.android.mymusicplayer.repository.DURATION
+import com.bdlepla.android.mymusicplayer.repository.IS_FAVORITE
 import com.bdlepla.android.mymusicplayer.repository.MEDIA_URI
 import com.bdlepla.android.mymusicplayer.repository.TRACK_NUMBER
 
@@ -20,6 +22,7 @@ class SongInfo(private val mediaItem: MediaItem) {
     val albumYear = mediaMetadata.releaseYear ?: 0
     val albumArt = mediaMetadata.artworkUri.toString()
     val duration = mediaMetadata.duration
+    val isFavorite = mediaMetadata.isFavorite
 
     //val genre = mediaMetadata.genreName
     val mediaUri = mediaMetadata.mediaUri
@@ -33,9 +36,21 @@ class SongInfo(private val mediaItem: MediaItem) {
     val artistId = mediaMetadata.artistId
     //val genreId = mediaMetadata.genreId
 
+    fun copyWithFavorite(isFavorite: Boolean): SongInfo {
+        val newExtras = (mediaMetadata.extras?.clone() as? Bundle) ?: Bundle()
+        newExtras.putBoolean(IS_FAVORITE, isFavorite)
+        val newMetadata = mediaMetadata.buildUpon()
+            .setExtras(newExtras)
+            .build()
+        val newMediaItem = mediaItem.buildUpon()
+            .setMediaMetadata(newMetadata)
+            .build()
+        return SongInfo(newMediaItem)
+    }
+
     override fun equals(other: Any?): Boolean {
         val otherSong = other as? SongInfo ?: return false
-        return otherSong.songId == songId
+        return otherSong.songId == songId && otherSong.isFavorite == isFavorite
     }
 
     override fun hashCode(): Int = songId.hashCode()
@@ -58,6 +73,9 @@ val MediaMetadata.albumName:String
 
 val MediaMetadata.duration:Int
     get() = extras?.getInt(DURATION) ?: 0
+
+val MediaMetadata.isFavorite: Boolean
+    get() = extras?.getBoolean(IS_FAVORITE) ?: false
 
 //val MediaMetadata.genreName:String
 //    get() {

@@ -41,7 +41,8 @@ fun Navigation(
     onRemoveSongFromPlaylist:(PlaylistInfo, SongInfo)->Unit = emptyFunction2(),
     currentPlayingStats: CurrentPlayingStats? = null,
     isPaused: Boolean = false,
-    setShuffledSongs: (ImmutableArray<SongInfo>) -> Unit = emptyFunction1()
+    setShuffledSongs: (ImmutableArray<SongInfo>) -> Unit = emptyFunction1(),
+    onFavoriteToggle: (SongInfo) -> Unit = emptyFunction1()
 ) {
     NavHost(navController, startDestination = NavigationItem.Songs.route) {
         val isExpandedWindow = false
@@ -50,7 +51,7 @@ fun Navigation(
             LaunchedEffect(songs) {
                 setShuffledSongs(songs.shuffled())
             }
-            SongList(songs, { onLongPress(it, null, true) })
+            SongList(songs, { onLongPress(it, null, true) }, onFavoriteToggle = onFavoriteToggle)
         }
 
         composable(NavigationItem.Artists.route) {
@@ -73,7 +74,7 @@ fun Navigation(
                 setShuffledSongs(songsForArtist.shuffled())
             }
 
-            ArtistSongsScreen(theArtist, songsForArtist, { onLongPress(it, null, true) })
+            ArtistSongsScreen(theArtist, songsForArtist, { onLongPress(it, null, true) }, onFavoriteToggle = onFavoriteToggle)
         }
 
         composable(NavigationItem.Albums.route) {
@@ -93,7 +94,7 @@ fun Navigation(
                 setShuffledSongs(songsInAlbum.shuffled())
             }
 
-            AlbumSongsScreen(isExpandedWindow, theAlbum, songsInAlbum, { onLongPress(it, null, true) })
+            AlbumSongsScreen(isExpandedWindow, theAlbum, songsInAlbum, { onLongPress(it, null, true) }, onFavoriteToggle = onFavoriteToggle)
         }
 
         composable(NavigationItem.Playing.route) {
@@ -105,7 +106,8 @@ fun Navigation(
                 currentSongs = currentSongList,
                 isPaused = isPaused,
                 controller = mediaController,
-                onBackClick = { navController.popBackStack() }
+                onBackClick = { navController.popBackStack() },
+                onFavoriteToggle = onFavoriteToggle
             )
         }
 
@@ -131,7 +133,7 @@ fun Navigation(
                 setShuffledSongs(songsInPlaylist.shuffled())
             }
 
-            PlaylistSongsScreen(playlist, songsInPlaylist, onRemoveSongFromPlaylist)
+            PlaylistSongsScreen(playlist, songsInPlaylist, onRemoveSongFromPlaylist, onFavoriteToggle = onFavoriteToggle)
         }
     }
 }

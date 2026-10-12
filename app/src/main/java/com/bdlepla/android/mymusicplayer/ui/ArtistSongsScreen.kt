@@ -24,7 +24,8 @@ import com.danrusu.pods4k.immutableArrays.ImmutableArray
 fun ArtistSongsScreen(
     artistInfo: ArtistInfo,
     songsInArtist: ImmutableArray<SongInfo>,
-    onLongPress: (ImmutableArray<SongInfo>) -> Unit = emptyFunction1()
+    onLongPress: (ImmutableArray<SongInfo>) -> Unit = emptyFunction1(),
+    onFavoriteToggle: (SongInfo) -> Unit = emptyFunction1()
 ) {
     Column {
         Box (modifier = Modifier.fillMaxWidth()) {
@@ -37,7 +38,7 @@ fun ArtistSongsScreen(
             )
         }
         Spacer(modifier= Modifier.padding(all=4.dp))
-        SongList(songInfos = songsInArtist, onLongClick = onLongPress)
+        SongList(songInfos = songsInArtist, onLongClick = onLongPress, onFavoriteToggle = onFavoriteToggle)
     }
 }
 

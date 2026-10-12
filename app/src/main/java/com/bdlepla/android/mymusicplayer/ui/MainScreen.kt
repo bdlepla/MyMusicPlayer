@@ -185,6 +185,10 @@ internal fun MainScreen(viewModel: MyMusicViewModel=viewModel(), activity: Conte
         viewModel.removeSongFromPlaylist(playListInfo, songInfo)
     }
 
+    val onFavoriteToggle: (SongInfo) -> Unit = {
+        viewModel.toggleFavorite(it)
+    }
+
     MainContent(
         viewModel.browser,
         songs,
@@ -202,7 +206,8 @@ internal fun MainScreen(viewModel: MyMusicViewModel=viewModel(), activity: Conte
         currentlyPlayingStats,
         isPaused,
         activity,
-        castState
+        castState,
+        onFavoriteToggle
     )
 }
 
@@ -226,7 +231,8 @@ private fun MainContent(
     currentPlayingStats: CurrentPlayingStats? = null,
     isPaused: Boolean = false,
     activity: Context? = null,
-    castState: Int = 0
+    castState: Int = 0,
+    onFavoriteToggle: (SongInfo) -> Unit = emptyFunction1()
 ) {
     val shuffledSongs = remember{mutableStateOf(songs.shuffled())}
     val setShuffledSongs: (ImmutableArray<SongInfo>) -> Unit = {
@@ -280,7 +286,8 @@ private fun MainContent(
                         onRemoveSongFromPlaylist = onRemoveSongFromPlaylist,
                         currentPlayingStats = currentPlayingStats,
                         isPaused = isPaused,
-                        setShuffledSongs = setShuffledSongs
+                        setShuffledSongs = setShuffledSongs,
+                        onFavoriteToggle = onFavoriteToggle
                     )
                 }
             }

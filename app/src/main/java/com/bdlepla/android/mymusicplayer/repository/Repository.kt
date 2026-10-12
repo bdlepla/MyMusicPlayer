@@ -1,12 +1,14 @@
 package com.bdlepla.android.mymusicplayer.repository
 
 import android.content.ContentUris
+import android.content.ContentValues
 import android.content.Context
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.provider.MediaStore
 import android.util.Log
 import android.util.Size
+import androidx.core.content.edit
 import androidx.core.database.getStringOrNull
 import androidx.core.net.toUri
 import androidx.media3.common.MediaItem
@@ -17,6 +19,12 @@ import java.io.File
 import java.io.FileOutputStream
 
 object Repository {
+
+    private fun getFavoriteSongIds(context: Context): Set<Long> {
+        val prefs = context.getSharedPreferences("favorite_songs_prefs", Context.MODE_PRIVATE)
+        val set = prefs.getStringSet("favorite_ids", emptySet()) ?: emptySet()
+        return set.mapNotNull { it.toLongOrNull() }.toSet()
+    }
 
     fun getAllAlbumYears(context: Context): Map<Long, Int> {
         return buildMap {
@@ -48,8 +56,9 @@ object Repository {
         }
     }
 
-    fun getAllSongs(context: Context):ImmutableArray<MediaItem> {
+    fun getAllSongs(context: Context): ImmutableArray<MediaItem> {
         val albumYears = getAllAlbumYears(context)
+        val favoriteSongIds = getFavoriteSongIds(context)
         val ret = ImmutableArray.Builder<MediaItem>()
 
         val collection = MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL)
@@ -66,7 +75,8 @@ object Repository {
             MediaStore.Audio.AudioColumns.ARTIST_ID,
             //MediaStore.Audio.AudioColumns.GENRE,
             //MediaStore.Audio.AudioColumns.GENRE_ID,
-            MediaStore.Audio.AudioColumns.DURATION
+            MediaStore.Audio.AudioColumns.DURATION,
+            MediaStore.Audio.AudioColumns.IS_FAVORITE
         )
         val selection = MediaStore.Audio.Media.IS_MUSIC + " != 0"
         val selectionArgs = null
@@ -91,6 +101,7 @@ object Repository {
             //val genreColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.GENRE)
             //val genreIdColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.GENRE_ID)
             val durationColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DURATION)
+            val isFavoriteColumn = cursor.getColumnIndex(MediaStore.Audio.Media.IS_FAVORITE)
 
             while (cursor.moveToNext()) {
                 val data = cursor.getString(dataColumn)
@@ -113,6 +124,8 @@ object Repository {
                 //val genre = cursor.getString(genreColumn)
                 //val genreId = cursor.getLong(genreIdColumn)
                 val durationInSeconds = cursor.getInt(durationColumn) / 1000
+                val mediaStoreFavorite = isFavoriteColumn != -1 && cursor.getInt(isFavoriteColumn) == 1
+                val isFavorite = mediaStoreFavorite || favoriteSongIds.contains(songId.toLong())
 
                 val bundle =  Bundle().apply {
                     putString(ALBUM, album)
@@ -124,6 +137,7 @@ object Repository {
                     putString(MEDIA_URI, data)
                     putInt(TRACK_NUMBER, track)
                     putInt(DURATION, durationInSeconds)
+                    putBoolean(IS_FAVORITE, isFavorite)
                 }
 
                 val metadata =
@@ -153,6 +167,31 @@ object Repository {
             }
         }
         return ret.build()
+    }
+
+    fun toggleSongFavorite(context: Context, songId: Long, isFavorite: Boolean): Boolean {
+        // 1. Persist locally to SharedPreferences so favorites are guaranteed to persist across restarts
+        val prefs = context.getSharedPreferences("favorite_songs_prefs", Context.MODE_PRIVATE)
+        val currentSet = prefs.getStringSet("favorite_ids", emptySet())?.toMutableSet() ?: mutableSetOf()
+        if (isFavorite) {
+            currentSet.add(songId.toString())
+        } else {
+            currentSet.remove(songId.toString())
+        }
+        prefs.edit { putStringSet("favorite_ids", currentSet) }
+
+        // 2. Also attempt to persist in MediaStore IS_FAVORITE column
+        val uri = ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, songId)
+        val values = ContentValues().apply {
+            put(MediaStore.MediaColumns.IS_FAVORITE, if (isFavorite) 1 else 0)
+        }
+        return try {
+            val updatedRows = context.contentResolver.update(uri, values, null, null)
+            updatedRows > 0
+        } catch (e: Exception) {
+            Log.e("Repository", "Error updating MediaStore IS_FAVORITE for song $songId", e)
+            false
+        }
     }
 
     private fun getAlbumArt(context: Context, albumId:Long): String? {
@@ -199,3 +238,4 @@ const val ITEM_ID = "[itemID]"
 const val ARTIST_ID = "[artistID]"
 const val PLAYLIST_ID = "[playlistID]"
 const val DURATION = "[duration]"
+const val IS_FAVORITE = "[isFavorite]"

@@ -27,12 +27,14 @@ fun AlbumSongsScreen(
     isExpandedWindowSize: Boolean = false,
     albumInfo: AlbumInfo,
     songsInAlbum: ImmutableArray<SongInfo>,
-    onLongPress: (ImmutableArray<SongInfo>) -> Unit = emptyFunction1()) {
+    onLongPress: (ImmutableArray<SongInfo>) -> Unit = emptyFunction1(),
+    onFavoriteToggle: (SongInfo) -> Unit = emptyFunction1()
+) {
     if (isExpandedWindowSize) {
-        AlbumSongsScreenLandscape(albumInfo, songsInAlbum, onLongPress)
+        AlbumSongsScreenLandscape(albumInfo, songsInAlbum, onLongPress, onFavoriteToggle)
     }
     else {
-        AlbumSongsScreenPortrait(albumInfo, songsInAlbum, onLongPress)
+        AlbumSongsScreenPortrait(albumInfo, songsInAlbum, onLongPress, onFavoriteToggle)
     }
 }
 
@@ -40,7 +42,9 @@ fun AlbumSongsScreen(
 fun AlbumSongsScreenPortrait(
     albumInfo: AlbumInfo,
     songsInAlbum: ImmutableArray<SongInfo>,
-    onLongPress: (ImmutableArray<SongInfo>) -> Unit = emptyFunction1()) {
+    onLongPress: (ImmutableArray<SongInfo>) -> Unit = emptyFunction1(),
+    onFavoriteToggle: (SongInfo) -> Unit = emptyFunction1()
+) {
     Column {
         Box (modifier = Modifier.fillMaxWidth()){
             Image(
@@ -52,7 +56,7 @@ fun AlbumSongsScreenPortrait(
             )
         }
         Spacer(modifier= Modifier.padding(all=4.dp))
-        SongList(songsInAlbum, onLongPress)
+        SongList(songsInAlbum, onLongPress, onFavoriteToggle = onFavoriteToggle)
     }
 }
 
@@ -75,7 +79,9 @@ fun AlbumSongsScreenPortraitPreview() {
 fun AlbumSongsScreenLandscape(
     albumInfo: AlbumInfo,
     songsInAlbum: ImmutableArray<SongInfo>,
-    onLongPress: (ImmutableArray<SongInfo>) -> Unit = emptyFunction1()) {
+    onLongPress: (ImmutableArray<SongInfo>) -> Unit = emptyFunction1(),
+    onFavoriteToggle: (SongInfo) -> Unit = emptyFunction1()
+) {
     Row {
         //PlayScreen(currentPlayingStats = playingStats, isPaused = isPaused)
         //SongList
@@ -91,7 +97,7 @@ fun AlbumSongsScreenLandscape(
             )
         }
         Spacer(modifier= Modifier.padding(all=4.dp))
-        SongList(songsInAlbum, onLongPress)
+        SongList(songsInAlbum, onLongPress, onFavoriteToggle = onFavoriteToggle)
     }
 }
 

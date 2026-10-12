@@ -29,6 +29,7 @@ import com.bdlepla.android.mymusicplayer.extensions.forSorting
 import com.bdlepla.android.mymusicplayer.repository.ALBUM_ID
 import com.bdlepla.android.mymusicplayer.repository.ARTIST_ID
 import com.bdlepla.android.mymusicplayer.repository.ITEM_ID
+import com.bdlepla.android.mymusicplayer.repository.Repository
 import com.bdlepla.android.mymusicplayer.service.PlayService
 import com.danrusu.pods4k.immutableArrays.ImmutableArray
 import com.danrusu.pods4k.immutableArrays.asList
@@ -38,6 +39,7 @@ import com.danrusu.pods4k.immutableArrays.multiplicativeSpecializations.map
 import com.danrusu.pods4k.immutableArrays.toImmutableArray
 import com.google.common.util.concurrent.ListenableFuture
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -380,5 +382,43 @@ class MyMusicViewModel
     fun removeSongFromPlaylist(playListInfo: PlaylistInfo, songInfo: SongInfo) {
         playlistManager.removeSongFromPlaylist(playListInfo, songInfo)
         _allPlaylists.value = playlistManager.updatePlaylistInfo(immutableSongCollection)
+    }
+
+    fun toggleFavorite(songInfo: SongInfo) {
+        val newIsFavorite = !songInfo.isFavorite
+        val newSongInfo = songInfo.copyWithFavorite(newIsFavorite)
+
+        val index = songCollection.indexOfFirst { it.songId == songInfo.songId }
+        if (index != -1) {
+            songCollection[index] = newSongInfo
+            _allSongs.value = immutableSongCollection.sortedBy { it.title.forSorting() }
+            _allPlaylists.value = playlistManager.updatePlaylistInfo(immutableSongCollection)
+
+            _allAlbums.value.forEach { album ->
+                val songs = immutableSongCollection
+                    .filter { it.albumId == album.albumId }
+                    .sortedBy { it.trackNumber }
+                album.addSongs(songs)
+            }
+            _allAlbums.value = _allAlbums.value.map { it }
+
+            _allArtists.value.forEach { artist ->
+                val artistAlbums = _allAlbums.value.filter { album -> album.artistId == artist.artistId }
+                artist.addAlbums(artistAlbums)
+            }
+            _allArtists.value = _allArtists.value.map { it }
+
+            _currentSongList.value = _currentSongList.value.map { song ->
+                if (song.songId == songInfo.songId) newSongInfo else song
+            }
+
+            if (_currentlyPlaying?.songId == songInfo.songId) {
+                _currentlyPlaying = newSongInfo
+            }
+        }
+
+        viewModelScope.launch(Dispatchers.IO) {
+            Repository.toggleSongFavorite(getApplication(), songInfo.songId, newIsFavorite)
+        }
     }
 }

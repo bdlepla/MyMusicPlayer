@@ -9,6 +9,7 @@ import com.bdlepla.android.mymusicplayer.business.PlaylistInfo
 import com.bdlepla.android.mymusicplayer.business.SongInfo
 import com.bdlepla.android.mymusicplayer.repository.ALBUM_ID
 import com.bdlepla.android.mymusicplayer.repository.ARTIST_ID
+import com.bdlepla.android.mymusicplayer.repository.IS_FAVORITE
 import com.bdlepla.android.mymusicplayer.repository.MEDIA_URI
 import com.bdlepla.android.mymusicplayer.service.MediaItemTree.ITEM_PREFIX
 import com.danrusu.pods4k.immutableArrays.ImmutableArray
@@ -42,6 +43,7 @@ private fun ImmutableArray<String>.toSongInfo(songId: Int): SongInfo {
         putLong(ARTIST_ID, songId.toLong())
         //putLong(GENRE_ID, songId.toLong())
         putString(MEDIA_URI, "")
+        putBoolean(IS_FAVORITE, songId % 2 == 1)
     }
 
     val mediaItemMeta = MediaMetadata.Builder()

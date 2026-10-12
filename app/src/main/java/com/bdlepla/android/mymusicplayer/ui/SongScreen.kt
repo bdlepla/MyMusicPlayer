@@ -5,15 +5,22 @@ import androidx.activity.compose.ReportDrawn
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -39,7 +46,8 @@ fun SongList(
     songInfos: ImmutableArray<SongInfo>,
     onLongClick: (ImmutableArray<SongInfo>) -> Unit = emptyFunction1(),
     currentSongIndex: Int = -1,
-    onClick: (SongInfo) -> Unit = emptyFunction1()
+    onClick: (SongInfo) -> Unit = emptyFunction1(),
+    onFavoriteToggle: (SongInfo) -> Unit = emptyFunction1()
 ) {
 
     val listState = rememberLazyListState()
@@ -48,7 +56,8 @@ fun SongList(
             SongWithImage(
                 songInfo = songInfo,
                 onClick = { onClick(songInfo) },
-                onLongClick = { onLongClick(immutableArrayOf(songInfo)) }
+                onLongClick = { onLongClick(immutableArrayOf(songInfo)) },
+                onFavoriteToggle = { onFavoriteToggle(songInfo) }
             )
             HorizontalDivider(thickness = 10.dp, color = MaterialTheme.colorScheme.background)
         }
@@ -89,15 +98,20 @@ fun Song(songInfo: SongInfo) {
 fun SongWithImage(
     songInfo: SongInfo,
     onClick: (SongInfo) -> Unit = emptyFunction1(),
-    onLongClick: (SongInfo) -> Unit = emptyFunction1()
+    onLongClick: (SongInfo) -> Unit = emptyFunction1(),
+    onFavoriteToggle: (SongInfo) -> Unit = emptyFunction1(),
+    showFavorite: Boolean = true
 ){
-    Row(verticalAlignment = Alignment.CenterVertically,
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
+            .fillMaxWidth()
             .combinedClickable (
                 onClick = { onClick(songInfo) },
                 onLongClick = { onLongClick(songInfo) }
             )
-            .semantics(mergeDescendants = true) {}) {
+            .semantics(mergeDescendants = true) {}
+    ) {
         Spacer(modifier = Modifier.padding(vertical = 4.dp))
         Image(
             painter = songInfo.albumArt.toImagePainter(),
@@ -105,7 +119,20 @@ fun SongWithImage(
             modifier = Modifier.size(50.dp),
         )
         Spacer(modifier = Modifier.padding(all = 4.dp))
-        Song(songInfo)
+        Box(modifier = Modifier.weight(1f)) {
+            Song(songInfo)
+        }
+        if (showFavorite) {
+            IconButton(
+                onClick = { onFavoriteToggle(songInfo) }
+            ) {
+                Icon(
+                    imageVector = if (songInfo.isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                    contentDescription = if (songInfo.isFavorite) "Remove from favorites" else "Add to favorites",
+                    tint = if (songInfo.isFavorite) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
     }
 }
 

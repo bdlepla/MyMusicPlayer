@@ -43,7 +43,9 @@ fun PlayScreen(
     currentSongs: ImmutableArray<SongInfo>,
     isPaused: Boolean,
     controller: MediaController?=null,
-    onBackClick:() -> Unit = emptyFunction()) {
+    onBackClick:() -> Unit = emptyFunction(),
+    onFavoriteToggle: (SongInfo) -> Unit = emptyFunction1()
+) {
     val currentSong = currentPlayingStats?.currentPlaying ?: return
     val currentSongIndex = currentSongs.indexOf(currentSong)
     val callbacks = Callbacks(
@@ -90,7 +92,7 @@ fun PlayScreen(
                 Song(currentSong)
             }
             Spacer(modifier = Modifier.padding(all = 4.dp))
-            SongList(currentSongs, currentSongIndex = currentSongIndex)
+            SongList(currentSongs, currentSongIndex = currentSongIndex, onFavoriteToggle = onFavoriteToggle)
         }
     }
 }

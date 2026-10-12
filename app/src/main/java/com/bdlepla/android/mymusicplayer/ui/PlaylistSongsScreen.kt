@@ -19,10 +19,12 @@ import com.danrusu.pods4k.immutableArrays.ImmutableArray
 
 @Composable
 fun PlaylistSongsScreen(
-    playlist:PlaylistInfo,
+    playlist: PlaylistInfo,
     songs: ImmutableArray<SongInfo>,
-    onRemoveSongFromPlayList:(PlaylistInfo, SongInfo)->Unit = emptyFunction2()) {
-    val onLongPress:(ImmutableArray<SongInfo>)->Unit = {
+    onRemoveSongFromPlayList: (PlaylistInfo, SongInfo) -> Unit = emptyFunction2(),
+    onFavoriteToggle: (SongInfo) -> Unit = emptyFunction1()
+) {
+    val onLongPress: (ImmutableArray<SongInfo>) -> Unit = {
         if (it.any()) {
             onRemoveSongFromPlayList(playlist, it.first())
         }
@@ -38,6 +40,6 @@ fun PlaylistSongsScreen(
             )
         }
         Spacer(modifier= Modifier.padding(all=4.dp))
-        SongList(songInfos = songs, onLongClick = onLongPress)
+        SongList(songInfos = songs, onLongClick = onLongPress, onFavoriteToggle = onFavoriteToggle)
     }
 }
