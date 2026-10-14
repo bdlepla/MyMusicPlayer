@@ -32,6 +32,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.media3.session.MediaController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.bdlepla.android.mymusicplayer.AutomaticPlaylistConfig
 import com.bdlepla.android.mymusicplayer.MyMusicViewModel
 import com.bdlepla.android.mymusicplayer.Navigation
 import com.bdlepla.android.mymusicplayer.R
@@ -45,9 +46,6 @@ import com.bdlepla.android.mymusicplayer.ui.theme.MyMusicPlayerTheme
 import com.danrusu.pods4k.immutableArrays.ImmutableArray
 import com.danrusu.pods4k.immutableArrays.emptyImmutableArray
 
-// Main Screen uses the view model to set the variables and callbacks
-// to view model. This is so I can see previews for everything in
-// the MainContents and its components.
 @Composable
 internal fun MainScreen(viewModel: MyMusicViewModel=viewModel(), activity: Context) {
     val songs by viewModel.allSongs.collectAsState()
@@ -58,7 +56,6 @@ internal fun MainScreen(viewModel: MyMusicViewModel=viewModel(), activity: Conte
     val isPaused by viewModel.isPaused.collectAsState()
     val currentSongList by viewModel.currentSongList.collectAsState()
     val castState by viewModel.castState.collectAsState()
-
 
     val onPlayImmediately: (ImmutableArray<SongInfo>) -> Unit = {
         viewModel.playPlaylistNow(it)
@@ -76,6 +73,79 @@ internal fun MainScreen(viewModel: MyMusicViewModel=viewModel(), activity: Conte
 
     val onCreateNewPlaylist: (String)->Unit = { viewModel.addNewPlaylist(it) }
     val onRemovePlaylist:(PlaylistInfo)->Unit = { viewModel.removePlaylist(it) }
+    val onSaveAutomaticPlaylist: (AutomaticPlaylistConfig) -> Unit = { viewModel.saveAutomaticPlaylist(it) }
+    val onUpdateAutomaticPlaylist: (String, AutomaticPlaylistConfig) -> Unit = { oldName, newConfig ->
+        viewModel.updateAutomaticPlaylist(oldName, newConfig)
+    }
+    val onFavoriteToggle: (SongInfo) -> Unit = { viewModel.toggleFavorite(it) }
+    val onRemoveSongFromPlaylist:(PlaylistInfo, SongInfo)->Unit = { playListInfo, songInfo ->
+        viewModel.removeSongFromPlaylist(playListInfo, songInfo)
+    }
+
+    MainContent(
+        mediaController = viewModel.browser,
+        songs = songs,
+        currentSongList = currentSongList,
+        artists = artists,
+        albums = albums,
+        playlists = playlists,
+        onCreateNewPlaylist = onCreateNewPlaylist,
+        onRemovePlaylist = onRemovePlaylist,
+        onSaveAutomaticPlaylist = onSaveAutomaticPlaylist,
+        onUpdateAutomaticPlaylist = onUpdateAutomaticPlaylist,
+        onPlayImmediately = onPlayImmediately,
+        onPlayNext = onPlayNext,
+        onQueue = onQueue,
+        onShuffleClick = onShuffleClick,
+        onRepeatClick = onRepeatClick,
+        onPlayPauseClick = onPlayPauseClick,
+        onNextClick = onNextClick,
+        onRemoveSongFromPlaylist = onRemoveSongFromPlaylist,
+        currentPlayingStats = currentlyPlayingStats,
+        isPaused = isPaused,
+        activity = activity,
+        castState = castState,
+        onFavoriteToggle = onFavoriteToggle,
+        addSongsToPlaylist = { playlist, songsToAdd -> viewModel.addSongsToPlaylist(playlist, songsToAdd) }
+    )
+}
+
+@Composable
+private fun MainContent(
+    mediaController: MediaController?,
+    songs: ImmutableArray<SongInfo>,
+    currentSongList: ImmutableArray<SongInfo>,
+    artists: ImmutableArray<ArtistInfo>,
+    albums: ImmutableArray<AlbumInfo>,
+    playlists: ImmutableArray<PlaylistInfo>,
+    onCreateNewPlaylist: (String) -> Unit = emptyFunction1(),
+    onRemovePlaylist: (PlaylistInfo) -> Unit = emptyFunction1(),
+    onSaveAutomaticPlaylist: (AutomaticPlaylistConfig) -> Unit = emptyFunction1(),
+    onUpdateAutomaticPlaylist: (String, AutomaticPlaylistConfig) -> Unit = emptyFunction2(),
+    onPlayImmediately: (ImmutableArray<SongInfo>) -> Unit = emptyFunction1(),
+    onPlayNext: (ImmutableArray<SongInfo>) -> Unit = emptyFunction1(),
+    onQueue: (ImmutableArray<SongInfo>) -> Unit = emptyFunction1(),
+    onShuffleClick: () -> Unit = emptyFunction(),
+    onRepeatClick: () -> Unit = emptyFunction(),
+    onPlayPauseClick: () -> Unit = emptyFunction(),
+    onNextClick: () -> Unit = emptyFunction(),
+    onRemoveSongFromPlaylist: (PlaylistInfo, SongInfo) -> Unit = emptyFunction2(),
+    currentPlayingStats: CurrentPlayingStats? = null,
+    isPaused: Boolean = false,
+    activity: Context? = null,
+    castState: Int = 0,
+    onFavoriteToggle: (SongInfo) -> Unit = emptyFunction1(),
+    addSongsToPlaylist: (PlaylistInfo, ImmutableArray<SongInfo>) -> Unit = emptyFunction2()
+) {
+    val shuffledSongs = remember{mutableStateOf(songs.shuffled())}
+    val setShuffledSongs: (ImmutableArray<SongInfo>) -> Unit = {
+        shuffledSongs.value = it
+    }
+
+    val navController = rememberNavController()
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+    val isPlayingRoute = currentRoute == NavigationItem.Playing.route
 
     val songsForAction = remember { mutableStateOf<ImmutableArray<SongInfo>>(emptyImmutableArray()) }
     val playlistForAction = remember { mutableStateOf<PlaylistInfo?>(null) }
@@ -83,11 +153,20 @@ internal fun MainScreen(viewModel: MyMusicViewModel=viewModel(), activity: Conte
     val pickPlaylist = remember { mutableStateOf(false) }
     val showActionChoice = remember { mutableStateOf(false) }
 
-    val onLongPressAction: (ImmutableArray<SongInfo>, PlaylistInfo?, Boolean)->Unit = { songs, playlist, showAddToPlaylist ->
-        songsForAction.value = songs
+    val onLongPressAction: (ImmutableArray<SongInfo>, PlaylistInfo?, Boolean)->Unit = { s, playlist, showAddToPlaylist ->
+        songsForAction.value = s
         playlistForAction.value = playlist
         showAddToPlaylistOption.value = showAddToPlaylist
         showActionChoice.value = true
+    }
+
+    val getResolvedSongs: () -> ImmutableArray<SongInfo> = {
+        val playlist = playlistForAction.value
+        if (playlist?.automaticConfig != null) {
+            playlist.evaluateSongs(songs)
+        } else {
+            songsForAction.value
+        }
     }
 
     if (showActionChoice.value) {
@@ -108,21 +187,21 @@ internal fun MainScreen(viewModel: MyMusicViewModel=viewModel(), activity: Conte
                         ListItem(
                             headlineContent = { Text("Play Immediately") },
                             modifier = Modifier.clickable {
-                                onPlayImmediately(songsForAction.value)
+                                onPlayImmediately(getResolvedSongs())
                                 showActionChoice.value = false
                             }
                         )
                         ListItem(
                             headlineContent = { Text("Play Next") },
                             modifier = Modifier.clickable {
-                                onPlayNext(songsForAction.value)
+                                onPlayNext(getResolvedSongs())
                                 showActionChoice.value = false
                             }
                         )
                         ListItem(
                             headlineContent = { Text("Add to Current Queue") },
                             modifier = Modifier.clickable {
-                                onQueue(songsForAction.value)
+                                onQueue(getResolvedSongs())
                                 showActionChoice.value = false
                             }
                         )
@@ -136,6 +215,15 @@ internal fun MainScreen(viewModel: MyMusicViewModel=viewModel(), activity: Conte
                             )
                         }
                         playlistForAction.value?.let { playlist ->
+                            if (playlist.automaticConfig != null) {
+                                ListItem(
+                                    headlineContent = { Text("Edit Playlist") },
+                                    modifier = Modifier.clickable {
+                                        showActionChoice.value = false
+                                        navController.navigate("edit_automatic_playlist/${playlist.name}")
+                                    }
+                                )
+                            }
                             ListItem(
                                 headlineContent = { Text("Remove Playlist", color = Color.Red) },
                                 modifier = Modifier.clickable {
@@ -154,7 +242,7 @@ internal fun MainScreen(viewModel: MyMusicViewModel=viewModel(), activity: Conte
         MyMusicPlayerTheme {
             Dialog(onDismissRequest = { pickPlaylist.value = false }) {
                 val onCLick: (PlaylistInfo) -> Unit = {
-                    viewModel.addSongsToPlaylist(it, songsForAction.value)
+                    addSongsToPlaylist(it, songsForAction.value)
                     pickPlaylist.value = false
                 }
 
@@ -180,69 +268,6 @@ internal fun MainScreen(viewModel: MyMusicViewModel=viewModel(), activity: Conte
             }
         }
     }
-
-    val onRemoveSongFromPlaylist:(PlaylistInfo, SongInfo)->Unit = { playListInfo, songInfo ->
-        viewModel.removeSongFromPlaylist(playListInfo, songInfo)
-    }
-
-    val onFavoriteToggle: (SongInfo) -> Unit = {
-        viewModel.toggleFavorite(it)
-    }
-
-    MainContent(
-        viewModel.browser,
-        songs,
-        currentSongList,
-        artists,
-        albums,
-        playlists,
-        onCreateNewPlaylist,
-        onLongPressAction,
-        onRemoveSongFromPlaylist,
-        onShuffleClick,
-        onRepeatClick,
-        onPlayPauseClick,
-        onNextClick,
-        currentlyPlayingStats,
-        isPaused,
-        activity,
-        castState,
-        onFavoriteToggle
-    )
-}
-
-// Main content is the main screen but without relying on the view model
-// so previews will work.
-@Composable
-private fun MainContent(
-    mediaController: MediaController?,
-    songs: ImmutableArray<SongInfo>,
-    currentSongList: ImmutableArray<SongInfo>,
-    artists: ImmutableArray<ArtistInfo>,
-    albums: ImmutableArray<AlbumInfo>,
-    playlists: ImmutableArray<PlaylistInfo>,
-    onCreateNewPlaylist: (String) -> Unit = emptyFunction1(),
-    onLongPress: (ImmutableArray<SongInfo>, PlaylistInfo?, Boolean)->Unit = emptyFunction3(),
-    onRemoveSongFromPlaylist:(PlaylistInfo, SongInfo)->Unit = emptyFunction2(),
-    onShuffleClick: () -> Unit = emptyFunction(),
-    onRepeatClick: () -> Unit = emptyFunction(),
-    onPlayPauseClick: () -> Unit = emptyFunction(),
-    onNextClick: () -> Unit = emptyFunction(),
-    currentPlayingStats: CurrentPlayingStats? = null,
-    isPaused: Boolean = false,
-    activity: Context? = null,
-    castState: Int = 0,
-    onFavoriteToggle: (SongInfo) -> Unit = emptyFunction1()
-) {
-    val shuffledSongs = remember{mutableStateOf(songs.shuffled())}
-    val setShuffledSongs: (ImmutableArray<SongInfo>) -> Unit = {
-        shuffledSongs.value = it
-    }
-
-    val navController = rememberNavController()
-    val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = navBackStackEntry?.destination?.route
-    val isPlayingRoute = currentRoute == NavigationItem.Playing.route
 
     MyMusicPlayerTheme {
         Surface {
@@ -282,7 +307,9 @@ private fun MainContent(
                         albums = albums,
                         playlists = playlists,
                         onCreateNewPlaylist = onCreateNewPlaylist,
-                        onLongPress = onLongPress,
+                        onSaveAutomaticPlaylist = onSaveAutomaticPlaylist,
+                        onUpdateAutomaticPlaylist = onUpdateAutomaticPlaylist,
+                        onLongPress = onLongPressAction,
                         onRemoveSongFromPlaylist = onRemoveSongFromPlaylist,
                         currentPlayingStats = currentPlayingStats,
                         isPaused = isPaused,
@@ -295,7 +322,6 @@ private fun MainContent(
     }
 }
 
-
 @Preview(
     showBackground = true,
     name="Main Content Light Mode"
@@ -305,17 +331,16 @@ private fun MainContent(
     showBackground = true,
     name = "Main Content Dark Mode"
 )
-
 @Composable
 fun MainContentPreview() {
     MyMusicPlayerTheme {
         MainContent(
-            null,
-            SampleData().songs,
-            SampleData().songs,
-            SampleData().artists,
-            SampleData().albums,
-            SampleData().playlists
+            mediaController = null,
+            songs = SampleData().songs,
+            currentSongList = SampleData().songs,
+            artists = SampleData().artists,
+            albums = SampleData().albums,
+            playlists = SampleData().playlists
         )
     }
 }

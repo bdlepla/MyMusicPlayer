@@ -1,0 +1,19 @@
+syntax = "proto3";
+option java_package = "com.bdlepla.android.mymusicplayer";
+option java_outer_classname = "AutomaticPlaylistProto";
+option java_multiple_files = true;
+
+message AutomaticPlaylistConfig {
+  string name = 1;
+  string source = 2; // e.g. "All Songs"
+  bool applyFilter = 3;
+  string attribute = 4; // e.g. "Favorite"
+  string value = 5; // e.g. "True" or "False"
+  bool applyLimit = 6;
+  string limitType = 7; // e.g. "Number of songs" or "Minutes"
+  int32 limitValue = 8;
+}
+
+message AutomaticPlaylists {
+  repeated AutomaticPlaylistConfig playlists = 1;
+}

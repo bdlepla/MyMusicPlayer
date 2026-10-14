@@ -15,6 +15,7 @@ import com.bdlepla.android.mymusicplayer.ui.AlbumList
 import com.bdlepla.android.mymusicplayer.ui.AlbumSongsScreen
 import com.bdlepla.android.mymusicplayer.ui.ArtistList
 import com.bdlepla.android.mymusicplayer.ui.ArtistSongsScreen
+import com.bdlepla.android.mymusicplayer.ui.CreateAutomaticPlaylistScreen
 import com.bdlepla.android.mymusicplayer.ui.NavigationItem
 import com.bdlepla.android.mymusicplayer.ui.PlayScreen
 import com.bdlepla.android.mymusicplayer.ui.PlaylistScreen
@@ -37,8 +38,11 @@ fun Navigation(
     albums: ImmutableArray<AlbumInfo>,
     playlists: ImmutableArray<PlaylistInfo>,
     onCreateNewPlaylist: (String) -> Unit = emptyFunction1(),
+    onSaveAutomaticPlaylist: (AutomaticPlaylistConfig) -> Unit = emptyFunction1(),
+    onUpdateAutomaticPlaylist: (String, AutomaticPlaylistConfig) -> Unit = emptyFunction2(),
+    onEditAutomaticPlaylist: (String) -> Unit = emptyFunction1(),
     onLongPress: (ImmutableArray<SongInfo>, PlaylistInfo?, Boolean) -> Unit = emptyFunction3(),
-    onRemoveSongFromPlaylist:(PlaylistInfo, SongInfo)->Unit = emptyFunction2(),
+    onRemoveSongFromPlaylist: (PlaylistInfo, SongInfo) -> Unit = emptyFunction2(),
     currentPlayingStats: CurrentPlayingStats? = null,
     isPaused: Boolean = false,
     setShuffledSongs: (ImmutableArray<SongInfo>) -> Unit = emptyFunction1(),
@@ -120,14 +124,45 @@ fun Navigation(
             LaunchedEffect(playlists) {
                 setShuffledSongs(playlists.shuffled().flatMap { playlist -> playlist.songs.shuffled() })
             }
-            PlaylistScreen(playlists, onClick, onCreateNewPlaylist, onLongPress)
+            PlaylistScreen(
+                playlistList = playlists,
+                onClick = onClick,
+                onCreateNewPlaylist = onCreateNewPlaylist,
+                onCreateAutomaticPlaylist = { navController.navigate("create_automatic_playlist") },
+                onLongPress = onLongPress
+            )
+        }
+
+        composable("create_automatic_playlist") {
+            CreateAutomaticPlaylistScreen(
+                onSave = { config ->
+                    onSaveAutomaticPlaylist(config)
+                    navController.popBackStack()
+                },
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        composable("edit_automatic_playlist/{playlistName}") { backStack ->
+            val args = backStack.arguments ?: return@composable
+            val playlistName = args.getString("playlistName") ?: return@composable
+            val playlist = playlists.firstOrNull { it.name == playlistName } ?: return@composable
+            val config = playlist.automaticConfig ?: return@composable
+            CreateAutomaticPlaylistScreen(
+                initialConfig = config,
+                onSave = { newConfig ->
+                    onUpdateAutomaticPlaylist(playlistName, newConfig)
+                    navController.popBackStack()
+                },
+                onBack = { navController.popBackStack() }
+            )
         }
 
         composable("playlistsongs/{playlistId}") { backStack ->
             val args = backStack.arguments ?: return@composable
             val playlistName = args.getString("playlistId") ?: return@composable
             val playlist = playlists.firstOrNull { it.name == playlistName } ?: return@composable
-            val songsInPlaylist = playlist.songs
+            val songsInPlaylist = playlist.evaluateSongs(songs)
 
             LaunchedEffect(songsInPlaylist) {
                 setShuffledSongs(songsInPlaylist.shuffled())

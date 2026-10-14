@@ -13,7 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
@@ -52,12 +52,12 @@ fun SongList(
 
     val listState = rememberLazyListState()
     LazyColumn(state = listState) {
-        items(items = songInfos.asList(), key = { it.songId }) { songInfo ->
+        itemsIndexed(items = songInfos.asList(), key = { index, song -> "${song.songId}-$index" }) { _, song ->
             SongWithImage(
-                songInfo = songInfo,
-                onClick = { onClick(songInfo) },
-                onLongClick = { onLongClick(immutableArrayOf(songInfo)) },
-                onFavoriteToggle = { onFavoriteToggle(songInfo) }
+                songInfo = song,
+                onClick = { onClick(song) },
+                onLongClick = { onLongClick(immutableArrayOf(song)) },
+                onFavoriteToggle = { onFavoriteToggle(song) }
             )
             HorizontalDivider(thickness = 10.dp, color = MaterialTheme.colorScheme.background)
         }

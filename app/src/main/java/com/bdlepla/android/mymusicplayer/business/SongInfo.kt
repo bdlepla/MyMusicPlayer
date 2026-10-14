@@ -11,6 +11,9 @@ import com.bdlepla.android.mymusicplayer.repository.DURATION
 import com.bdlepla.android.mymusicplayer.repository.IS_FAVORITE
 import com.bdlepla.android.mymusicplayer.repository.MEDIA_URI
 import com.bdlepla.android.mymusicplayer.repository.TRACK_NUMBER
+import com.danrusu.pods4k.immutableArrays.ImmutableArray
+import com.danrusu.pods4k.immutableArrays.multiplicativeSpecializations.map
+import java.util.UUID.randomUUID
 
 class SongInfo(private val mediaItem: MediaItem) {
     fun toMediaItem() = mediaItem
@@ -54,8 +57,12 @@ class SongInfo(private val mediaItem: MediaItem) {
     }
 
     override fun hashCode(): Int = songId.hashCode()
+    fun withKey() = SongInfoWithKey(this)
 }
+fun ImmutableArray<SongInfo>.toWithKey() = map { it.withKey() }
+//fun List<SongInfo>.toWithKey() = map { it.withKey() }
 
+data class SongInfoWithKey(val songInfo: SongInfo, val key: String=randomUUID().toString())
 val MediaMetadata.track: Int
     get() = trackNumber ?: (extras?.getInt(TRACK_NUMBER) ?: 0)
 

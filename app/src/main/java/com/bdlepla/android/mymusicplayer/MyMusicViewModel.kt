@@ -24,6 +24,7 @@ import com.bdlepla.android.mymusicplayer.business.albumId
 import com.bdlepla.android.mymusicplayer.business.albumName
 import com.bdlepla.android.mymusicplayer.business.artistId
 import com.bdlepla.android.mymusicplayer.business.artistName
+import com.bdlepla.android.mymusicplayer.datastore.AutomaticPlaylistsDataStore
 import com.bdlepla.android.mymusicplayer.extensions.any
 import com.bdlepla.android.mymusicplayer.extensions.forSorting
 import com.bdlepla.android.mymusicplayer.repository.ALBUM_ID
@@ -46,6 +47,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -58,6 +60,7 @@ class MyMusicViewModel
     val browser: MediaBrowser?
         get() = if (browserFuture.isDone) browserFuture.get() else null
     private val playlistManager:PlaylistManager = PlaylistManager(application)
+    private val automaticPlaylistsDataStore: AutomaticPlaylistsDataStore = AutomaticPlaylistsDataStore(application)
 
     // Initialize the Cast context. This is required so that the media route button can be
     // created in the AppBar
@@ -371,9 +374,73 @@ class MyMusicViewModel
     private val immutableSongCollection
         get() = songCollection.toImmutableArray() // OK; Do not change
 
+    private fun updatePlaylists() {
+        val manualPlaylists = playlistManager.updatePlaylistInfo(immutableSongCollection)
+        val autoConfigs = automaticPlaylistsDataStore.settings.playlistsList
+        val autoPlaylists = autoConfigs.map { config ->
+            var filteredSongs = immutableSongCollection.asIterable()
+            if (config.applyFilter) {
+                if (config.attribute == "Favorite") {
+                    val wantFavorite = config.value.equals("true", ignoreCase = true)
+                    filteredSongs = filteredSongs.filter { it.isFavorite == wantFavorite }
+                }
+            }
+            var songList = filteredSongs.toList()
+            if (config.applyLimit) {
+                if (config.limitType == "Number of songs") {
+                    songList = songList.take(config.limitValue)
+                } else if (config.limitType == "Minutes") {
+                    val maxSeconds = config.limitValue * 60
+                    var totalSeconds = 0
+                    val limited = mutableListOf<SongInfo>()
+                    for (song in songList) {
+                        if (totalSeconds + song.duration <= maxSeconds || limited.isEmpty()) {
+                            limited.add(song)
+                            totalSeconds += song.duration
+                        } else {
+                            break
+                        }
+                    }
+                    songList = limited
+                }
+            }
+            val immutableSongs = songList.toImmutableArray()
+            var artworkString: String? = null
+            if (immutableSongs.any()) {
+                artworkString = immutableSongs.random().albumArt
+            }
+            PlaylistInfo(config.name, immutableSongs, artworkString, automaticConfig = config)
+        }.toImmutableArray()
+
+        _allPlaylists.value = (manualPlaylists.asList() + autoPlaylists.asList()).toImmutableArray()
+    }
+
+    fun saveAutomaticPlaylist(config: AutomaticPlaylistConfig) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val current = automaticPlaylistsDataStore.settings
+            val updated = current.toBuilder().addPlaylists(config).build()
+            automaticPlaylistsDataStore.saveSettings(updated)
+            withContext(Dispatchers.Main) {
+                updatePlaylists()
+            }
+        }
+    }
+
+    fun updateAutomaticPlaylist(oldName: String, newConfig: AutomaticPlaylistConfig) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val current = automaticPlaylistsDataStore.settings
+            val updatedPlaylists = current.playlistsList.map { if (it.name == oldName) newConfig else it }
+            val newSettings = current.toBuilder().clearPlaylists().addAllPlaylists(updatedPlaylists).build()
+            automaticPlaylistsDataStore.saveSettings(newSettings)
+            withContext(Dispatchers.Main) {
+                updatePlaylists()
+            }
+        }
+    }
+
     private fun addSongs(songs:Iterable<SongInfo>) {
         songCollection.addAll(songs)
-        _allPlaylists.value = playlistManager.updatePlaylistInfo(immutableSongCollection)
+        updatePlaylists()
         _allSongs.value =  immutableSongCollection.sortedBy { it.title.forSorting() }
     }
 
@@ -398,22 +465,36 @@ class MyMusicViewModel
 
     fun addSongsToPlaylist(playListInfo: PlaylistInfo, songs: ImmutableArray<SongInfo>) {
         playlistManager.addSongsToPlaylist(playListInfo, songs)
-        _allPlaylists.value = playlistManager.updatePlaylistInfo(immutableSongCollection)
+        updatePlaylists()
     }
 
     fun removePlaylist(playListInfo: PlaylistInfo) {
-        playlistManager.removePlaylist(playListInfo)
-        _allPlaylists.value = playlistManager.updatePlaylistInfo(immutableSongCollection)
+        val autoConfigs = automaticPlaylistsDataStore.settings.playlistsList
+        val autoConfig = autoConfigs.firstOrNull { it.name == playListInfo.name }
+        if (autoConfig != null) {
+            viewModelScope.launch(Dispatchers.IO) {
+                val current = automaticPlaylistsDataStore.settings
+                val updatedPlaylists = current.playlistsList.filter { it.name != playListInfo.name }
+                val newSettings = current.toBuilder().clearPlaylists().addAllPlaylists(updatedPlaylists).build()
+                automaticPlaylistsDataStore.saveSettings(newSettings)
+                withContext(Dispatchers.Main) {
+                    updatePlaylists()
+                }
+            }
+        } else {
+            playlistManager.removePlaylist(playListInfo)
+            updatePlaylists()
+        }
     }
 
     fun addNewPlaylist(it: String) {
         playlistManager.addNewPlaylist(it)
-        _allPlaylists.value = playlistManager.updatePlaylistInfo(immutableSongCollection)
+        updatePlaylists()
     }
 
     fun removeSongFromPlaylist(playListInfo: PlaylistInfo, songInfo: SongInfo) {
         playlistManager.removeSongFromPlaylist(playListInfo, songInfo)
-        _allPlaylists.value = playlistManager.updatePlaylistInfo(immutableSongCollection)
+        updatePlaylists()
     }
 
     fun toggleFavorite(songInfo: SongInfo) {
@@ -438,7 +519,7 @@ class MyMusicViewModel
             val newSongInfo = songCollection[index].copyWithFavorite(isFavorite)
             songCollection[index] = newSongInfo
             _allSongs.value = immutableSongCollection.sortedBy { it.title.forSorting() }
-            _allPlaylists.value = playlistManager.updatePlaylistInfo(immutableSongCollection)
+            updatePlaylists()
 
             _allAlbums.value.forEach { album ->
                 val songs = immutableSongCollection

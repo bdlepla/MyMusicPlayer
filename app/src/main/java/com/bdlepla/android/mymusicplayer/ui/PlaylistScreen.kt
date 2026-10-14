@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.Button
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -47,17 +48,53 @@ fun PlaylistScreen(
     playlistList: ImmutableArray<PlaylistInfo>,
     onClick: (PlaylistInfo) -> Unit = emptyFunction1(),
     onCreateNewPlaylist: (String) -> Unit = emptyFunction1(),
+    onCreateAutomaticPlaylist: () -> Unit = emptyFunction(),
     onLongPress: (ImmutableArray<SongInfo>, PlaylistInfo?, Boolean) -> Unit = emptyFunction3()){
 
+    val showTypeDialog = remember { mutableStateOf(false) }
     val nameNewPlaylist = remember { mutableStateOf(false) }
     val savedPlaylistNameToAdd = remember { mutableStateOf("") }
     val onAddNewPlaylist: ()->Unit = {
-        savedPlaylistNameToAdd.value = ""
-        nameNewPlaylist.value = true
+        showTypeDialog.value = true
     }
 
     val myOnLongPress: (PlaylistInfo)->Unit = {
         onLongPress(it.songs.shuffled(), it, false)
+    }
+
+    if (showTypeDialog.value) {
+        MyMusicPlayerTheme {
+            Dialog(onDismissRequest = { showTypeDialog.value = false }) {
+                Box(
+                    Modifier
+                        .background(MaterialTheme.colorScheme.background)
+                        .padding(24.dp)
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "Choose Playlist Type",
+                            style = MaterialTheme.typography.titleLarge,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                        Spacer(modifier = Modifier.padding(12.dp))
+                        Button(onClick = {
+                            showTypeDialog.value = false
+                            savedPlaylistNameToAdd.value = ""
+                            nameNewPlaylist.value = true
+                        }, modifier = Modifier.fillMaxWidth()) {
+                            Text("Manual Playlist")
+                        }
+                        Spacer(modifier = Modifier.padding(8.dp))
+                        Button(onClick = {
+                            showTypeDialog.value = false
+                            onCreateAutomaticPlaylist()
+                        }, modifier = Modifier.fillMaxWidth()) {
+                            Text("Automatic Playlist")
+                        }
+                    }
+                }
+            }
+        }
     }
 
     if (nameNewPlaylist.value) {
