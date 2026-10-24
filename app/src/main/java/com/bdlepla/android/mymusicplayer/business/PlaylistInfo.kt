@@ -28,12 +28,9 @@ data class PlaylistInfo(
                 var totalSeconds = 0
                 val limited = mutableListOf<SongInfo>()
                 for (song in songList) {
-                    if (totalSeconds + song.duration <= maxSeconds || limited.isEmpty()) {
-                        limited.add(song)
-                        totalSeconds += song.duration
-                    } else {
-                        break
-                    }
+                    limited.add(song)
+                    totalSeconds += song.duration
+                    if (totalSeconds > maxSeconds) break
                 }
                 songList = limited
             }
