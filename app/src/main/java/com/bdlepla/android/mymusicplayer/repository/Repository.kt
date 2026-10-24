@@ -32,6 +32,11 @@ object Repository {
         return set.mapNotNull { it.toLongOrNull() }.toSet()
     }
 
+    fun isFavorite(context: Context, songId: Long): Boolean {
+        if (songId == 0L) return false
+        return getFavoriteSongIds(context).contains(songId)
+    }
+
     fun getAllAlbumYears(context: Context): Map<Long, Int> {
         return buildMap {
             val collection = MediaStore.Audio.Albums.getContentUri(MediaStore.VOLUME_EXTERNAL)
@@ -64,7 +69,8 @@ object Repository {
 
     fun getAllSongs(context: Context): ImmutableArray<MediaItem> {
         val albumYears = getAllAlbumYears(context)
-        val favoriteSongIds = getFavoriteSongIds(context)
+        val favoriteSongIds = getFavoriteSongIds(context).toMutableSet()
+        var prefsUpdated = false
         val ret = ImmutableArray.Builder<MediaItem>()
 
         val collection = MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL)
@@ -132,6 +138,9 @@ object Repository {
                 val durationInSeconds = cursor.getInt(durationColumn) / 1000
                 val mediaStoreFavorite = isFavoriteColumn != -1 && cursor.getInt(isFavoriteColumn) == 1
                 val isFavorite = mediaStoreFavorite || favoriteSongIds.contains(songId.toLong())
+                if (isFavorite && favoriteSongIds.add(songId.toLong())) {
+                    prefsUpdated = true
+                }
 
                 val bundle =  Bundle().apply {
                     putString(ALBUM, album)
@@ -171,6 +180,10 @@ object Repository {
 
                 ret.add(item)
             }
+        }
+        if (prefsUpdated) {
+            val prefs = context.getSharedPreferences("favorite_songs_prefs", Context.MODE_PRIVATE)
+            prefs.edit { putStringSet("favorite_ids", favoriteSongIds.map { it.toString() }.toSet()) }
         }
         return ret.build()
     }

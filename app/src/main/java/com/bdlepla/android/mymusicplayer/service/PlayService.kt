@@ -136,10 +136,11 @@ class PlayService: MediaLibraryService() {
         updateCustomLayout()
     }
 
-    private fun updateCustomLayout() {
-        val currentMediaItem = currentPlayer.currentMediaItem
+    private fun updateCustomLayout(targetMediaItem: MediaItem? = null) {
+        val currentMediaItem = targetMediaItem ?: exoPlayer.currentMediaItem ?: currentPlayer.currentMediaItem
         val songInfo = currentMediaItem?.let { SongInfo(it) }
-        val isFavorite = songInfo?.isFavorite ?: false
+        val songId = songInfo?.songId ?: 0L
+        val isFavorite = if (songId != 0L) Repository.isFavorite(this@PlayService, songId) else (songInfo?.isFavorite ?: false)
 
         val favoriteCommand = CommandButton.Builder()
             .setDisplayName(if (isFavorite) "Remove from favorites" else "Add to favorites")
@@ -193,6 +194,7 @@ class PlayService: MediaLibraryService() {
     }
 
     private fun updatePlayerSongFavorite(songId: Long, isFavorite: Boolean) {
+        MediaItemTree.updateSongFavorite(songId, isFavorite)
         val count = currentPlayer.mediaItemCount
         for (i in 0 until count) {
             val item = currentPlayer.getMediaItemAt(i)
@@ -295,6 +297,7 @@ class PlayService: MediaLibraryService() {
         currentPlayer.prepare()
         currentPlayer.play()
         saveQueue()
+        updateCustomLayout()
     }
 
     private fun saveQueue() {
@@ -398,10 +401,20 @@ class PlayService: MediaLibraryService() {
 
        override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
            super.onMediaItemTransition(mediaItem, reason)
-           updateCustomLayout()
+           updateCustomLayout(mediaItem)
            if (reason != Player.MEDIA_ITEM_TRANSITION_REASON_PLAYLIST_CHANGED) {
                queueManager.updateCurrentState(currentPlayer.currentMediaItemIndex, currentPlayer.currentPosition)
                saveQueue()
+           }
+       }
+
+       override fun onEvents(player: Player, events: Player.Events) {
+           super.onEvents(player, events)
+           if (events.contains(Player.EVENT_MEDIA_ITEM_TRANSITION)
+               || events.contains(Player.EVENT_TIMELINE_CHANGED)
+               || events.contains(Player.EVENT_POSITION_DISCONTINUITY)
+           ) {
+               updateCustomLayout(player.currentMediaItem)
            }
        }
 
@@ -489,7 +502,7 @@ class PlayService: MediaLibraryService() {
                     val currentMediaItem = currentPlayer.currentMediaItem
                     if (currentMediaItem != null) {
                         val songInfo = SongInfo(currentMediaItem)
-                        val newIsFavorite = !songInfo.isFavorite
+                        val newIsFavorite = !Repository.isFavorite(this@PlayService, songInfo.songId)
                         Repository.toggleSongFavorite(this@PlayService, songInfo.songId, newIsFavorite)
 
                         val updatedSongInfo = songInfo.copyWithFavorite(newIsFavorite)

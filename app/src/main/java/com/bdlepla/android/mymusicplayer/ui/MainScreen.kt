@@ -185,7 +185,7 @@ private fun MainContent(
                         )
                         Spacer(modifier = Modifier.padding(all = 8.dp))
                         ListItem(
-                            headlineContent = { Text("Play Immediately") },
+                            headlineContent = { Text("Play Now") },
                             modifier = Modifier.clickable {
                                 onPlayImmediately(getResolvedSongs())
                                 showActionChoice.value = false

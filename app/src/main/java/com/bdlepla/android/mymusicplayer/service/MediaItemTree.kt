@@ -14,6 +14,7 @@ import androidx.media3.common.MediaMetadata.MEDIA_TYPE_FOLDER_PLAYLISTS
 import androidx.media3.common.MediaMetadata.MEDIA_TYPE_MUSIC
 import androidx.media3.common.MediaMetadata.MEDIA_TYPE_PLAYLIST
 import com.bdlepla.android.mymusicplayer.business.PlaylistReader
+import com.bdlepla.android.mymusicplayer.business.SongInfo
 import com.bdlepla.android.mymusicplayer.business.albumId
 import com.bdlepla.android.mymusicplayer.business.albumName
 import com.bdlepla.android.mymusicplayer.business.artistId
@@ -276,6 +277,21 @@ object MediaItemTree {
     }
 
     fun getItem(mediaId: String): MediaItem? = treeNodes[mediaId]?.item
+
+    fun updateSongFavorite(songId: Long, isFavorite: Boolean) {
+        val mediaId = ITEM_PREFIX + songId
+        val existingNode = treeNodes[mediaId] ?: return
+        val existingItem = existingNode.item
+        val songInfo = SongInfo(existingItem)
+        if (songInfo.isFavorite != isFavorite) {
+            val updatedItem = songInfo.copyWithFavorite(isFavorite).toMediaItem()
+            treeNodes[mediaId] = MediaItemNode(updatedItem)
+            val title = existingItem.mediaMetadata.title.toString().forSorting().lowercase()
+            if (titleMap.containsKey(title)) {
+                titleMap[title] = updatedItem
+            }
+        }
+    }
 
     fun getRootItem(): MediaItem = treeNodes[ROOT_ID]!!.item
 
