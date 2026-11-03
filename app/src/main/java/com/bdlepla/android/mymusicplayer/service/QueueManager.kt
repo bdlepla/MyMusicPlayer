@@ -33,11 +33,11 @@ class QueueManager(private val defaultPlaylistProvider: () -> PlaylistInfo) {
         songInfos.addAll(playlist.songs.toList())
     }
 
-    fun playAfterCurrentSong(playlist: PlaylistInfo) {
+    fun playAfterCurrentSong(playlist: PlaylistInfo, activeIndex: Int = currentIndex) {
         ensureInitialized()
-        val currentRemaining = songInfos.drop(currentIndex)
+        val currentRemaining = songInfos.drop(activeIndex)
         songInfos.clear()
-        songInfos.addAll(0, currentRemaining.take(1)+playlist.songs.toList()+currentRemaining.drop(1))
+        songInfos.addAll(0, currentRemaining.take(1) + playlist.songs.toList() + currentRemaining.drop(1))
         currentIndex = 0
     }
 

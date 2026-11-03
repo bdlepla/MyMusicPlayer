@@ -530,15 +530,37 @@ class PlayService: MediaLibraryService() {
                 }
                 CUSTOM_COMMAND_PLAY_AFTER_PLAYLIST -> {
                     val playlist = args.getPlaylistInfo()
-                    queueManager.playAfterCurrentPlaylist(playlist)
-                    saveQueue()
-                    loadQueuedPlaylist(queueManager)
+                    val mediaItems = playlist.songs.asList().map { it.toMediaItem() }
+                    if (mediaItems.isNotEmpty()) {
+                        if (currentPlayer.mediaItemCount > 0) {
+                            currentPlayer.addMediaItems(mediaItems)
+                            queueManager.playAfterCurrentPlaylist(playlist)
+                            saveQueue()
+                        } else {
+                            queueManager.playAfterCurrentPlaylist(playlist)
+                            saveQueue()
+                            loadQueuedPlaylist(queueManager)
+                        }
+                    }
                 }
                 CUSTOM_COMMAND_PLAY_AFTER_SONG -> {
                     val playlist = args.getPlaylistInfo()
-                    queueManager.playAfterCurrentSong(playlist)
-                    saveQueue()
-                    loadQueuedPlaylist(queueManager)
+                    val mediaItems = playlist.songs.asList().map { it.toMediaItem() }
+                    if (mediaItems.isNotEmpty()) {
+                        val currIndex = currentPlayer.currentMediaItemIndex
+                        if (currentPlayer.mediaItemCount > 0 && currIndex != C.INDEX_UNSET) {
+                            if (currIndex > 0) {
+                                currentPlayer.removeMediaItems(0, currIndex)
+                            }
+                            currentPlayer.addMediaItems(1, mediaItems)
+                            queueManager.playAfterCurrentSong(playlist, currIndex)
+                            saveQueue()
+                        } else {
+                            queueManager.playAfterCurrentSong(playlist)
+                            saveQueue()
+                            loadQueuedPlaylist(queueManager)
+                        }
+                    }
                 }
             }
             return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
