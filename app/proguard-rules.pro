@@ -26,6 +26,11 @@
    <fields>;
 }
 
+# Preserve ViewModel classes and their constructors for reflection-based instantiation by ViewModelProvider
+-keep class * extends androidx.lifecycle.ViewModel {
+    <init>(...);
+}
+
 -dontwarn org.bouncycastle.jsse.BCSSLParameters
 -dontwarn org.bouncycastle.jsse.BCSSLSocket
 -dontwarn org.bouncycastle.jsse.provider.BouncyCastleJsseProvider

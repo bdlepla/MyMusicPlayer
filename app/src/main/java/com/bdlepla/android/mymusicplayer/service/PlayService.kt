@@ -2,8 +2,12 @@ package com.bdlepla.android.mymusicplayer.service
 
 import android.app.PendingIntent
 import android.app.PendingIntent.FLAG_IMMUTABLE
+import android.database.ContentObserver
+import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
+import android.os.Looper
+import android.provider.MediaStore
 import android.util.Log
 import androidx.media3.cast.CastPlayer
 import androidx.media3.cast.SessionAvailabilityListener
@@ -25,7 +29,10 @@ import com.bdlepla.android.mymusicplayer.R
 import com.bdlepla.android.mymusicplayer.business.PlaylistInfo
 import com.bdlepla.android.mymusicplayer.business.SongInfo
 import com.bdlepla.android.mymusicplayer.datastore.MyMusicPlayerSettingsDataStore
+import com.bdlepla.android.mymusicplayer.repository.ALBUM_ID
+import com.bdlepla.android.mymusicplayer.repository.ARTIST_ID
 import com.bdlepla.android.mymusicplayer.repository.ITEM_ID
+import com.bdlepla.android.mymusicplayer.repository.ROOT_ID
 import com.bdlepla.android.mymusicplayer.repository.Repository
 import com.danrusu.pods4k.immutableArrays.asList
 import com.danrusu.pods4k.immutableArrays.emptyImmutableArray
@@ -184,12 +191,49 @@ class PlayService: MediaLibraryService() {
         }
         initializeMediaSession()
 
+        registerMusicContentObserver()
+        Repository.scanMusicStorage(this)
+
         scope.launch {
             Repository.favoriteChanges.collect { (songId, isFavorite) ->
                 withContext(Dispatchers.Main) {
                     updatePlayerSongFavorite(songId, isFavorite)
                 }
             }
+        }
+    }
+
+    private var musicContentObserver: ContentObserver? = null
+
+    private fun registerMusicContentObserver() {
+        val observerHandler = Handler(Looper.getMainLooper())
+        musicContentObserver = object : ContentObserver(observerHandler) {
+            override fun onChange(selfChange: Boolean, uri: Uri?) {
+                super.onChange(selfChange, uri)
+                onMediaStoreChanged()
+            }
+        }
+        contentResolver.registerContentObserver(
+            MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+            true,
+            musicContentObserver!!
+        )
+    }
+
+    private fun unregisterMusicContentObserver() {
+        musicContentObserver?.let {
+            contentResolver.unregisterContentObserver(it)
+            musicContentObserver = null
+        }
+    }
+
+    private fun onMediaStoreChanged() {
+        MediaItemTree.initialize(this)
+        if (::mediaLibrarySession.isInitialized) {
+            mediaLibrarySession.notifyChildrenChanged(ITEM_ID, 0, null)
+            mediaLibrarySession.notifyChildrenChanged(ROOT_ID, 0, null)
+            mediaLibrarySession.notifyChildrenChanged(ALBUM_ID, 0, null)
+            mediaLibrarySession.notifyChildrenChanged(ARTIST_ID, 0, null)
         }
     }
 
@@ -231,6 +275,7 @@ class PlayService: MediaLibraryService() {
 
     override fun onDestroy() {
         isReleasing = true
+        unregisterMusicContentObserver()
         stopServer()
         handler.removeCallbacksAndMessages(null)
         scope.cancel()

@@ -4,7 +4,9 @@ import android.content.ContentUris
 import android.content.ContentValues
 import android.content.Context
 import android.graphics.Bitmap
+import android.media.MediaScannerConnection
 import android.os.Bundle
+import android.os.Environment
 import android.provider.MediaStore
 import android.util.Log
 import android.util.Size
@@ -243,6 +245,40 @@ object Repository {
             // Fallback: Return a default image from your assets folder
             // if you have one (e.g., assets/default_art.png)
             "content://androidx.media3/default_art.png"
+        }
+    }
+
+    fun scanMusicStorage(context: Context, onScanFinished: (() -> Unit)? = null) {
+        val musicDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC)
+        val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+
+        val filesToScan = mutableListOf<String>()
+        listOf(musicDir, downloadsDir).forEach { dir ->
+            if (dir.exists() && dir.isDirectory) {
+                dir.walkTopDown()
+                    .filter { file ->
+                        file.isFile && (
+                            file.extension.equals("mp3", ignoreCase = true) ||
+                            file.extension.equals("flac", ignoreCase = true) ||
+                            file.extension.equals("m4a", ignoreCase = true) ||
+                            file.extension.equals("ogg", ignoreCase = true) ||
+                            file.extension.equals("wav", ignoreCase = true)
+                        )
+                    }
+                    .forEach { filesToScan.add(it.absolutePath) }
+            }
+        }
+
+        if (filesToScan.isNotEmpty()) {
+            MediaScannerConnection.scanFile(
+                context.applicationContext,
+                filesToScan.toTypedArray(),
+                null
+            ) { _, _ ->
+                onScanFinished?.invoke()
+            }
+        } else {
+            onScanFinished?.invoke()
         }
     }
 }

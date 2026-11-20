@@ -34,15 +34,30 @@ class MyMusicPlayerSettingsDataStore @Inject constructor(private val context: Co
 
     private suspend fun readFile(): MyMusicPlayerSettings =
         getFullFilename?.let { filename ->
-            Path(filename).toFile().inputStream().use {
-                return MyMusicPlayerSettingsSerializer().readFrom(it)
+            val file = Path(filename).toFile()
+            if (file.exists()) {
+                try {
+                    file.inputStream().use {
+                        return MyMusicPlayerSettingsSerializer().readFrom(it)
+                    }
+                } catch (_: Exception) {
+                    MyMusicPlayerSettingsSerializer().defaultValue
+                }
+            } else {
+                MyMusicPlayerSettingsSerializer().defaultValue
             }
         } ?: MyMusicPlayerSettingsSerializer().defaultValue
 
     private suspend fun writeFile(setting: MyMusicPlayerSettings) {
         getFullFilename?.let { filename ->
-            Path(filename).toFile().outputStream().use {
-                MyMusicPlayerSettingsSerializer().writeTo(setting, it)
+            val file = Path(filename).toFile()
+            file.parentFile?.mkdirs()
+            try {
+                file.outputStream().use {
+                    MyMusicPlayerSettingsSerializer().writeTo(setting, it)
+                }
+            } catch (_: Exception) {
+                // Ignore write failures gracefully
             }
         }
     }

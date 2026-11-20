@@ -30,7 +30,9 @@ import com.bdlepla.android.mymusicplayer.extensions.forSorting
 import com.bdlepla.android.mymusicplayer.repository.ALBUM_ID
 import com.bdlepla.android.mymusicplayer.repository.ARTIST_ID
 import com.bdlepla.android.mymusicplayer.repository.ITEM_ID
+import com.bdlepla.android.mymusicplayer.repository.ROOT_ID
 import com.bdlepla.android.mymusicplayer.repository.Repository
+import androidx.media3.session.MediaLibraryService
 import com.bdlepla.android.mymusicplayer.service.PlayService
 import com.danrusu.pods4k.immutableArrays.ImmutableArray
 import com.danrusu.pods4k.immutableArrays.asList
@@ -58,9 +60,29 @@ class MyMusicViewModel
 //    private val castStateListener = PlayerCastStateListener()
     private lateinit var browserFuture: ListenableFuture<MediaBrowser>
     val browser: MediaBrowser?
-        get() = if (browserFuture.isDone) browserFuture.get() else null
+        get() = if (::browserFuture.isInitialized && browserFuture.isDone) {
+            try {
+                browserFuture.get()
+            } catch (_: Exception) {
+                null
+            }
+        } else null
     private val playlistManager:PlaylistManager = PlaylistManager(application)
     private val automaticPlaylistsDataStore: AutomaticPlaylistsDataStore = AutomaticPlaylistsDataStore(application)
+
+    private val browserListener = object : MediaBrowser.Listener {
+        override fun onChildrenChanged(
+            browser: MediaBrowser,
+            parentId: String,
+            itemCount: Int,
+            params: MediaLibraryService.LibraryParams?
+        ) {
+            super.onChildrenChanged(browser, parentId, itemCount, params)
+            if (parentId == ITEM_ID || parentId == ROOT_ID) {
+                reloadLibrary()
+            }
+        }
+    }
 
     // Initialize the Cast context. This is required so that the media route button can be
     // created in the AppBar
@@ -89,13 +111,17 @@ class MyMusicViewModel
     private fun initializeBrowser(context: Context) {
         val componentName = ComponentName(context, PlayService::class.java)
         val sessionToken = SessionToken(context, componentName)
-        browserFuture = MediaBrowser.Builder(context, sessionToken).buildAsync()
+        browserFuture = MediaBrowser.Builder(context, sessionToken)
+            .setListener(browserListener)
+            .buildAsync()
         browserFuture.addListener({ setBrowser(context) }, ContextCompat.getMainExecutor(context))
     }
 
     private fun setBrowser(context: Context) {
         val b = browser ?: return
         b.addListener(playerListener)
+        b.subscribe(ITEM_ID, null)
+        b.subscribe(ROOT_ID, null)
         checkPlaybackPositionAsync(b)
         viewModelScope.launch { loadSongs(b, context) }
     }
@@ -273,6 +299,21 @@ class MyMusicViewModel
             browser?.let { updateCurrentSongList(it) }
         }
     }
+
+    fun reloadLibrary() {
+        val b = browser ?: return
+        songCollection.clear()
+        _allSongs.value = emptyImmutableArray()
+        _allAlbums.value = emptyImmutableArray()
+        _allArtists.value = emptyImmutableArray()
+        loadSongs(b, getApplication())
+    }
+
+    fun rescanMediaStorage() {
+        val context = getApplication<Application>().applicationContext
+        Repository.scanMusicStorage(context)
+    }
+
     private fun MediaMetadata.toSongInfo(): SongInfo? =
         songCollection.firstOrNull { si -> si.artist == artist && si.title == title && si.album == albumTitle }
 

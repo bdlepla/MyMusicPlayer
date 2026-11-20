@@ -34,15 +34,30 @@ class AutomaticPlaylistsDataStore @Inject constructor(private val context: Conte
 
     private suspend fun readFile(): AutomaticPlaylists =
         getFullFilename?.let { filename ->
-            Path(filename).toFile().inputStream().use {
-                return AutomaticPlaylistsSerializer().readFrom(it)
+            val file = Path(filename).toFile()
+            if (file.exists()) {
+                try {
+                    file.inputStream().use {
+                        return AutomaticPlaylistsSerializer().readFrom(it)
+                    }
+                } catch (_: Exception) {
+                    AutomaticPlaylistsSerializer().defaultValue
+                }
+            } else {
+                AutomaticPlaylistsSerializer().defaultValue
             }
         } ?: AutomaticPlaylistsSerializer().defaultValue
 
     private suspend fun writeFile(setting: AutomaticPlaylists) {
         getFullFilename?.let { filename ->
-            Path(filename).toFile().outputStream().use {
-                AutomaticPlaylistsSerializer().writeTo(setting, it)
+            val file = Path(filename).toFile()
+            file.parentFile?.mkdirs()
+            try {
+                file.outputStream().use {
+                    AutomaticPlaylistsSerializer().writeTo(setting, it)
+                }
+            } catch (_: Exception) {
+                // Ignore write failures gracefully
             }
         }
     }

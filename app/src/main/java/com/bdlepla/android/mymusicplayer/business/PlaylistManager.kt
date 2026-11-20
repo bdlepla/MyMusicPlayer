@@ -15,30 +15,52 @@ import java.nio.file.Path
 import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.Path
 import kotlin.io.path.PathWalkOption
+import kotlin.io.path.createDirectories
+import kotlin.io.path.exists
 import kotlin.io.path.relativeToOrSelf
 import kotlin.io.path.walk
 
 open class PlaylistBase(private val context: Context) {
-    protected val appStoragePath
-        get() = Path(context.getExternalFilesDir(null).toString())
+    protected val appStoragePath: Path?
+        get() {
+            val dir = context.getExternalFilesDir(null) ?: return null
+            if (!dir.exists()) {
+                dir.mkdirs()
+            }
+            return Path(dir.absolutePath)
+        }
 }
-open class PlaylistReader(context:Context) :PlaylistBase(context) {
-    @OptIn(ExperimentalPathApi::class)
-    fun loadPlaylists():MutableMap<String, MutableList<String>> =
-        appStoragePath
-            .walk(PathWalkOption.INCLUDE_DIRECTORIES)
-            .map { it.toFile().nameWithoutExtension to it.toString() }
-            .filter { it.second.endsWith(".m3u") }
-            .map { it to loadPlaylistSongs(it.second) }
-            .associate { it.first.first to it.second.toMutableList() }
-            .toMutableMap()
 
-    private fun loadPlaylistSongs(m3uName:String):ImmutableArray<String> {
-        return File(m3uName)
-            .readLines()
-            .toImmutableArray() // OK; Do not change
-            .map { it.trim() }
-            .filter { it.isNotEmpty() && it[0] != '#' && !it.contains("/Music/") }
+open class PlaylistReader(context: Context) : PlaylistBase(context) {
+    @OptIn(ExperimentalPathApi::class)
+    fun loadPlaylists(): MutableMap<String, MutableList<String>> {
+        val path = appStoragePath ?: return mutableMapOf()
+        if (!path.exists()) {
+            return mutableMapOf()
+        }
+        return try {
+            path.walk(PathWalkOption.INCLUDE_DIRECTORIES)
+                .map { it.toFile().nameWithoutExtension to it.toString() }
+                .filter { it.second.endsWith(".m3u") }
+                .map { it to loadPlaylistSongs(it.second) }
+                .associate { it.first.first to it.second.toMutableList() }
+                .toMutableMap()
+        } catch (_: Exception) {
+            mutableMapOf()
+        }
+    }
+
+    private fun loadPlaylistSongs(m3uName: String): ImmutableArray<String> {
+        val file = File(m3uName)
+        if (!file.exists()) return emptyImmutableArray()
+        return try {
+            file.readLines()
+                .toImmutableArray() // OK; Do not change
+                .map { it.trim() }
+                .filter { it.isNotEmpty() && it[0] != '#' && !it.contains("/Music/") }
+        } catch (_: Exception) {
+            emptyImmutableArray()
+        }
     }
 }
 
@@ -46,31 +68,43 @@ class PlaylistManager(context: ContextWrapper) : PlaylistReader(context) {
     private var playLists: MutableMap<String, MutableList<String>> = loadPlaylists()
 
     private val mediaPath: Path
-        get() = Path(Environment.getExternalStorageDirectory().path+"/Music")
+        get() = Path(Environment.getExternalStorageDirectory().path + "/Music")
 
-    private fun getFullFilename(name:String) = "$appStoragePath/$name.m3u"
-
-
-    private fun savePlaylistSongs(m3uname:String, songNames:ImmutableArray<String>) {
-        if (File(m3uname).exists()){
-            File(m3uname).delete()
+    private fun getFullFilename(name: String): String? {
+        val path = appStoragePath ?: return null
+        if (!path.exists()) {
+            path.createDirectories()
         }
-        FileWriter(m3uname).use { fw ->
-            songNames.forEach { songName ->
-                fw.write(songName+"\n")
+        return path.resolve("$name.m3u").toString()
+    }
+
+    private fun savePlaylistSongs(m3uname: String?, songNames: ImmutableArray<String>) {
+        if (m3uname == null) return
+        val file = File(m3uname)
+        file.parentFile?.mkdirs()
+        if (file.exists()) {
+            file.delete()
+        }
+        try {
+            FileWriter(file).use { fw ->
+                songNames.forEach { songName ->
+                    fw.write(songName + "\n")
+                }
             }
+        } catch (_: Exception) {
+            // handle error gracefully
         }
     }
 
-    fun updatePlaylistInfo(songs:ImmutableArray<SongInfo>):ImmutableArray<PlaylistInfo> =
+    fun updatePlaylistInfo(songs: ImmutableArray<SongInfo>): ImmutableArray<PlaylistInfo> =
         playLists.map {
             val playListSongs = it.value.mapNotNull { playListSong ->
                 songs.firstOrNull { songInCollection ->
                     songInCollection.mediaUri.endsWith(playListSong)
                 }
             }.toImmutableArray() // OK, Do not change
-            var artworkString:String? = null
-            if (playListSongs.any()){
+            var artworkString: String? = null
+            if (playListSongs.any()) {
                 val songsForArtwork = playListSongs.random()
                 artworkString = songsForArtwork.albumArt
             }
@@ -108,13 +142,14 @@ class PlaylistManager(context: ContextWrapper) : PlaylistReader(context) {
         savePlaylistSongs(m3uname, emptyImmutableArray())
     }
 
-    fun removePlaylist(playListInfo: PlaylistInfo){
+    fun removePlaylist(playListInfo: PlaylistInfo) {
         playLists.remove(playListInfo.name)
         val fileName = getFullFilename(playListInfo.name)
-        if (File(fileName).exists()) {
-            File(fileName).delete()
+        if (fileName != null) {
+            val file = File(fileName)
+            if (file.exists()) {
+                file.delete()
+            }
         }
     }
 }
-
-
